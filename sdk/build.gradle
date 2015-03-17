@@ -28,4 +28,5 @@ android {
 
 dependencies {
     compile files('libs/openwebrtc.jar')
+    compile 'org.mozilla:rhino:1.7R4'
 }
