@@ -9,6 +9,10 @@ android {
         targetSdkVersion 22
         versionCode 1
         versionName "0.0.1"
+
+        ndk {
+            abiFilter "armeabi"
+        }
     }
     buildTypes {
         release {
@@ -20,4 +24,8 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
     }
+}
+
+dependencies {
+    compile files('libs/openwebrtc.jar')
 }
