@@ -221,6 +221,74 @@ public class SdpProcessorTest extends AndroidTestCase {
                     new MediaPayload(109, 48000, "opus", 2, null)
             );
         }
+
+        {
+            JSONObject videoDescription = mediaDescriptions.optJSONObject(1);
+            assertNotNull(videoDescription);
+            assertMediaAttrs(videoDescription, "video", "9", "RTP/SAVPF");
+            assertRtcpMux(videoDescription, true);
+            assertEquals("sendrecv", videoDescription.optString("mode"));
+
+            assertNetAttrs(videoDescription, "IN", "IP4", "0.0.0.0");
+            assertDtlsObject(videoDescription, "actpass", "sha-256", "6C:B4:AB:6C:86:7E:6C:C8:69:68:CE:53:A1:3E:36:D2:1D:5B:4E:CC:39:2E:C7:4D:3F:A8:04:B5:0E:EB:74:9D");
+            assertIce(videoDescription, "90293b3d", "ab4334b9f3efb523ba45c11ec3152350",
+                    new IceCandidate("0", 1, "UDP", 2130379007, "172.20.10.2", 63183, "host"),
+                    new IceCandidate("0", 2, "UDP", 2130379006, "172.20.10.2", 62121, "host"),
+                    new IceCandidate("0", 1, "UDP", 2130379007, "172.20.10.2", 63183, "host"),
+                    new IceCandidate("0", 2, "UDP", 2130379006, "172.20.10.2", 62121, "host"),
+                    new IceCandidate("1", 1, "UDP", 1694236671, "90.237.24.157", 43849, "srflx", "172.20.10.2", 63183),
+                    new IceCandidate("1", 2, "UDP", 1694236670, "90.237.24.157", 39502, "srflx", "172.20.10.2", 62121),
+                    new IceCandidate("3", 1, "UDP", 100401151, "192.36.158.14", 56914, "relay", "192.36.158.14", 56914),
+                    new IceCandidate("3", 2, "UDP", 100401150, "192.36.158.14", 54995, "relay", "192.36.158.14", 54995)
+            );
+            assertPayloads(videoDescription,
+                    new MediaPayload(97, 90000, "H264", true, true, true, new HashMap<String, Object>(){{
+                        put("packetizationMode", 0);
+                        put("levelAsymmetryAllowed", 1);
+                        put("PROFILE", 0);
+                        put("cbr", 0);
+                        put("useinbandfec", 0);
+                        put("profileLevelId", "42e01f");
+                        put("stereo", 0);
+                        put("LEVEL", 0);
+                        put("usedtx", 0);
+                        put("parameterAdd", 1);
+                    }}),
+                    new MediaPayload(126, 90000, "H264", true, true, true, new HashMap<String, Object>(){{
+                        put("packetizationMode", 1);
+                        put("levelAsymmetryAllowed", 1);
+                        put("PROFILE", 0);
+                        put("cbr", 0);
+                        put("useinbandfec", 0);
+                        put("profileLevelId", "42e01f");
+                        put("stereo", 0);
+                        put("LEVEL", 0);
+                        put("usedtx", 0);
+                        put("parameterAdd", 1);
+                    }}),
+                    new MediaPayload(120, 90000, "VP8", true, true, true, null)
+            );
+        }
+
+        {
+            JSONObject dataDescription = mediaDescriptions.optJSONObject(2);
+            assertNotNull(dataDescription);
+            assertMediaAttrs(dataDescription, "application", "9", "DTLS/SCTP");
+
+            assertSctp(dataDescription, 5000, "webrtc-datachannel", 256);
+            assertNetAttrs(dataDescription, "IN", "IP4", "0.0.0.0");
+            assertDtlsObject(dataDescription, "actpass", "sha-256", "6C:B4:AB:6C:86:7E:6C:C8:69:68:CE:53:A1:3E:36:D2:1D:5B:4E:CC:39:2E:C7:4D:3F:A8:04:B5:0E:EB:74:9D");
+            assertIce(dataDescription, "90293b3d", "ab4334b9f3efb523ba45c11ec3152350",
+                    new IceCandidate("0", 1, "UDP", 2130379007, "172.20.10.2", 51850, "host"),
+                    new IceCandidate("0", 2, "UDP", 2130379006, "172.20.10.2", 61466, "host"),
+                    new IceCandidate("0", 1, "UDP", 2130379007, "172.20.10.2", 51850, "host"),
+                    new IceCandidate("0", 2, "UDP", 2130379006, "172.20.10.2", 61466, "host"),
+                    new IceCandidate("1", 1, "UDP", 1694236671, "90.237.24.157", 35856, "srflx", "172.20.10.2", 51850),
+                    new IceCandidate("1", 2, "UDP", 1694236670, "90.237.24.157", 32790, "srflx", "172.20.10.2", 61466),
+                    new IceCandidate("3", 1, "UDP", 100401151, "192.36.158.14", 55300, "relay", "192.36.158.14", 55300),
+                    new IceCandidate("3", 2, "UDP", 100401150, "192.36.158.14", 61720, "relay", "192.36.158.14", 61720)
+            );
+        }
     }
 
     private void assertRtcpMux(JSONObject mediaDescription, boolean rtcpMux) {
