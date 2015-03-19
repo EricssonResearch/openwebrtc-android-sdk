@@ -8,7 +8,10 @@ import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
-public class SimpleRtcConfig implements RtcConfig {
+import java.util.Collection;
+import java.util.List;
+
+public class SimpleRtcConfig extends RtcConfig {
     /**
      * Creates a configuration for setting up a basic audio/video call.
      *
@@ -78,5 +81,20 @@ public class SimpleRtcConfig implements RtcConfig {
      */
     public void setRemoteView(TextureView surface) {
 
+    }
+
+    @Override
+    void setRemoteDescription(SessionDescription remoteDescription) {
+
+    }
+
+    @Override
+    List<Stream> getStreams() {
+        return null;
+    }
+
+    @Override
+    Collection<HelperServer> getHelperServers() {
+        return null;
     }
 }
