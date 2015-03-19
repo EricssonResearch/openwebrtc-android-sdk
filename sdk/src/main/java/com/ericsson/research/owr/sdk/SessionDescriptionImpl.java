@@ -14,9 +14,11 @@ class SessionDescriptionImpl implements SessionDescription {
 
     private final ArrayList<StreamDescription> mStreamDescriptions;
     private final long mSessionId;
+    private final DescriptionType mType;
     private Map<String, StreamDescription> mStreamDescriptionMap;
 
-    SessionDescriptionImpl(long sessionId, Collection<StreamDescription> streamDescriptions) {
+    SessionDescriptionImpl(DescriptionType type, long sessionId, Collection<StreamDescription> streamDescriptions) {
+        mType = type;
         mSessionId = sessionId;
         mStreamDescriptions = new ArrayList<StreamDescription>(streamDescriptions.size());
         boolean createdMap = false;
@@ -32,6 +34,11 @@ class SessionDescriptionImpl implements SessionDescription {
                 mStreamDescriptionMap.put(streamId, streamDescription);
             }
         }
+    }
+
+    @Override
+    public DescriptionType getDescriptionType() {
+        return mType;
     }
 
     @Override

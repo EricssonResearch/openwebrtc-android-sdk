@@ -9,6 +9,11 @@ package com.ericsson.research.owr.sdk;
  */
 public interface SessionDescription {
     /**
+     * @return the type of the session description
+     */
+    public DescriptionType getDescriptionType();
+
+    /**
      * @return the number of media descriptions available
      */
     public int getMediaDescriptionCount();
