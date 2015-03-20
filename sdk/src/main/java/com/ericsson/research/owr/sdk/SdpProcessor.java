@@ -51,9 +51,6 @@ public class SdpProcessor {
     }
 
     public JSONObject sdpToJson(String sdp) throws InvalidDescriptionException {
-        if (sdp.contains("'")) {
-            throw new InvalidDescriptionException("SDP should not contain \"'\"");
-        }
         Context context = Context.enter();
         context.setOptimizationLevel(-1);
         context.setLanguageVersion(Context.VERSION_1_8);
@@ -74,10 +71,6 @@ public class SdpProcessor {
     }
 
     public String jsonToSdp(JSONObject json) throws InvalidDescriptionException {
-        String jsonString = json.toString();
-        if (jsonString.contains("'")) {
-            throw new IllegalArgumentException("SDP json should not contain \"'\"");
-        }
         Context context = Context.enter();
         context.setOptimizationLevel(-1);
         context.setLanguageVersion(Context.VERSION_1_8);

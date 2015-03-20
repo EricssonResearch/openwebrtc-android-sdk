@@ -109,7 +109,6 @@ public class SdpProcessorTest extends AndroidTestCase {
             "a=sctpmap:5000 webrtc-datachannel 1024\r\n";
 
     private static final String sSimpleSdp = "m=application 0 NONE\r\n";
-    private static final String sIllegalSdp = "m=appli'cation 0 NONE\r\n";
     private static final String sInvalidSdp = "y=application 0 NONE\r";
 
     @Override
@@ -126,17 +125,6 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals("application", mediaDescriptions.optJSONObject(0).optString("type"));
         assertEquals("0", mediaDescriptions.optJSONObject(0).optString("port"));
         assertEquals("NONE", mediaDescriptions.optJSONObject(0).optString("protocol"));
-    }
-
-    public void testIllegalChar() {
-        boolean thrown = false;
-        try {
-            JSONObject json = mSdpProcessor.sdpToJson(sIllegalSdp);
-            assertNull(json);
-        } catch (InvalidDescriptionException e) {
-            thrown = true;
-        }
-        assertTrue(thrown);
     }
 
     public void testIllegalSdp() throws InvalidDescriptionException {
