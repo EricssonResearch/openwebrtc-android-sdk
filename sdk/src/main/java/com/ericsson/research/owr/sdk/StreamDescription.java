@@ -4,9 +4,10 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import com.ericsson.research.owr.Candidate;
 import com.ericsson.research.owr.Payload;
 
-import java.util.List;
+import java.util.Map;
 
 /**
  * An interface for describing a stream that is a part of a rtc session
@@ -22,7 +23,9 @@ public interface StreamDescription {
 
     public String getPassword();
 
-    public List<RtcCandidate> getCandidates();
+    public int getCandidateCount();
+
+    public Candidate getCandidate(int index);
 
     public String getDtlsSetup();
 
@@ -35,14 +38,20 @@ public interface StreamDescription {
 
     public boolean isRtcpMux();
 
-    public List<Long> getSsrcs();
+    public int getSsrcCount();
 
-    public List<Payload> getPayloads();
+    public long getSsrc(int index);
+
+    public int getPayloadCount();
+
+    public Payload getPayload(int index);
+
+    public Map<String, Object> getPayloadParameters(int index);
 
     // data only
     public int getSctpPort();
 
-    public int getMessageMaxSize();
+    public int getMaxMessageSize();
 
     public String getAppLabel();
 }
