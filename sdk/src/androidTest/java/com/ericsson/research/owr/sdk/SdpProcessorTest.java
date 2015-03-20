@@ -22,95 +22,95 @@ public class SdpProcessorTest extends AndroidTestCase {
 
     private SdpProcessor mSdpProcessor;
     private static final String sFfSdp = "" +
-            "v=0\\r\\n" +
-            "o=Mozilla-SIPUA-35.0.1 1021 0 IN IP4 0.0.0.0\\r\\n" +
-            "s=SIP Call\\r\\n" +
-            "t=0 0\\r\\n" +
-            "a=ice-ufrag:90293b3d\\r\\n" +
-            "a=ice-pwd:ab4334b9f3efb523ba45c11ec3152350\\r\\n" +
-            "a=fingerprint:sha-256 6C:B4:AB:6C:86:7E:6C:C8:69:68:CE:53:A1:3E:36:D2:1D:5B:4E:CC:39:2E:C7:4D:3F:A8:04:B5:0E:EB:74:9D\\r\\n" +
-            "m=audio 9 RTP/SAVPF 109 9 0 8 101\\r\\n" +
-            "c=IN IP4 0.0.0.0\\r\\n" +
-            "a=rtpmap:109 opus/48000/2\\r\\n" +
-            "a=ptime:20\\r\\n" +
-            "a=rtpmap:9 G722/8000\\r\\n" +
-            "a=rtpmap:0 PCMU/8000\\r\\n" +
-            "a=rtpmap:8 PCMA/8000\\r\\n" +
-            "a=rtpmap:101 telephone-event/8000\\r\\n" +
-            "a=fmtp:101 0-15\\r\\n" +
-            "a=sendrecv\\r\\n" +
-            "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\\r\\n" +
-            "a=setup:actpass\\r\\n" +
-            "a=rtcp-mux\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51830 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 59310 typ host\\r\\n" +
-            "a=candidate:1 1 UDP 1694236671 90.237.24.157 41535 typ srflx raddr 172.20.10.2 rport 51830\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51830 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 59310 typ host\\r\\n" +
-            "a=candidate:1 1 UDP 1694236671 90.237.24.157 41535 typ srflx raddr 172.20.10.2 rport 51830\\r\\n" +
-            "a=candidate:1 2 UDP 1694236670 90.237.24.157 48703 typ srflx raddr 172.20.10.2 rport 59310\\r\\n" +
-            "a=candidate:3 1 UDP 100401151 192.36.158.14 64686 typ relay raddr 192.36.158.14 rport 64686\\r\\n" +
-            "a=candidate:3 2 UDP 100401150 192.36.158.14 59208 typ relay raddr 192.36.158.14 rport 59208\\r\\n" +
-            "m=video 9 RTP/SAVPF 120 126 97\\r\\n" +
-            "c=IN IP4 0.0.0.0\\r\\n" +
-            "a=rtpmap:120 VP8/90000\\r\\n" +
-            "a=rtpmap:126 H264/90000\\r\\n" +
-            "a=fmtp:126 PROFILE=0;LEVEL=0;profile-level-id=42e01f;packetization-mode=1;level-asymmetry-allowed=1;parameter-add=1;usedtx=0;stereo=0;useinbandfec=0;cbr=0\\r\\n" +
-            "a=rtpmap:97 H264/90000\\r\\n" +
-            "a=fmtp:97 PROFILE=0;LEVEL=0;profile-level-id=42e01f;packetization-mode=0;level-asymmetry-allowed=1;parameter-add=1;usedtx=0;stereo=0;useinbandfec=0;cbr=0\\r\\n" +
-            "a=sendrecv\\r\\n" +
-            "a=rtcp-fb:120 nack\\r\\n" +
-            "a=rtcp-fb:120 nack pli\\r\\n" +
-            "a=rtcp-fb:120 ccm fir\\r\\n" +
-            "a=rtcp-fb:126 nack\\r\\n" +
-            "a=rtcp-fb:126 nack pli\\r\\n" +
-            "a=rtcp-fb:126 ccm fir\\r\\n" +
-            "a=rtcp-fb:97 nack\\r\\n" +
-            "a=rtcp-fb:97 nack pli\\r\\n" +
-            "a=rtcp-fb:97 ccm fir\\r\\n" +
-            "a=setup:actpass\\r\\n" +
-            "a=rtcp-mux\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 63183 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 62121 typ host\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 63183 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 62121 typ host\\r\\n" +
-            "a=candidate:1 1 UDP 1694236671 90.237.24.157 43849 typ srflx raddr 172.20.10.2 rport 63183\\r\\n" +
-            "a=candidate:1 2 UDP 1694236670 90.237.24.157 39502 typ srflx raddr 172.20.10.2 rport 62121\\r\\n" +
-            "a=candidate:3 1 UDP 100401151 192.36.158.14 56914 typ relay raddr 192.36.158.14 rport 56914\\r\\n" +
-            "a=candidate:3 2 UDP 100401150 192.36.158.14 54995 typ relay raddr 192.36.158.14 rport 54995\\r\\n" +
-            "m=application 9 DTLS/SCTP 5000\\r\\n" +
-            "c=IN IP4 0.0.0.0\\r\\n" +
-            "a=sctpmap:5000 webrtc-datachannel 256\\r\\n" +
-            "a=setup:actpass\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 61466 typ host\\r\\n" +
-            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host\\r\\n" +
-            "a=candidate:0 2 UDP 2130379006 172.20.10.2 61466 typ host\\r\\n" +
-            "a=candidate:1 1 UDP 1694236671 90.237.24.157 35856 typ srflx raddr 172.20.10.2 rport 51850\\r\\n" +
-            "a=candidate:1 2 UDP 1694236670 90.237.24.157 32790 typ srflx raddr 172.20.10.2 rport 61466\\r\\n" +
-            "a=candidate:3 1 UDP 100401151 192.36.158.14 55300 typ relay raddr 192.36.158.14 rport 55300\\r\\n" +
-            "a=candidate:3 2 UDP 100401150 192.36.158.14 61720 typ relay raddr 192.36.158.14 rport 61720\\r\\n";
+            "v=0\r\n" +
+            "o=Mozilla-SIPUA-35.0.1 1021 0 IN IP4 0.0.0.0\r\n" +
+            "s=SIP Call\r\n" +
+            "t=0 0\r\n" +
+            "a=ice-ufrag:90293b3d\r\n" +
+            "a=ice-pwd:ab4334b9f3efb523ba45c11ec3152350\r\n" +
+            "a=fingerprint:sha-256 6C:B4:AB:6C:86:7E:6C:C8:69:68:CE:53:A1:3E:36:D2:1D:5B:4E:CC:39:2E:C7:4D:3F:A8:04:B5:0E:EB:74:9D\r\n" +
+            "m=audio 9 RTP/SAVPF 109 9 0 8 101\r\n" +
+            "c=IN IP4 0.0.0.0\r\n" +
+            "a=rtpmap:109 opus/48000/2\r\n" +
+            "a=ptime:20\r\n" +
+            "a=rtpmap:9 G722/8000\r\n" +
+            "a=rtpmap:0 PCMU/8000\r\n" +
+            "a=rtpmap:8 PCMA/8000\r\n" +
+            "a=rtpmap:101 telephone-event/8000\r\n" +
+            "a=fmtp:101 0-15\r\n" +
+            "a=sendrecv\r\n" +
+            "a=extmap:1 urn:ietf:params:rtp-hdrext:ssrc-audio-level\r\n" +
+            "a=setup:actpass\r\n" +
+            "a=rtcp-mux\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51830 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 59310 typ host\r\n" +
+            "a=candidate:1 1 UDP 1694236671 90.237.24.157 41535 typ srflx raddr 172.20.10.2 rport 51830\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51830 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 59310 typ host\r\n" +
+            "a=candidate:1 1 UDP 1694236671 90.237.24.157 41535 typ srflx raddr 172.20.10.2 rport 51830\r\n" +
+            "a=candidate:1 2 UDP 1694236670 90.237.24.157 48703 typ srflx raddr 172.20.10.2 rport 59310\r\n" +
+            "a=candidate:3 1 UDP 100401151 192.36.158.14 64686 typ relay raddr 192.36.158.14 rport 64686\r\n" +
+            "a=candidate:3 2 UDP 100401150 192.36.158.14 59208 typ relay raddr 192.36.158.14 rport 59208\r\n" +
+            "m=video 9 RTP/SAVPF 120 126 97\r\n" +
+            "c=IN IP4 0.0.0.0\r\n" +
+            "a=rtpmap:120 VP8/90000\r\n" +
+            "a=rtpmap:126 H264/90000\r\n" +
+            "a=fmtp:126 PROFILE=0;LEVEL=0;profile-level-id=42e01f;packetization-mode=1;level-asymmetry-allowed=1;parameter-add=1;usedtx=0;stereo=0;useinbandfec=0;cbr=0\r\n" +
+            "a=rtpmap:97 H264/90000\r\n" +
+            "a=fmtp:97 PROFILE=0;LEVEL=0;profile-level-id=42e01f;packetization-mode=0;level-asymmetry-allowed=1;parameter-add=1;usedtx=0;stereo=0;useinbandfec=0;cbr=0\r\n" +
+            "a=sendrecv\r\n" +
+            "a=rtcp-fb:120 nack\r\n" +
+            "a=rtcp-fb:120 nack pli\r\n" +
+            "a=rtcp-fb:120 ccm fir\r\n" +
+            "a=rtcp-fb:126 nack\r\n" +
+            "a=rtcp-fb:126 nack pli\r\n" +
+            "a=rtcp-fb:126 ccm fir\r\n" +
+            "a=rtcp-fb:97 nack\r\n" +
+            "a=rtcp-fb:97 nack pli\r\n" +
+            "a=rtcp-fb:97 ccm fir\r\n" +
+            "a=setup:actpass\r\n" +
+            "a=rtcp-mux\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 63183 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 62121 typ host\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 63183 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 62121 typ host\r\n" +
+            "a=candidate:1 1 UDP 1694236671 90.237.24.157 43849 typ srflx raddr 172.20.10.2 rport 63183\r\n" +
+            "a=candidate:1 2 UDP 1694236670 90.237.24.157 39502 typ srflx raddr 172.20.10.2 rport 62121\r\n" +
+            "a=candidate:3 1 UDP 100401151 192.36.158.14 56914 typ relay raddr 192.36.158.14 rport 56914\r\n" +
+            "a=candidate:3 2 UDP 100401150 192.36.158.14 54995 typ relay raddr 192.36.158.14 rport 54995\r\n" +
+            "m=application 9 DTLS/SCTP 5000\r\n" +
+            "c=IN IP4 0.0.0.0\r\n" +
+            "a=sctpmap:5000 webrtc-datachannel 256\r\n" +
+            "a=setup:actpass\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 61466 typ host\r\n" +
+            "a=candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host\r\n" +
+            "a=candidate:0 2 UDP 2130379006 172.20.10.2 61466 typ host\r\n" +
+            "a=candidate:1 1 UDP 1694236671 90.237.24.157 35856 typ srflx raddr 172.20.10.2 rport 51850\r\n" +
+            "a=candidate:1 2 UDP 1694236670 90.237.24.157 32790 typ srflx raddr 172.20.10.2 rport 61466\r\n" +
+            "a=candidate:3 1 UDP 100401151 192.36.158.14 55300 typ relay raddr 192.36.158.14 rport 55300\r\n" +
+            "a=candidate:3 2 UDP 100401150 192.36.158.14 61720 typ relay raddr 192.36.158.14 rport 61720\r\n";
 
     private static final String sDcSdp = "" +
-            "v=0\\r\\n" +
-            "o=- 128254989039880302 2 IN IP4 127.0.0.1\\r\\n" +
-            "s=-\\r\\n" +
-            "t=0 0\\r\\n" +
-            "a=msid-semantic: WMS\\r\\n" +
-            "m=application 57049 DTLS/SCTP 5000\\r\\n" +
-            "c=IN IP4 192.168.1.86\\r\\n" +
-            "a=candidate:3681649477 1 udp 2122260223 192.168.1.86 57049 typ host generation 0\\r\\n" +
-            "a=ice-ufrag:9I+z5/4mb+Y00teq\\r\\n" +
-            "a=ice-pwd:2gMDyNA8fu2WOCnIyyU1gkur\\r\\n" +
-            "a=ice-options:google-ice\\r\\n" +
-            "a=fingerprint:sha-256 1A:3C:A9:43:47:14:D1:12:E3:6E:C0:D5:19:14:EE:57:F6:FC:F9:1F:18:64:65:79:8B:AA:88:EB:3E:1A:B6:69\\r\\n" +
-            "a=setup:actpass\\r\\n" +
-            "a=mid:data\\r\\n" +
-            "a=sctpmap:5000 webrtc-datachannel 1024\\r\\n";
+            "v=0\r\n" +
+            "o=- 128254989039880302 2 IN IP4 127.0.0.1\r\n" +
+            "s=-\r\n" +
+            "t=0 0\r\n" +
+            "a=msid-semantic: WMS\r\n" +
+            "m=application 57049 DTLS/SCTP 5000\r\n" +
+            "c=IN IP4 192.168.1.86\r\n" +
+            "a=candidate:3681649477 1 udp 2122260223 192.168.1.86 57049 typ host generation 0\r\n" +
+            "a=ice-ufrag:9I+z5/4mb+Y00teq\r\n" +
+            "a=ice-pwd:2gMDyNA8fu2WOCnIyyU1gkur\r\n" +
+            "a=ice-options:google-ice\r\n" +
+            "a=fingerprint:sha-256 1A:3C:A9:43:47:14:D1:12:E3:6E:C0:D5:19:14:EE:57:F6:FC:F9:1F:18:64:65:79:8B:AA:88:EB:3E:1A:B6:69\r\n" +
+            "a=setup:actpass\r\n" +
+            "a=mid:data\r\n" +
+            "a=sctpmap:5000 webrtc-datachannel 1024\r\n";
 
-    private static final String sSimpleSdp = "m=application 0 NONE\\r\\n";
-    private static final String sIllegalSdp = "m=appli'cation 0 NONE\\r\\n";
-    private static final String sInvalidSdp = "y=application 0 NONE\\r";
+    private static final String sSimpleSdp = "m=application 0 NONE\r\n";
+    private static final String sIllegalSdp = "m=appli'cation 0 NONE\r\n";
+    private static final String sInvalidSdp = "y=application 0 NONE\r";
 
     @Override
     protected void setUp() throws Exception {
