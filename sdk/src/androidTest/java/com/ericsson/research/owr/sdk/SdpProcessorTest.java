@@ -160,7 +160,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals("-", json.optString("sessionName"));
         assertEquals("0", json.optString("stopTime"));
 
-        assertOriginator(json, 2, 128254989039880300L, "-", "IN", "IP4", "127.0.0.1");
+        assertOriginator(json, 2, "128254989039880302", "-", "IN", "IP4", "127.0.0.1");
 
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
         assertNotNull(mediaDescriptions);
@@ -190,7 +190,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals("SIP Call", json.optString("sessionName"));
         assertEquals("0", json.optString("stopTime"));
 
-        assertOriginator(json, 0, 1021, "Mozilla-SIPUA-35.0.1", "IN", "IP4", "0.0.0.0");
+        assertOriginator(json, 0, "1021", "Mozilla-SIPUA-35.0.1", "IN", "IP4", "0.0.0.0");
 
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
         assertNotNull(mediaDescriptions);
@@ -310,11 +310,11 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals(protocol, mediaDescription.optString("protocol"));
     }
 
-    private void assertOriginator(JSONObject json, int sessionVersion, long sessionId, String username, String netType, String addressType, String address) {
+    private void assertOriginator(JSONObject json, int sessionVersion, String sessionId, String username, String netType, String addressType, String address) {
         JSONObject originator = json.optJSONObject("originator");
         assertNotNull(originator);
         assertEquals(sessionVersion, originator.optInt("sessionVersion"));
-        assertEquals(sessionId, originator.optLong("sessionId"));
+        assertEquals(sessionId, originator.optString("sessionId", null));
         assertEquals(username, originator.optString("username"));
         assertNetAttrs(originator, netType, addressType, address);
     }

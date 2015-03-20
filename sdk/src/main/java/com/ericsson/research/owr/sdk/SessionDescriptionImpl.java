@@ -13,11 +13,11 @@ class SessionDescriptionImpl implements SessionDescription {
     public static final String TAG = "SessionDescriptionImpl";
 
     private final ArrayList<StreamDescription> mStreamDescriptions;
-    private final long mSessionId;
+    private final String mSessionId;
     private final DescriptionType mType;
     private Map<String, StreamDescription> mStreamDescriptionMap;
 
-    SessionDescriptionImpl(DescriptionType type, long sessionId, Collection<StreamDescription> streamDescriptions) {
+    SessionDescriptionImpl(DescriptionType type, String sessionId, Collection<StreamDescription> streamDescriptions) {
         mType = type;
         mSessionId = sessionId;
         mStreamDescriptions = new ArrayList<StreamDescription>(streamDescriptions.size());
@@ -60,7 +60,7 @@ class SessionDescriptionImpl implements SessionDescription {
     }
 
     @Override
-    public long getSessionId() {
+    public String getSessionId() {
         return mSessionId;
     }
 

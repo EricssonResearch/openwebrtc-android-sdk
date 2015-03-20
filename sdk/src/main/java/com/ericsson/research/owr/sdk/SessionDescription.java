@@ -37,7 +37,7 @@ public interface SessionDescription {
     /**
      * @return the id of the session
      */
-    public long getSessionId();
+    public String getSessionId();
 
     /**
      * @param streamType a stream type
