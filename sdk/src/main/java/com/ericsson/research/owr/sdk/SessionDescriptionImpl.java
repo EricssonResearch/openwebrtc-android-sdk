@@ -42,17 +42,17 @@ class SessionDescriptionImpl implements SessionDescription {
     }
 
     @Override
-    public int getMediaDescriptionCount() {
+    public int getStreamDescriptionCount() {
         return mStreamDescriptions.size();
     }
 
     @Override
-    public StreamDescription getMediaDescriptionByIndex(final int index) {
+    public StreamDescription getStreamDescriptionByIndex(final int index) {
         return mStreamDescriptions.get(index);
     }
 
     @Override
-    public StreamDescription getMediaDescriptionById(final String id) {
+    public StreamDescription getStreamDescriptionById(final String id) {
         if (id == null) {
             return null;
         }

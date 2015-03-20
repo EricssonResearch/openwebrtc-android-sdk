@@ -16,7 +16,7 @@ public interface SessionDescription {
     /**
      * @return the number of media descriptions available
      */
-    public int getMediaDescriptionCount();
+    public int getStreamDescriptionCount();
 
     /**
      * Returns the media description at index
@@ -24,7 +24,7 @@ public interface SessionDescription {
      * @return a MediaDescription
      * @throws java.lang.IndexOutOfBoundsException if index < 0 or index >= count
      */
-    public StreamDescription getMediaDescriptionByIndex(int index);
+    public StreamDescription getStreamDescriptionByIndex(int index);
 
     /**
      * Returns a media description by id, or null if none is found.
@@ -32,7 +32,7 @@ public interface SessionDescription {
      * @param id the id of the media description to get
      * @return a MediaDescription, or null if none is found
      */
-    public StreamDescription getMediaDescriptionById(String id);
+    public StreamDescription getStreamDescriptionById(String id);
 
     /**
      * @return the id of the session
