@@ -10,6 +10,7 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
@@ -49,9 +50,9 @@ public class SdpProcessor {
         }
     }
 
-    public JSONObject sdpToJson(String sdp) {
+    public JSONObject sdpToJson(String sdp) throws InvalidDescriptionException {
         if (sdp.contains("'")) {
-            throw new IllegalArgumentException("SDP should not contain \"'\"");
+            throw new InvalidDescriptionException("SDP should not contain \"'\"");
         }
         Context context = Context.enter();
         context.setOptimizationLevel(-1);
@@ -64,13 +65,15 @@ public class SdpProcessor {
                 e.printStackTrace();
                 Log.e(TAG, "failed to parse json generated from SDP: '" + result + '"');
             }
+        } catch (EvaluatorException e) {
+            throw new InvalidDescriptionException("failed to parse sdp: " + e.getMessage(), e);
         } finally {
             Context.exit();
         }
         return null;
     }
 
-    public String jsonToSdp(JSONObject json) {
+    public String jsonToSdp(JSONObject json) throws InvalidDescriptionException {
         String jsonString = json.toString();
         if (jsonString.contains("'")) {
             throw new IllegalArgumentException("SDP json should not contain \"'\"");
@@ -81,6 +84,8 @@ public class SdpProcessor {
         try {
             Object result = mJsonToSdpFunction.call(context, mScope, mScope, new Object[]{json.toString()});
             return "" + result;
+        } catch (EvaluatorException e) {
+            throw new InvalidDescriptionException("failed to parse sdp: " + e.getMessage(), e);
         } finally {
             Context.exit();
         }

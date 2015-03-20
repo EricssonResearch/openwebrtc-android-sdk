@@ -118,7 +118,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         mSdpProcessor = SdpProcessor.fromAssets(getContext().getAssets());
     }
 
-    public void testSimpleParse() {
+    public void testSimpleParse() throws InvalidDescriptionException {
         JSONObject json = mSdpProcessor.sdpToJson(sSimpleSdp);
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
         assertNotNull(mediaDescriptions);
@@ -133,13 +133,13 @@ public class SdpProcessorTest extends AndroidTestCase {
         try {
             JSONObject json = mSdpProcessor.sdpToJson(sIllegalSdp);
             assertNull(json);
-        } catch (IllegalArgumentException e) {
+        } catch (InvalidDescriptionException e) {
             thrown = true;
         }
         assertTrue(thrown);
     }
 
-    public void testIllegalSdp() {
+    public void testIllegalSdp() throws InvalidDescriptionException {
         JSONObject json = mSdpProcessor.sdpToJson(sInvalidSdp);
         assertNotNull(json);
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
@@ -147,7 +147,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals(0, mediaDescriptions.length());
     }
 
-    public void testDatachannelSdp() {
+    public void testDatachannelSdp() throws InvalidDescriptionException {
         JSONObject json = mSdpProcessor.sdpToJson(sDcSdp);
         assertEquals("0", json.optString("version"));
         assertEquals("0", json.optString("startTime"));
@@ -176,7 +176,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         }
     }
 
-    public void testFirefoxSdp() {
+    public void testFirefoxSdp() throws InvalidDescriptionException {
         JSONObject json = mSdpProcessor.sdpToJson(sFfSdp);
         String asd = json.toString();
         Log.v(TAG, asd.substring(0, 3000));
