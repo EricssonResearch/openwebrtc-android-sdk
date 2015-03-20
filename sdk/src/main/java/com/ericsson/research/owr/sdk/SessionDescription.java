@@ -38,4 +38,10 @@ public interface SessionDescription {
      * @return the id of the session
      */
     public long getSessionId();
+
+    /**
+     * @param streamType a stream type
+     * @return true if the session description contains a stream of type streamType, false otherwise
+     */
+    public boolean hasStreamType(StreamType streamType);
 }

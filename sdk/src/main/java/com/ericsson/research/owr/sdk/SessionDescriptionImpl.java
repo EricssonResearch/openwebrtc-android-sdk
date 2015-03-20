@@ -63,4 +63,14 @@ class SessionDescriptionImpl implements SessionDescription {
     public long getSessionId() {
         return mSessionId;
     }
+
+    @Override
+    public boolean hasStreamType(final StreamType streamType) {
+        for (StreamDescription streamDescription : mStreamDescriptions) {
+            if (streamDescription.getStreamType() == streamType) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
