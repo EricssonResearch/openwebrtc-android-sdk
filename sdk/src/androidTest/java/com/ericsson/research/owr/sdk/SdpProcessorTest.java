@@ -166,10 +166,6 @@ public class SdpProcessorTest extends AndroidTestCase {
 
     public void testFirefoxSdp() throws InvalidDescriptionException {
         JSONObject json = mSdpProcessor.sdpToJson(sFfSdp);
-        String asd = json.toString();
-        Log.v(TAG, asd.substring(0, 3000));
-        Log.v(TAG, asd.substring(3000, 6000));
-        Log.v(TAG, asd.substring(6000));
         assertEquals("0", json.optString("version"));
         assertEquals("0", json.optString("startTime"));
         assertEquals("SIP Call", json.optString("sessionName"));
