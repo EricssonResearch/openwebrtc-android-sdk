@@ -278,14 +278,14 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals(StreamMode.SEND_RECEIVE, audio.getMode());
         assertEquals("eNiJLDtGPTtx8J8b", audio.getUfrag());
         assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getPassword());
-        assertEquals(3, audio.getPayloadCount());
-        assertEquals(CodecType.OPUS, audio.getPayload(0).getCodecType());
+        assertEquals(10, audio.getPayloadCount());
+        assertEquals("opus", audio.getPayload(0).getEncodingName());
         assertEquals(111, audio.getPayload(0).getPayloadType());
         assertEquals(48000, audio.getPayload(0).getClockRate());
-        assertEquals(2, ((AudioPayload) audio.getPayload(0)).getChannels());
-        assertEquals(10, audio.getPayloadParameters(0).get("minptime"));
+        assertEquals(2, audio.getPayload(0).getChannels());
+        assertEquals(10, audio.getPayload(0).getParameters().get("minptime"));
         // the parameter isn't parsed properly
-        assertNull(audio.getPayloadParameters(0).get("useinbandfec"));
+        assertNull(audio.getPayload(0).getParameters().get("useinbandfec"));
     }
 
     public void testInvalidType() throws JSONException {

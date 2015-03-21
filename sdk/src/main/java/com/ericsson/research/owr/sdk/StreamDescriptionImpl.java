@@ -20,7 +20,7 @@ class StreamDescriptionImpl implements StreamDescription {
     private final StreamMode mMode;
     private final String mUfrag;
     private final String mPassword;
-    private final List<Candidate> mCandidates;
+    private final List<RtcCandidate> mCandidates;
     private final String mDtlsSetup;
     private final String mFingerprint;
     private final String mFingerprintHashFunction;
@@ -28,13 +28,13 @@ class StreamDescriptionImpl implements StreamDescription {
     private final String mCname;
     private final boolean mRtcpMux;
     private final List<Long> mSsrcs;
-    private final List<Pair<Payload, Map<String, Object>>> mPayloads;
+    private final List<RtcPayload> mPayloads;
     // data only
     private final int mSctpPort;
     private final int mMaxMessageSize;
     private final String mAppLabel;
 
-    private StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<Candidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String cname, boolean rtcpMux, List<Long> ssrcs, List<Pair<Payload, Map<String, Object>>> payloads, int sctpPort, int maxMessageSize, String appLabel) {
+    private StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
         mId = id;
         mStreamType = streamType;
         mMode = mode;
@@ -53,11 +53,11 @@ class StreamDescriptionImpl implements StreamDescription {
         mAppLabel = appLabel;
     }
 
-    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<Candidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String cname, boolean rtcpMux, List<Long> ssrcs, List<Pair<Payload, Map<String, Object>>> payloads) {
+    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
         this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, cname, rtcpMux, ssrcs, payloads, -1, -1, null);
     }
 
-    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<Candidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
+    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
         this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, false, null, null, sctpPort, maxMessageSize, appLabel);
     }
 
@@ -92,7 +92,7 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public Candidate getCandidate(final int index) {
+    public RtcCandidate getCandidate(final int index) {
         return mCandidates.get(index);
     }
 
@@ -136,13 +136,8 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public Payload getPayload(int index) {
-        return mPayloads.get(index).first;
-    }
-
-    @Override
-    public Map<String, Object> getPayloadParameters(final int index) {
-        return mPayloads.get(index).second;
+    public RtcPayload getPayload(int index) {
+        return mPayloads.get(index);
     }
 
     @Override

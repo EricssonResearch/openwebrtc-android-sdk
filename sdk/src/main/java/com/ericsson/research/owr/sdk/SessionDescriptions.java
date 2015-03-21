@@ -5,16 +5,10 @@
 package com.ericsson.research.owr.sdk;
 
 import android.util.Log;
-import android.util.Pair;
 
-import com.ericsson.research.owr.AudioPayload;
-import com.ericsson.research.owr.Candidate;
 import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.CodecType;
 import com.ericsson.research.owr.ComponentType;
-import com.ericsson.research.owr.Payload;
 import com.ericsson.research.owr.TransportType;
-import com.ericsson.research.owr.VideoPayload;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -83,7 +77,7 @@ public class SessionDescriptions {
                 return null;
             }
             try {
-                streamDescriptions.add(mediaDescriptionJsonToStreamDescription(mediaDescription));
+                streamDescriptions.add(mediaDescriptionJsonToStreamDescription(mediaDescription, i));
             } catch (JSONException e) {
                 throw new InvalidDescriptionException("Failed to parse media description", e);
             }
@@ -92,21 +86,21 @@ public class SessionDescriptions {
         return new SessionDescriptionImpl(descriptionType, sessionId, streamDescriptions);
     }
 
-    private static StreamDescription mediaDescriptionJsonToStreamDescription(JSONObject json) throws JSONException, InvalidDescriptionException {
+    private static StreamDescription mediaDescriptionJsonToStreamDescription(JSONObject json, int index) throws JSONException, InvalidDescriptionException {
         StreamType streamType;
         StreamMode mode;
         String id;
         String ufrag;
         String password;
-        List<Candidate> candidates = null;
+        List<RtcCandidate> candidates = null;
         String dtlsSetup;
         String fingerprint;
         String fingerprintHashFunction;
 
-        String cname = null;
+        String cname;
         boolean rtcpMux;
         List<Long> ssrcs = null;
-        List<Pair<Payload, Map<String, Object>>> payloads = null;
+        List<RtcPayload> payloads;
 
         int sctpPort;
         int maxMessageSize;
@@ -153,11 +147,11 @@ public class SessionDescriptions {
 
         JSONArray candidateArr = ice.optJSONArray("candidates");
         if (candidateArr != null) {
-            candidates = new ArrayList<Candidate>(candidateArr.length());
+            candidates = new ArrayList<RtcCandidate>(candidateArr.length());
 
             for (int i = 0; i < candidateArr.length(); i++) {
                 try {
-                    candidates.add(owrJsonToCandidate(candidateArr.getJSONObject(i), ufrag, password));
+                    candidates.add(owrJsonToCandidate(candidateArr.getJSONObject(i), ufrag, password, index, id));
                 } catch (JSONException exception) {
                     Log.w(TAG, "failed to read candidate: " + exception);
                 }
@@ -188,29 +182,24 @@ public class SessionDescriptions {
             }
 
             JSONArray payloadArr = json.getJSONArray("payloads");
-            payloads = new ArrayList<Pair<Payload, Map<String, Object>>>(payloadArr.length());
+            payloads = new ArrayList<RtcPayload>(payloadArr.length());
             for (int i = 0; i < payloadArr.length(); i++) {
                 JSONObject payload = payloadArr.getJSONObject(i);
-                String encodingName = payload.getString("encodingName");
+                String encodingName = "<unknown>";
                 try {
-                    CodecType codecType = CodecType.valueOf(encodingName.toUpperCase());
+                    encodingName = payload.getString("encodingName");
                     int payloadType = payload.getInt("type");
                     Map<String, Object> parameters = jsonParametersToMap(payload.optJSONObject("parameters"));
 
                     int clockRate = payload.getInt("clockRate");
+                    int channels = payload.optInt("channels", 0);
+                    boolean nack = payload.optBoolean("nack", false);
+                    boolean nackPli = payload.optBoolean("nackpli", false);
+                    boolean ccmFir = payload.optBoolean("ccmfir", false);
 
-                    Payload owrPayload;
-                    if (streamType == StreamType.VIDEO) {
-                        boolean nackpli = payload.getBoolean("nackpli");
-                        boolean ccmfir = payload.getBoolean("ccmfir");
-                        owrPayload = new VideoPayload(codecType, payloadType, clockRate, nackpli, ccmfir);
-                    } else { // audio
-                        int channels = payload.getInt("channels");
-                        owrPayload = new AudioPayload(codecType, payloadType, clockRate, channels);
-                    }
-                    payloads.add(new Pair<Payload, Map<String, Object>>(owrPayload, parameters));
-                } catch (IllegalArgumentException ignored) {
-                    Log.d(TAG, "ignoring payload with encoding name " + encodingName);
+                    payloads.add(new PlainRtcPayload(payloadType, encodingName, clockRate, parameters, channels, nack, nackPli, ccmFir));
+                } catch (JSONException e) {
+                    Log.d(TAG, "ignoring payload \"" + encodingName + "\": " + e.getMessage());
                 }
             }
             return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, cname, rtcpMux, ssrcs, payloads);
@@ -233,21 +222,17 @@ public class SessionDescriptions {
         return parameters;
     }
 
-    private static Candidate owrJsonToCandidate(JSONObject json, String ufrag, String password) throws JSONException {
-        Candidate candidate = new Candidate(
-                candidateTypeFromOwrJson(json),
-                componentTypeFromOwrJson(json)
-        );
-        candidate.setTransportType(transportTypeFromOwrJson(json));
-        candidate.setFoundation(json.getString("foundation"));
-        candidate.setAddress(json.getString("address"));
-        candidate.setPort(json.getInt("port"));
-        candidate.setBaseAddress(json.optString("relatedAddress", ""));
-        candidate.setBasePort(json.optInt("relatedPort", 0));
-        candidate.setPriority(json.getInt("priority"));
-        candidate.setUfrag(ufrag);
-        candidate.setPassword(password);
-        return candidate;
+    private static RtcCandidate owrJsonToCandidate(JSONObject json, String ufrag, String password, int index, String id) throws JSONException {
+        String foundation = json.getString("foundation");
+        ComponentType componentType = componentTypeFromOwrJson(json);
+        String address = json.getString("address");
+        int port = json.getInt("port");
+        int priority = json.getInt("priority");
+        TransportType transportType = transportTypeFromOwrJson(json);
+        CandidateType type = candidateTypeFromOwrJson(json);
+        String relatedAddress = json.optString("relatedAddress", "");
+        int relatedPort = json.optInt("relatedPort", 0);
+        return new PlainRtcCandidate(index, id, ufrag, password, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
     }
     private static CandidateType candidateTypeFromOwrJson(JSONObject json) throws JSONException {
         String type = json.getString("type");
