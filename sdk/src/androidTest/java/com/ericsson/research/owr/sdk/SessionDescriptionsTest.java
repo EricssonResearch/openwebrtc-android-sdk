@@ -5,14 +5,8 @@
 package com.ericsson.research.owr.sdk;
 
 import android.test.AndroidTestCase;
-import android.util.Log;
 
-import com.ericsson.research.owr.AudioPayload;
-import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.CodecType;
-import com.ericsson.research.owr.ComponentType;
 import com.ericsson.research.owr.Owr;
-import com.ericsson.research.owr.TransportType;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -267,12 +261,12 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals("KJgfgjRFHmkuBHKhgoIHPkGpBRzErIAU4qQ3", audio.getId());
         assertEquals(4, audio.getCandidateCount());
         assertEquals("4000241536", audio.getCandidate(0).getFoundation());
-        assertEquals(ComponentType.RTP, audio.getCandidate(0).getComponentType());
-        assertEquals(TransportType.UDP, audio.getCandidate(0).getTransportType());
+        assertEquals(RtcCandidate.ComponentType.RTP, audio.getCandidate(0).getComponentType());
+        assertEquals(RtcCandidate.TransportType.UDP, audio.getCandidate(0).getTransportType());
         assertEquals(2122260223, audio.getCandidate(0).getPriority());
         assertEquals("129.192.20.149", audio.getCandidate(0).getAddress());
         assertEquals(50238, audio.getCandidate(0).getPort());
-        assertEquals(CandidateType.HOST, audio.getCandidate(0).getType());
+        assertEquals(RtcCandidate.CandidateType.HOST, audio.getCandidate(0).getType());
         assertEquals("eNiJLDtGPTtx8J8b", audio.getCandidate(0).getUfrag());
         assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getCandidate(0).getPassword());
         assertEquals(StreamMode.SEND_RECEIVE, audio.getMode());

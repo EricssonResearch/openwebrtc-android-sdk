@@ -4,10 +4,6 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.ComponentType;
-import com.ericsson.research.owr.TransportType;
-
 class PlainRtcCandidate implements RtcCandidate {
     public static String TAG = "PlainRtcCandidate";
 
@@ -43,10 +39,6 @@ class PlainRtcCandidate implements RtcCandidate {
 
     PlainRtcCandidate(String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
         this(-1, null, null, null, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
-    }
-
-    PlainRtcCandidate(String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type) {
-        this(-1, null, null, null, foundation, componentType, transportType, priority, address, port, type, null, -1);
     }
 
     public void setCredentials(String ufrag, String password) {

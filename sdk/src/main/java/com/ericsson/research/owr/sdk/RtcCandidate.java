@@ -4,10 +4,6 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.ComponentType;
-import com.ericsson.research.owr.TransportType;
-
 public interface RtcCandidate {
     public int getStreamIndex();
 
@@ -34,4 +30,16 @@ public interface RtcCandidate {
     public String getRelatedAddress();
 
     public int getRelatedPort();
+
+    public enum ComponentType {
+        RTP, RTCP
+    }
+
+    public enum TransportType {
+        UDP, TCP_ACTIVE, TCP_PASSIVE, TCP_SO
+    }
+
+    public enum CandidateType {
+        HOST, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAY
+    }
 }

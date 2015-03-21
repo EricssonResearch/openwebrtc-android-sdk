@@ -6,10 +6,6 @@ package com.ericsson.research.owr.sdk;
 
 import android.util.Log;
 
-import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.ComponentType;
-import com.ericsson.research.owr.TransportType;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -99,7 +95,7 @@ public class RtcCandidates {
                 break;
         }
         sb.append(" ");
-        if (candidate.getTransportType() == TransportType.UDP) {
+        if (candidate.getTransportType() == RtcCandidate.TransportType.UDP) {
             sb.append("UDP");
         } else {
             sb.append("TCP");
@@ -131,7 +127,7 @@ public class RtcCandidates {
             sb.append(" rport ");
             sb.append(candidate.getRelatedPort());
         }
-        if (candidate.getTransportType() != TransportType.UDP) {
+        if (candidate.getTransportType() != RtcCandidate.TransportType.UDP) {
             sb.append(" tcptype ");
             switch (candidate.getTransportType()) {
                 case TCP_ACTIVE:
@@ -187,50 +183,50 @@ public class RtcCandidates {
 
         String foundation = matcher.group(PATTERN_GROUP_ATTRIBUTE_FOUNDATION);
         int componentId = Integer.parseInt(matcher.group(PATTERN_GROUP_ATTRIBUTE_COMPONENT), 10);
-        ComponentType componentType;
+        RtcCandidate.ComponentType componentType;
         String transport = matcher.group(PATTERN_GROUP_ATTRIBUTE_TRANSPORT);
         int priority = Integer.parseInt(matcher.group(PATTERN_GROUP_ATTRIBUTE_PRIORITY), 10);
         String address = matcher.group(PATTERN_GROUP_ATTRIBUTE_ADDRESS);
         int port = Integer.parseInt(matcher.group(PATTERN_GROUP_ATTRIBUTE_PORT), 10);
         String type = matcher.group(PATTERN_GROUP_ATTRIBUTE_TYPE);
-        CandidateType candidateType;
+        RtcCandidate.CandidateType candidateType;
         String relatedAddress = matcher.group(PATTERN_GROUP_ATTRIBUTE_RELATED_ADDRESS);
         int relatedPort = -1;
         if (relatedAddress != null) {
             relatedPort = Integer.parseInt(matcher.group(PATTERN_GROUP_ATTRIBUTE_RELATED_PORT), 10);
         }
         String tcpType = matcher.group(PATTERN_GROUP_ATTRIBUTE_TCP_TYPE);
-        TransportType transportType;
+        RtcCandidate.TransportType transportType;
 
         if (componentId == 1) {
-            componentType = ComponentType.RTP;
+            componentType = RtcCandidate.ComponentType.RTP;
         } else {
-            componentType = ComponentType.RTCP;
+            componentType = RtcCandidate.ComponentType.RTCP;
         }
 
         if ("host".equals(type)) {
-            candidateType = CandidateType.HOST;
+            candidateType = RtcCandidate.CandidateType.HOST;
         } else if ("srflx".equals(type)) {
-            candidateType = CandidateType.SERVER_REFLEXIVE;
+            candidateType = RtcCandidate.CandidateType.SERVER_REFLEXIVE;
         } else if ("prflx".equals(type)) {
-            candidateType = CandidateType.PEER_REFLEXIVE;
+            candidateType = RtcCandidate.CandidateType.PEER_REFLEXIVE;
         } else {
-            candidateType = CandidateType.RELAY;
+            candidateType = RtcCandidate.CandidateType.RELAY;
         }
 
         if ("UDP".equals(transport)) {
-            transportType = TransportType.UDP;
+            transportType = RtcCandidate.TransportType.UDP;
         } else {
             if (tcpType != null) {
                 if ("active".equals(tcpType)) {
-                    transportType = TransportType.TCP_ACTIVE;
+                    transportType = RtcCandidate.TransportType.TCP_ACTIVE;
                 } else if ("passive".equals(tcpType)) {
-                    transportType = TransportType.TCP_PASSIVE;
+                    transportType = RtcCandidate.TransportType.TCP_PASSIVE;
                 } else {
-                    transportType = TransportType.TCP_SO;
+                    transportType = RtcCandidate.TransportType.TCP_SO;
                 }
             } else if (port == 0 || port == 9) {
-                transportType = TransportType.TCP_ACTIVE;
+                transportType = RtcCandidate.TransportType.TCP_ACTIVE;
                 port = 9;
             } else {
                 return null;
@@ -238,8 +234,8 @@ public class RtcCandidates {
         }
 
         if (relatedAddress == null) {
-            if (candidateType == CandidateType.HOST) {
-                return new PlainRtcCandidate(foundation, componentType, transportType, priority, address, port, candidateType);
+            if (candidateType == RtcCandidate.CandidateType.HOST) {
+                return new PlainRtcCandidate(foundation, componentType, transportType, priority, address, port, candidateType, null, -1);
             } else {
                 return null;
             }

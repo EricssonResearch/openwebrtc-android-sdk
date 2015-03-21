@@ -6,10 +6,6 @@ package com.ericsson.research.owr.sdk;
 
 import android.util.Log;
 
-import com.ericsson.research.owr.CandidateType;
-import com.ericsson.research.owr.ComponentType;
-import com.ericsson.research.owr.TransportType;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -224,58 +220,58 @@ public class SessionDescriptions {
 
     private static RtcCandidate owrJsonToCandidate(JSONObject json, String ufrag, String password, int index, String id) throws JSONException {
         String foundation = json.getString("foundation");
-        ComponentType componentType = componentTypeFromOwrJson(json);
+        RtcCandidate.ComponentType componentType = componentTypeFromOwrJson(json);
         String address = json.getString("address");
         int port = json.getInt("port");
         int priority = json.getInt("priority");
-        TransportType transportType = transportTypeFromOwrJson(json);
-        CandidateType type = candidateTypeFromOwrJson(json);
+        RtcCandidate.TransportType transportType = transportTypeFromOwrJson(json);
+        RtcCandidate.CandidateType type = candidateTypeFromOwrJson(json);
         String relatedAddress = json.optString("relatedAddress", "");
         int relatedPort = json.optInt("relatedPort", 0);
         return new PlainRtcCandidate(index, id, ufrag, password, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
     }
-    private static CandidateType candidateTypeFromOwrJson(JSONObject json) throws JSONException {
+    private static RtcCandidate.CandidateType candidateTypeFromOwrJson(JSONObject json) throws JSONException {
         String type = json.getString("type");
         if ("host".equals(type)) {
-            return CandidateType.HOST;
+            return RtcCandidate.CandidateType.HOST;
         } else if ("srflx".equals(type)) {
-            return CandidateType.SERVER_REFLEXIVE;
+            return RtcCandidate.CandidateType.SERVER_REFLEXIVE;
         } else if ("prflx".equals(type)) {
-            return CandidateType.PEER_REFLEXIVE;
+            return RtcCandidate.CandidateType.PEER_REFLEXIVE;
         } else if ("relay".equals(type)) {
-            return CandidateType.RELAY;
+            return RtcCandidate.CandidateType.RELAY;
         } else {
             throw new JSONException("unknown candidate type: " + type);
         }
     }
 
-    private static ComponentType componentTypeFromOwrJson(JSONObject json) throws JSONException {
+    private static RtcCandidate.ComponentType componentTypeFromOwrJson(JSONObject json) throws JSONException {
         int componentId = json.getInt("componentId");
         switch (componentId) {
             case 1:
-                return ComponentType.RTP;
+                return RtcCandidate.ComponentType.RTP;
             case 2:
-                return ComponentType.RTCP;
+                return RtcCandidate.ComponentType.RTCP;
             default:
                 throw new JSONException("unknown component id: " + componentId);
         }
     }
 
-    private static TransportType transportTypeFromOwrJson(JSONObject json) throws JSONException {
+    private static RtcCandidate.TransportType transportTypeFromOwrJson(JSONObject json) throws JSONException {
         String transportType = json.getString("transport");
         if (transportType.equals("TCP")) {
             String tcpType = json.getString("tcpType");
             if ("active".equals(tcpType)) {
-                return TransportType.TCP_ACTIVE;
+                return RtcCandidate.TransportType.TCP_ACTIVE;
             } else if ("passive".equals(tcpType)) {
-                return TransportType.TCP_PASSIVE;
+                return RtcCandidate.TransportType.TCP_PASSIVE;
             } else if ("so".equals(tcpType)) {
-                return TransportType.TCP_SO;
+                return RtcCandidate.TransportType.TCP_SO;
             } else {
                 throw new JSONException("unknown tcp type: " + tcpType);
             }
         } else if (transportType.equals("UDP")) {
-            return TransportType.UDP;
+            return RtcCandidate.TransportType.UDP;
         } else {
             throw new JSONException("unknown transport type: " + transportType);
         }
