@@ -219,7 +219,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject simpleOffer = new JSONObject(sSimpleOffer);
         SessionDescription offer = SessionDescriptions.fromJsep(simpleOffer, mSdpProcessor);
         assertNotNull(offer);
-        assertEquals(DescriptionType.INBOUND_OFFER, offer.getDescriptionType());
+        assertEquals(SessionDescription.Type.OFFER, offer.getType());
         assertEquals("1426854267315236600", offer.getSessionId());
         assertEquals(0, offer.getStreamDescriptionCount());
         assertFalse(offer.hasStreamType(StreamType.AUDIO));
@@ -231,7 +231,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject simpleAnswer = new JSONObject(sSimpleAnswer);
         SessionDescription answer = SessionDescriptions.fromJsep(simpleAnswer, mSdpProcessor);
         assertNotNull(answer);
-        assertEquals(DescriptionType.INBOUND_ANSWER, answer.getDescriptionType());
+        assertEquals(SessionDescription.Type.ANSWER, answer.getType());
         assertEquals("1426854267315236600", answer.getSessionId());
         assertEquals(0, answer.getStreamDescriptionCount());
         assertFalse(answer.hasStreamType(StreamType.AUDIO));
@@ -244,7 +244,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         SessionDescription desc = SessionDescriptions.fromJsep(json, mSdpProcessor);
         assertNotNull(desc);
         assertEquals("7407423127539558064", desc.getSessionId());
-        assertEquals(DescriptionType.INBOUND_OFFER, desc.getDescriptionType());
+        assertEquals(SessionDescription.Type.OFFER, desc.getType());
         assertEquals(2, desc.getStreamDescriptionCount());
 
         StreamDescription audio = desc.getStreamDescriptionByIndex(0);

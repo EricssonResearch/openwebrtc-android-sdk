@@ -11,7 +11,7 @@ public interface SessionDescription {
     /**
      * @return the type of the session description
      */
-    public DescriptionType getDescriptionType();
+    public Type getType();
 
     /**
      * @return the number of media descriptions available
@@ -44,4 +44,8 @@ public interface SessionDescription {
      * @return true if the session description contains a stream of type streamType, false otherwise
      */
     public boolean hasStreamType(StreamType streamType);
+
+    public enum Type {
+        OFFER, ANSWER
+    }
 }

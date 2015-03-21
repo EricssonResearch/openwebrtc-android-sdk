@@ -34,13 +34,16 @@ public class SessionDescriptions {
         }
         JSONObject sdp = sdpProcessor.sdpToJson(sdpStr);
 
-        DescriptionType descriptionType;
-        if ("offer".equals(type)) {
-            descriptionType = DescriptionType.INBOUND_OFFER;
-        } else if ("answer".equals(type)) {
-            descriptionType = DescriptionType.INBOUND_ANSWER;
-        } else {
-            throw new InvalidDescriptionException("invalid jsep message type: " + type);
+        SessionDescription.Type descriptionType;
+        switch (type) {
+            case "offer":
+                descriptionType = SessionDescription.Type.OFFER;
+                break;
+            case "answer":
+                descriptionType = SessionDescription.Type.ANSWER;
+                break;
+            default:
+                throw new InvalidDescriptionException("invalid jsep message type: " + type);
         }
 
         JSONObject originator;
@@ -286,15 +289,15 @@ public class SessionDescriptions {
         String type;
         String sdpStr;
 
-        switch (sessionDescription.getDescriptionType()) {
-            case OUTBOUND_ANSWER:
+        switch (sessionDescription.getType()) {
+            case ANSWER:
                 type = "answer";
                 break;
-            case OUTBOUND_OFFER:
+            case OFFER:
                 type = "offer";
                 break;
             default:
-                throw new IllegalArgumentException("inbound description should not be transformed to jsep");
+                throw new IllegalArgumentException("invalid description type: " + sessionDescription.getType());
         }
 
         try {

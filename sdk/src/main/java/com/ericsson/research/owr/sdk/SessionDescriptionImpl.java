@@ -14,10 +14,10 @@ class SessionDescriptionImpl implements SessionDescription {
 
     private final ArrayList<StreamDescription> mStreamDescriptions;
     private final String mSessionId;
-    private final DescriptionType mType;
+    private final Type mType;
     private Map<String, StreamDescription> mStreamDescriptionMap;
 
-    SessionDescriptionImpl(DescriptionType type, String sessionId, Collection<StreamDescription> streamDescriptions) {
+    SessionDescriptionImpl(Type type, String sessionId, Collection<StreamDescription> streamDescriptions) {
         mType = type;
         mSessionId = sessionId;
         mStreamDescriptions = new ArrayList<StreamDescription>(streamDescriptions.size());
@@ -37,7 +37,7 @@ class SessionDescriptionImpl implements SessionDescription {
     }
 
     @Override
-    public DescriptionType getDescriptionType() {
+    public Type getType() {
         return mType;
     }
 
