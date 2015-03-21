@@ -29,6 +29,10 @@ public interface StreamDescription {
     public String getFingerprintHashFunction();
 
     // media only
+    public String getMediaStreamId();
+
+    public String getMediaStreamTrackId();
+
     public String getCname();
 
     public boolean isRtcpMux();

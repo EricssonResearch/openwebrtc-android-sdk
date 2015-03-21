@@ -93,6 +93,8 @@ public class SessionDescriptions {
         String fingerprint;
         String fingerprintHashFunction;
 
+        String mediaStreamId;
+        String mediaStreamTrackId;
         String cname;
         boolean rtcpMux;
         List<Long> ssrcs = null;
@@ -168,6 +170,8 @@ public class SessionDescriptions {
             return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, sctpPort, maxMessageSize, appLabel);
         } else { // audio or video
             cname = json.optString("cname", null);
+            mediaStreamId = json.optString("mediaStreamId", null);
+            mediaStreamTrackId = json.optString("mediaStreamTrackId", null);
 
             JSONArray ssrcArr = json.optJSONArray("ssrcs");
             if (ssrcArr != null) {
@@ -198,7 +202,7 @@ public class SessionDescriptions {
                     Log.d(TAG, "ignoring payload \"" + encodingName + "\": " + e.getMessage());
                 }
             }
-            return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, cname, rtcpMux, ssrcs, payloads);
+            return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads);
         }
     }
 
@@ -275,5 +279,223 @@ public class SessionDescriptions {
         } else {
             throw new JSONException("unknown transport type: " + transportType);
         }
+    }
+
+    public static JSONObject toJsep(SessionDescription sessionDescription, SdpProcessor sdpProcessor) {
+        JSONObject json = new JSONObject();
+        String type;
+        String sdpStr;
+
+        switch (sessionDescription.getDescriptionType()) {
+            case OUTBOUND_ANSWER:
+                type = "answer";
+                break;
+            case OUTBOUND_OFFER:
+                type = "offer";
+                break;
+            default:
+                throw new IllegalArgumentException("inbound description should not be transformed to jsep");
+        }
+
+        try {
+            JSONObject sdpJson = sessionDescriptionToOwrJson(sessionDescription);
+            sdpStr = sdpProcessor.jsonToSdp(sdpJson);
+        } catch (InvalidDescriptionException | JSONException e) {
+            throw new IllegalArgumentException("json to sdp conversion failed: " + e.getMessage(), e);
+        }
+
+        try {
+            json.put("type", type);
+            json.put("sdp", sdpStr);
+            return json;
+        } catch (JSONException e) {
+            throw new IllegalArgumentException("failed to create jsep message: " + e.getMessage(), e);
+        }
+    }
+
+    private static JSONObject sessionDescriptionToOwrJson(SessionDescription sessionDescription) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        JSONObject originator = new JSONObject();
+        originator.put("username", "-");
+        originator.put("sessionId", sessionDescription.getSessionId());
+        originator.put("sessionVersion", 1);
+        originator.put("netType", "IN");
+        originator.put("addressType", "IP4");
+        originator.put("address", "127.0.0.1");
+
+        json.put("version", 0);
+        json.put("originator", originator);
+        json.put("sessionName", "-");
+        json.put("startTime", 0);
+        json.put("stopTime", 0);
+
+        JSONArray streamDescriptions = new JSONArray();
+        for (int i = 0; i < sessionDescription.getStreamDescriptionCount(); i++) {
+            StreamDescription streamDescription = sessionDescription.getStreamDescriptionByIndex(i);
+            streamDescriptions.put(streamDescriptionToOwrJson(streamDescription));
+        }
+
+        json.put("mediaDescriptions", streamDescriptions);
+
+        return json;
+    }
+
+    private static JSONObject streamDescriptionToOwrJson(StreamDescription streamDescription) throws JSONException {
+        JSONObject json = new JSONObject();
+        String type = "unknown";
+
+        switch (streamDescription.getStreamType()) {
+            case AUDIO:
+                type = "audio";
+                break;
+            case VIDEO:
+                type = "video";
+                break;
+            case DATA:
+                type = "application";
+                break;
+        }
+        json.put("type", type);
+
+        if (streamDescription.getCandidateCount() == 0) {
+            throw new IllegalArgumentException("stream description does not have any candidates: " + type);
+        }
+
+        json.put("port", streamDescription.getCandidate(0).getPort());
+
+        if (streamDescription.getStreamType() == StreamType.DATA) {
+            json.put("protocol", "DTLS/SCTP");
+        } else {
+            json.put("protocol", "RTP/SAVPF");
+        }
+        json.put("netType", "IN");
+        json.put("addressType", "IP4");
+        json.put("address", "0.0.0.0");
+        json.put("mode", streamDescription.getMode());
+        json.put("cname", streamDescription.getCname());
+        json.put("mediaStreamId", streamDescription.getMediaStreamId());
+        json.put("mediaStreamTrackId", streamDescription.getMediaStreamTrackId());
+
+        if (streamDescription.getStreamType() != StreamType.DATA) {
+            JSONArray payloads = new JSONArray();
+            for (int i = 0; i < streamDescription.getPayloadCount(); i++) {
+                RtcPayload payload = streamDescription.getPayload(i);
+                JSONObject jsonPayload = new JSONObject();
+
+                jsonPayload.put("type", payload.getPayloadType());
+                jsonPayload.put("encodingName", payload.getEncodingName());
+                jsonPayload.put("clockRate", payload.getClockRate());
+
+                if (payload.getParameters() != null) {
+                    JSONObject parameters = new JSONObject();
+                    for (Map.Entry<String, Object> parameter : payload.getParameters().entrySet()) {
+                        parameters.put(parameter.getKey(), parameter.getValue());
+                    }
+                    jsonPayload.put("parameters", parameters);
+                }
+
+                if (streamDescription.getStreamType() == StreamType.AUDIO) {
+                    jsonPayload.put("nack", payload.isNack());
+                    jsonPayload.put("nackpli", payload.isNackPli());
+                    jsonPayload.put("ccmfir", payload.isCcmFir());
+                } else {
+                    jsonPayload.put("channels", payload.getChannels());
+                }
+                payloads.put(jsonPayload);
+            }
+            json.put("payloads", payloads);
+        }
+
+        if (streamDescription.isRtcpMux()) {
+            JSONObject rtcp = new JSONObject();
+            rtcp.put("mux", true);
+            json.put("rtcp", rtcp);
+        }
+
+        if (streamDescription.getSsrcCount() > 0) {
+            JSONArray ssrcs = new JSONArray();
+            for (int i = 0; i < streamDescription.getSsrcCount(); i++) {
+                ssrcs.put(streamDescription.getSsrc(i));
+            }
+            json.put("ssrcs", ssrcs);
+        }
+
+        JSONObject ice = new JSONObject();
+        ice.put("ufrag", streamDescription.getUfrag());
+        ice.put("password", streamDescription.getPassword());
+
+        JSONArray candidates = new JSONArray();
+        for (int i = 0; i < streamDescription.getCandidateCount(); i++) {
+            candidates.put(candidateToJson(streamDescription.getCandidate(i)));
+        }
+        ice.put("candidates", candidates);
+
+        json.put("ice", ice);
+
+        JSONObject dtls = new JSONObject();
+        dtls.put("fingerprintHashFunction", streamDescription.getFingerprintHashFunction());
+        dtls.put("fingerprint", streamDescription.getFingerprint());
+        dtls.put("setup", streamDescription.getDtlsSetup());
+        json.put("dtls", dtls);
+
+        return json;
+    }
+
+    private static JSONObject candidateToJson(RtcCandidate candidate) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        switch (candidate.getType()) {
+            case HOST:
+                json.put("type", "host");
+                break;
+            case SERVER_REFLEXIVE:
+                json.put("type", "srflx");
+                break;
+            case PEER_REFLEXIVE:
+                json.put("type", "prflx");
+                break;
+            case RELAY:
+                json.put("type", "relay");
+                break;
+            default:
+                throw new IllegalArgumentException("invalid candidate type: " + candidate.getType());
+        }
+
+        switch (candidate.getTransportType()) {
+            case UDP:
+                json.put("transport", "UDP");
+                break;
+            case TCP_ACTIVE:
+                json.put("tcpType", "active");
+                json.put("transport", "TCP");
+                break;
+            case TCP_PASSIVE:
+                json.put("tcpType", "passive");
+                json.put("transport", "TCP");
+                break;
+            case TCP_SO:
+                json.put("tcpType", "so");
+                json.put("transport", "TCP");
+                break;
+            default:
+                throw new IllegalArgumentException("invalid transport type: " + candidate.getType());
+        }
+
+        json.put("foundation", candidate.getFoundation());
+        json.put("componentId", candidate.getComponentType().ordinal() + 1);
+        json.put("priority", candidate.getPriority());
+        json.put("address", candidate.getAddress());
+
+        int port = candidate.getPort();
+        json.put("port", port != 0 ? port : 9);
+
+        if (candidate.getType() != RtcCandidate.CandidateType.HOST) {
+            json.put("relatedAddress", candidate.getRelatedAddress());
+            int basePort = candidate.getRelatedPort();
+            json.put("relatedPort", basePort != 0 ? basePort : 9);
+        }
+
+        return json;
     }
 }
