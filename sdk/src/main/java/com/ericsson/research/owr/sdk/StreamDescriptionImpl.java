@@ -4,13 +4,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import android.util.Pair;
-
-import com.ericsson.research.owr.Candidate;
-import com.ericsson.research.owr.Payload;
-
 import java.util.List;
-import java.util.Map;
 
 class StreamDescriptionImpl implements StreamDescription {
     public static final String TAG = "StreamDescriptionImpl";

@@ -5,9 +5,7 @@
 package com.ericsson.research.owr.sdk;
 
 import android.test.AndroidTestCase;
-import android.util.Log;
 import android.util.SparseArray;
-import android.util.SparseIntArray;
 
 import org.json.JSONArray;
 import org.json.JSONException;
