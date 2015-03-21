@@ -86,7 +86,7 @@ class StreamDescriptionImpl implements StreamDescription {
 
     @Override
     public int getCandidateCount() {
-        return mCandidates.size();
+        return mCandidates == null ? 0 : mCandidates.size();
     }
 
     @Override
@@ -130,7 +130,7 @@ class StreamDescriptionImpl implements StreamDescription {
 
     @Override
     public int getSsrcCount() {
-        return mSsrcs.size();
+        return mSsrcs == null ? 0 : mSsrcs.size();
     }
 
     @Override
@@ -140,7 +140,7 @@ class StreamDescriptionImpl implements StreamDescription {
 
     @Override
     public int getPayloadCount() {
-        return mPayloads.size();
+        return mPayloads == null ? 0 : mPayloads.size();
     }
 
     @Override

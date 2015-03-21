@@ -375,7 +375,20 @@ public class SessionDescriptions {
         json.put("netType", "IN");
         json.put("addressType", "IP4");
         json.put("address", "0.0.0.0");
-        json.put("mode", streamDescription.getMode());
+        switch (streamDescription.getMode()) {
+            case SEND_RECEIVE:
+                json.put("mode", "sendrecv");
+                break;
+            case SEND_ONLY:
+                json.put("mode", "sendonly");
+                break;
+            case RECEIVE_ONLY:
+                json.put("mode", "recvonly");
+                break;
+            case INACTIVE:
+                json.put("mode", "inactive");
+                break;
+        }
         json.put("cname", streamDescription.getCname());
         json.put("mediaStreamId", streamDescription.getMediaStreamId());
         json.put("mediaStreamTrackId", streamDescription.getMediaStreamTrackId());
@@ -398,7 +411,7 @@ public class SessionDescriptions {
                     jsonPayload.put("parameters", parameters);
                 }
 
-                if (streamDescription.getStreamType() == StreamType.AUDIO) {
+                if (streamDescription.getStreamType() == StreamType.VIDEO) {
                     jsonPayload.put("nack", payload.isNack());
                     jsonPayload.put("nackpli", payload.isNackPli());
                     jsonPayload.put("ccmfir", payload.isCcmFir());
@@ -408,6 +421,12 @@ public class SessionDescriptions {
                 payloads.put(jsonPayload);
             }
             json.put("payloads", payloads);
+        } else {
+            JSONObject sctp = new JSONObject();
+            sctp.put("port", streamDescription.getSctpPort());
+            sctp.put("app", streamDescription.getAppLabel());
+            sctp.put("maxMessageSize", streamDescription.getMaxMessageSize());
+            json.put("sctp", sctp);
         }
 
         if (streamDescription.isRtcpMux()) {

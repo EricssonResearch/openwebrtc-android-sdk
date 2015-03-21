@@ -8,8 +8,13 @@ import android.test.AndroidTestCase;
 
 import com.ericsson.research.owr.Owr;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SessionDescriptionsTest extends AndroidTestCase {
     private SdpProcessor mSdpProcessor;
@@ -215,6 +220,120 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         mSdpProcessor = SdpProcessor.fromAssets(getContext().getAssets());
     }
 
+    public void testSessionDescription() throws JSONException, InvalidDescriptionException {
+        RtcCandidate candidate = new PlainRtcCandidate("4375",
+                RtcCandidate.ComponentType.RTP, RtcCandidate.TransportType.UDP,
+                23746, "12.34.56.78", 12345, RtcCandidate.CandidateType.HOST, null, -1);
+        RtcPayload payload1 = new PlainRtcPayload(101, "lolcode", 1337,
+                new HashMap<String, Object>(){{put("speed", "full");}}, 5, false, false, false);
+        RtcPayload payload2 = new PlainRtcPayload(102, "wpm8", 1337,
+                new HashMap<String, Object>(){{put("speed", "full");}}, -2, true, true, true);
+        StreamDescription stream1 = new StreamDescriptionImpl(
+                "audio1", StreamType.AUDIO, StreamMode.RECEIVE_ONLY, "admin", "qweasd",
+                Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
+                "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
+                Arrays.asList(837456324L), Arrays.asList(payload1));
+        StreamDescription stream2 = new StreamDescriptionImpl(
+                "video1", StreamType.VIDEO, StreamMode.SEND_ONLY, "admin", "qweasd",
+                Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
+                "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
+                Arrays.asList(837456324L), Arrays.asList(payload2));
+        StreamDescription stream3 = new StreamDescriptionImpl(
+                "data1", StreamType.DATA, StreamMode.SEND_RECEIVE, "admin", "qweasd",
+                Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
+                5000, 512, "webrtc-datachannel");
+        SessionDescription sessionDescription = new SessionDescriptionImpl(
+                SessionDescription.Type.OFFER, "123456789", Arrays.asList(stream1, stream2, stream3));
+        JSONObject jsep = SessionDescriptions.toJsep(sessionDescription, mSdpProcessor);
+        assertNotNull(jsep);
+        assertEquals("offer", jsep.getString("type"));
+        String sdp = jsep.getString("sdp");
+        assertNotNull(sdp);
+        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        assertNotNull(sdpJson);
+        assertEquals("123456789", sdpJson.getJSONObject("originator").getString("sessionId"));
+        JSONArray mediaDescriptions = sdpJson.getJSONArray("mediaDescriptions");
+        assertEquals(3, mediaDescriptions.length());
+        JSONObject mediaDesc1 = mediaDescriptions.getJSONObject(0);
+        JSONObject mediaDesc2 = mediaDescriptions.getJSONObject(1);
+        JSONObject mediaDesc3 = mediaDescriptions.getJSONObject(2);
+        assertEquals("audio", mediaDesc1.getString("type"));
+        assertEquals("video", mediaDesc2.getString("type"));
+        assertEquals("application", mediaDesc3.getString("type"));
+        assertNull(mediaDesc1.optString("mid", null));
+        assertNull(mediaDesc2.optString("mid", null));
+        assertNull(mediaDesc3.optString("mid", null));
+        assertEquals("recvonly", mediaDesc1.getString("mode"));
+        assertEquals("sendonly", mediaDesc2.getString("mode"));
+        assertEquals("sendrecv", mediaDesc3.getString("mode"));
+        assertEquals("admin", mediaDesc1.getJSONObject("ice").getString("ufrag"));
+        assertEquals("admin", mediaDesc2.getJSONObject("ice").getString("ufrag"));
+        assertEquals("admin", mediaDesc3.getJSONObject("ice").getString("ufrag"));
+        assertEquals("qweasd", mediaDesc1.getJSONObject("ice").getString("password"));
+        assertEquals("qweasd", mediaDesc2.getJSONObject("ice").getString("password"));
+        assertEquals("qweasd", mediaDesc3.getJSONObject("ice").getString("password"));
+        assertEquals("12:23:34:45:56:67:78:89:90", mediaDesc1.getJSONObject("dtls").getString("fingerprint"));
+        assertEquals("12:23:34:45:56:67:78:89:90", mediaDesc2.getJSONObject("dtls").getString("fingerprint"));
+        assertEquals("12:23:34:45:56:67:78:89:90", mediaDesc3.getJSONObject("dtls").getString("fingerprint"));
+        assertEquals("sha-256", mediaDesc1.getJSONObject("dtls").getString("fingerprintHashFunction"));
+        assertEquals("sha-256", mediaDesc2.getJSONObject("dtls").getString("fingerprintHashFunction"));
+        assertEquals("sha-256", mediaDesc3.getJSONObject("dtls").getString("fingerprintHashFunction"));
+        assertEquals("actpass", mediaDesc1.getJSONObject("dtls").getString("setup"));
+        assertEquals("actpass", mediaDesc2.getJSONObject("dtls").getString("setup"));
+        assertEquals("actpass", mediaDesc3.getJSONObject("dtls").getString("setup"));
+        assertEquals(1, mediaDesc1.getJSONObject("ice").getJSONArray("candidates").length());
+        assertEquals(1, mediaDesc2.getJSONObject("ice").getJSONArray("candidates").length());
+        assertEquals(1, mediaDesc3.getJSONObject("ice").getJSONArray("candidates").length());
+        JSONObject candidate1 = mediaDesc1.getJSONObject("ice").getJSONArray("candidates").getJSONObject(0);
+        JSONObject candidate2 = mediaDesc2.getJSONObject("ice").getJSONArray("candidates").getJSONObject(0);
+        JSONObject candidate3 = mediaDesc3.getJSONObject("ice").getJSONArray("candidates").getJSONObject(0);
+        assertEquals("4375", candidate1.getString("foundation"));
+        assertEquals("4375", candidate2.getString("foundation"));
+        assertEquals("4375", candidate3.getString("foundation"));
+        assertEquals("UDP", candidate1.getString("transport"));
+        assertEquals("UDP", candidate2.getString("transport"));
+        assertEquals("UDP", candidate3.getString("transport"));
+        assertEquals("host", candidate1.getString("type"));
+        assertEquals("host", candidate2.getString("type"));
+        assertEquals("host", candidate3.getString("type"));
+        assertEquals(1, candidate1.getInt("componentId"));
+        assertEquals(1, candidate2.getInt("componentId"));
+        assertEquals(1, candidate3.getInt("componentId"));
+        assertEquals("12.34.56.78", candidate1.getString("address"));
+        assertEquals("12.34.56.78", candidate2.getString("address"));
+        assertEquals("12.34.56.78", candidate3.getString("address"));
+        assertEquals(12345, candidate1.getInt("port"));
+        assertEquals(12345, candidate2.getInt("port"));
+        assertEquals(12345, candidate3.getInt("port"));
+        assertEquals(23746, candidate1.getInt("priority"));
+        assertEquals(23746, candidate2.getInt("priority"));
+        assertEquals(23746, candidate3.getInt("priority"));
+        JSONObject jsonPayload1 = mediaDesc1.getJSONArray("payloads").getJSONObject(0);
+        JSONObject jsonPayload2 = mediaDesc2.getJSONArray("payloads").getJSONObject(0);
+        assertEquals(101, jsonPayload1.getInt("type"));
+        assertEquals(102, jsonPayload2.getInt("type"));
+        assertEquals("lolcode", jsonPayload1.getString("encodingName"));
+        assertEquals("wpm8", jsonPayload2.getString("encodingName"));
+        assertEquals(1337, jsonPayload1.getInt("clockRate"));
+        assertEquals(1337, jsonPayload2.getInt("clockRate"));
+        assertEquals("full", jsonPayload1.getJSONObject("parameters").getString("speed"));
+        assertEquals("full", jsonPayload2.getJSONObject("parameters").getString("speed"));
+        assertEquals(5, jsonPayload1.getInt("channels"));
+        assertFalse(jsonPayload1.has("nack"));
+        assertFalse(jsonPayload1.has("nackpli"));
+        assertFalse(jsonPayload1.has("ccmfir"));
+        assertFalse(jsonPayload2.has("channels"));
+        assertTrue(jsonPayload2.getBoolean("nack"));
+        assertTrue(jsonPayload2.getBoolean("nackpli"));
+        assertTrue(jsonPayload2.getBoolean("ccmfir"));
+        assertEquals(512, mediaDesc3.getJSONObject("sctp").getInt("maxMessageSize"));
+        assertEquals("webrtc-datachannel", mediaDesc3.getJSONObject("sctp").getString("app"));
+        assertEquals(5000, mediaDesc3.getJSONObject("sctp").getInt("port"));
+
+        SessionDescription sameDesc = SessionDescriptions.fromJsep(jsep, mSdpProcessor);
+        assertNotNull(sameDesc);
+    }
+
     public void testSimpleOffer() throws JSONException, InvalidDescriptionException {
         JSONObject simpleOffer = new JSONObject(sSimpleOffer);
         SessionDescription offer = SessionDescriptions.fromJsep(simpleOffer, mSdpProcessor);
@@ -225,6 +344,14 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertFalse(offer.hasStreamType(StreamType.AUDIO));
         assertFalse(offer.hasStreamType(StreamType.VIDEO));
         assertFalse(offer.hasStreamType(StreamType.DATA));
+        JSONObject jsep = SessionDescriptions.toJsep(offer, mSdpProcessor);
+        assertNotNull(jsep);
+        assertEquals("offer", jsep.getString("type"));
+        String sdp = jsep.getString("sdp");
+        assertNotNull(sdp);
+        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        assertNotNull(sdpJson);
+        assertEquals("1426854267315236600", sdpJson.getJSONObject("originator").getString("sessionId"));
     }
 
     public void testSimpleAnswer() throws JSONException, InvalidDescriptionException {
@@ -237,6 +364,14 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertFalse(answer.hasStreamType(StreamType.AUDIO));
         assertFalse(answer.hasStreamType(StreamType.VIDEO));
         assertFalse(answer.hasStreamType(StreamType.DATA));
+        JSONObject jsep = SessionDescriptions.toJsep(answer, mSdpProcessor);
+        assertNotNull(jsep);
+        assertEquals("answer", jsep.getString("type"));
+        String sdp = jsep.getString("sdp");
+        assertNotNull(sdp);
+        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        assertNotNull(sdpJson);
+        assertEquals("1426854267315236600", sdpJson.getJSONObject("originator").getString("sessionId"));
     }
 
     public void testChromeOffer() throws JSONException, InvalidDescriptionException {
