@@ -25,6 +25,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import java.util.Collections;
 import java.util.List;
 
 class StreamDescriptionImpl implements StreamDescription {
@@ -57,7 +58,11 @@ class StreamDescriptionImpl implements StreamDescription {
         mMode = mode;
         mUfrag = ufrag;
         mPassword = password;
-        mCandidates = candidates;
+        if (candidates == null) {
+            mCandidates = Collections.emptyList();
+        } else {
+            mCandidates = Collections.unmodifiableList(candidates);
+        }
         mDtlsSetup = dtlsSetup;
         mFingerprint = fingerprint;
         mFingerprintHashFunction = fingerprintHashFunction;
@@ -65,8 +70,16 @@ class StreamDescriptionImpl implements StreamDescription {
         mMediaStreamTrackId = mediaStreamTrackId;
         mCname = cname;
         mRtcpMux = rtcpMux;
-        mSsrcs = ssrcs;
-        mPayloads = payloads;
+        if (ssrcs == null) {
+            mSsrcs = Collections.emptyList();
+        } else {
+            mSsrcs = Collections.unmodifiableList(ssrcs);
+        }
+        if (payloads == null) {
+            mPayloads = Collections.emptyList();
+        } else {
+            mPayloads = Collections.unmodifiableList(payloads);
+        }
         mSctpPort = sctpPort;
         mMaxMessageSize = maxMessageSize;
         mAppLabel = appLabel;
@@ -106,13 +119,8 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public int getCandidateCount() {
-        return mCandidates == null ? 0 : mCandidates.size();
-    }
-
-    @Override
-    public RtcCandidate getCandidate(final int index) {
-        return mCandidates.get(index);
+    public List<RtcCandidate> getCandidates() {
+        return mCandidates;
     }
 
     @Override
@@ -150,23 +158,13 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public int getSsrcCount() {
-        return mSsrcs == null ? 0 : mSsrcs.size();
+    public List<Long> getSsrcs() {
+        return mSsrcs;
     }
 
     @Override
-    public long getSsrc(final int index) {
-        return mSsrcs.get(index);
-    }
-
-    @Override
-    public int getPayloadCount() {
-        return mPayloads == null ? 0 : mPayloads.size();
-    }
-
-    @Override
-    public RtcPayload getPayload(int index) {
-        return mPayloads.get(index);
+    public List<RtcPayload> getPayloads() {
+        return mPayloads;
     }
 
     @Override

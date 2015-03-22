@@ -354,7 +354,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertNotNull(offer);
         assertEquals(SessionDescription.Type.OFFER, offer.getType());
         assertEquals("1426854267315236600", offer.getSessionId());
-        assertEquals(0, offer.getStreamDescriptionCount());
+        assertTrue(offer.getStreamDescriptions().isEmpty());
         assertFalse(offer.hasStreamType(StreamType.AUDIO));
         assertFalse(offer.hasStreamType(StreamType.VIDEO));
         assertFalse(offer.hasStreamType(StreamType.DATA));
@@ -374,7 +374,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertNotNull(answer);
         assertEquals(SessionDescription.Type.ANSWER, answer.getType());
         assertEquals("1426854267315236600", answer.getSessionId());
-        assertEquals(0, answer.getStreamDescriptionCount());
+        assertTrue(answer.getStreamDescriptions().isEmpty());
         assertFalse(answer.hasStreamType(StreamType.AUDIO));
         assertFalse(answer.hasStreamType(StreamType.VIDEO));
         assertFalse(answer.hasStreamType(StreamType.DATA));
@@ -394,9 +394,9 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertNotNull(desc);
         assertEquals("7407423127539558064", desc.getSessionId());
         assertEquals(SessionDescription.Type.OFFER, desc.getType());
-        assertEquals(2, desc.getStreamDescriptionCount());
+        assertEquals(2, desc.getStreamDescriptions().size());
 
-        StreamDescription audio = desc.getStreamDescriptionByIndex(0);
+        StreamDescription audio = desc.getStreamDescriptions().get(0);
 
         assertEquals(-1, audio.getMaxMessageSize());
         assertEquals(-1, audio.getSctpPort());
@@ -408,27 +408,27 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         String fingerprint = "A8:B1:8B:70:89:B2:56:10:98:87:4F:A2:4A:0D:FE:76:C6:5C:8D:9D:4F:0B:12:4C:DB:B0:FC:08:8E:FF:B5:43";
         assertEquals(fingerprint, audio.getFingerprint());
         assertEquals("KJgfgjRFHmkuBHKhgoIHPkGpBRzErIAU4qQ3", audio.getId());
-        assertEquals(4, audio.getCandidateCount());
-        assertEquals("4000241536", audio.getCandidate(0).getFoundation());
-        assertEquals(RtcCandidate.ComponentType.RTP, audio.getCandidate(0).getComponentType());
-        assertEquals(RtcCandidate.TransportType.UDP, audio.getCandidate(0).getTransportType());
-        assertEquals(2122260223, audio.getCandidate(0).getPriority());
-        assertEquals("129.192.20.149", audio.getCandidate(0).getAddress());
-        assertEquals(50238, audio.getCandidate(0).getPort());
-        assertEquals(RtcCandidate.CandidateType.HOST, audio.getCandidate(0).getType());
-        assertEquals("eNiJLDtGPTtx8J8b", audio.getCandidate(0).getUfrag());
-        assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getCandidate(0).getPassword());
+        assertEquals(4, audio.getCandidates().size());
+        assertEquals("4000241536", audio.getCandidates().get(0).getFoundation());
+        assertEquals(RtcCandidate.ComponentType.RTP, audio.getCandidates().get(0).getComponentType());
+        assertEquals(RtcCandidate.TransportType.UDP, audio.getCandidates().get(0).getTransportType());
+        assertEquals(2122260223, audio.getCandidates().get(0).getPriority());
+        assertEquals("129.192.20.149", audio.getCandidates().get(0).getAddress());
+        assertEquals(50238, audio.getCandidates().get(0).getPort());
+        assertEquals(RtcCandidate.CandidateType.HOST, audio.getCandidates().get(0).getType());
+        assertEquals("eNiJLDtGPTtx8J8b", audio.getCandidates().get(0).getUfrag());
+        assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getCandidates().get(0).getPassword());
         assertEquals(StreamMode.SEND_RECEIVE, audio.getMode());
         assertEquals("eNiJLDtGPTtx8J8b", audio.getUfrag());
         assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getPassword());
-        assertEquals(10, audio.getPayloadCount());
-        assertEquals("opus", audio.getPayload(0).getEncodingName());
-        assertEquals(111, audio.getPayload(0).getPayloadType());
-        assertEquals(48000, audio.getPayload(0).getClockRate());
-        assertEquals(2, audio.getPayload(0).getChannels());
-        assertEquals(10, audio.getPayload(0).getParameters().get("minptime"));
+        assertEquals(10, audio.getPayloads().size());
+        assertEquals("opus", audio.getPayloads().get(0).getEncodingName());
+        assertEquals(111, audio.getPayloads().get(0).getPayloadType());
+        assertEquals(48000, audio.getPayloads().get(0).getClockRate());
+        assertEquals(2, audio.getPayloads().get(0).getChannels());
+        assertEquals(10, audio.getPayloads().get(0).getParameters().get("minptime"));
         // the parameter isn't parsed properly
-        assertNull(audio.getPayload(0).getParameters().get("useinbandfec"));
+        assertNull(audio.getPayloads().get(0).getParameters().get("useinbandfec"));
     }
 
     public void testInvalidType() throws JSONException {

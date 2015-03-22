@@ -25,6 +25,8 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import java.util.List;
+
 /**
  * An interface for describing a stream that is a part of a rtc session
  */
@@ -39,9 +41,7 @@ public interface StreamDescription {
 
     public String getPassword();
 
-    public int getCandidateCount();
-
-    public RtcCandidate getCandidate(int index);
+    public List<RtcCandidate> getCandidates();
 
     public String getDtlsSetup();
 
@@ -58,13 +58,9 @@ public interface StreamDescription {
 
     public boolean isRtcpMux();
 
-    public int getSsrcCount();
+    public List<Long> getSsrcs();
 
-    public long getSsrc(int index);
-
-    public int getPayloadCount();
-
-    public RtcPayload getPayload(int index);
+    public List<RtcPayload> getPayloads();
 
     // data only
     public int getSctpPort();

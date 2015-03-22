@@ -355,8 +355,7 @@ public class SessionDescriptions {
         json.put("stopTime", 0);
 
         JSONArray streamDescriptions = new JSONArray();
-        for (int i = 0; i < sessionDescription.getStreamDescriptionCount(); i++) {
-            StreamDescription streamDescription = sessionDescription.getStreamDescriptionByIndex(i);
+        for (StreamDescription streamDescription : sessionDescription.getStreamDescriptions()) {
             streamDescriptions.put(streamDescriptionToOwrJson(streamDescription));
         }
 
@@ -382,11 +381,11 @@ public class SessionDescriptions {
         }
         json.put("type", type);
 
-        if (streamDescription.getCandidateCount() == 0) {
+        if (streamDescription.getCandidates().isEmpty()) {
             throw new IllegalArgumentException("stream description does not have any candidates: " + type);
         }
 
-        json.put("port", streamDescription.getCandidate(0).getPort());
+        json.put("port", streamDescription.getCandidates().get(0).getPort());
 
         if (streamDescription.getStreamType() == StreamType.DATA) {
             json.put("protocol", "DTLS/SCTP");
@@ -416,8 +415,7 @@ public class SessionDescriptions {
 
         if (streamDescription.getStreamType() != StreamType.DATA) {
             JSONArray payloads = new JSONArray();
-            for (int i = 0; i < streamDescription.getPayloadCount(); i++) {
-                RtcPayload payload = streamDescription.getPayload(i);
+            for (RtcPayload payload : streamDescription.getPayloads()) {
                 JSONObject jsonPayload = new JSONObject();
 
                 jsonPayload.put("type", payload.getPayloadType());
@@ -456,10 +454,10 @@ public class SessionDescriptions {
             json.put("rtcp", rtcp);
         }
 
-        if (streamDescription.getSsrcCount() > 0) {
+        if (!streamDescription.getSsrcs().isEmpty()) {
             JSONArray ssrcs = new JSONArray();
-            for (int i = 0; i < streamDescription.getSsrcCount(); i++) {
-                ssrcs.put(streamDescription.getSsrc(i));
+            for (long ssrc : streamDescription.getSsrcs()) {
+                ssrcs.put(ssrc);
             }
             json.put("ssrcs", ssrcs);
         }
@@ -469,8 +467,8 @@ public class SessionDescriptions {
         ice.put("password", streamDescription.getPassword());
 
         JSONArray candidates = new JSONArray();
-        for (int i = 0; i < streamDescription.getCandidateCount(); i++) {
-            candidates.put(candidateToJson(streamDescription.getCandidate(i)));
+        for (RtcCandidate candidate : streamDescription.getCandidates()) {
+            candidates.put(candidateToJson(candidate));
         }
         ice.put("candidates", candidates);
 
