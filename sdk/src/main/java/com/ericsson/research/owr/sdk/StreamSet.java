@@ -82,13 +82,13 @@ public abstract class StreamSet {
          * @return a media source matching the media type of the stream
          */
         abstract MediaSource getMediaSource();
-    }
 
-    /**
-     * Once the remote description is received it should be used for any further configuration.
-     * @param remoteDescription a SessionDescription received from the remote peer.
-     */
-    abstract void setRemoteDescription(SessionDescription remoteDescription);
+        /**
+         * Called once the final mode has been determined for the stream
+         * @param mode of the stream
+         */
+        abstract void setStreamMode(StreamDescription.Mode mode);
+    }
 
     /**
      * Implementations should return a list of streams that are sent and/or received.

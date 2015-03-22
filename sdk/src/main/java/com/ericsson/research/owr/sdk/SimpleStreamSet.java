@@ -105,11 +105,6 @@ public class SimpleStreamSet extends StreamSet {
     }
 
     @Override
-    void setRemoteDescription(SessionDescription remoteDescription) {
-
-    }
-
-    @Override
     List<Stream> getStreams() {
         return null;
     }
