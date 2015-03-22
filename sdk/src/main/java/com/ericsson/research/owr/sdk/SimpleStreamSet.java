@@ -32,7 +32,7 @@ import android.view.TextureView;
 import java.util.Collection;
 import java.util.List;
 
-public class SimpleRtcConfig extends RtcConfig {
+public class SimpleStreamSet extends StreamSet {
     /**
      * Creates a configuration for setting up a basic audio/video call.
      *
@@ -40,7 +40,7 @@ public class SimpleRtcConfig extends RtcConfig {
      * @param sendVideo true if video should be sent, video may still be received
      * @return a new RtcConfig with a simple audio/video call configuration
      */
-    public static RtcConfig defaultConfig(boolean sendAudio, boolean sendVideo) {
+    public static StreamSet defaultConfig(boolean sendAudio, boolean sendVideo) {
         return null;
     }
 
@@ -111,11 +111,6 @@ public class SimpleRtcConfig extends RtcConfig {
 
     @Override
     List<Stream> getStreams() {
-        return null;
-    }
-
-    @Override
-    Collection<HelperServer> getHelperServers() {
         return null;
     }
 }
