@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 public class SessionDescriptions {
-    public static final String TAG = "SessionDescriptions";
+    private static final String TAG = "SessionDescriptions";
 
     public static SessionDescription fromJsep(JSONObject json) throws InvalidDescriptionException {
         String type;
@@ -89,7 +89,7 @@ public class SessionDescriptions {
         if (mediaDescriptions.length() == 0) {
             Log.w(TAG, "media descriptions array is empty");
         }
-        ArrayList<StreamDescription> streamDescriptions = new ArrayList<StreamDescription>(mediaDescriptions.length());
+        ArrayList<StreamDescription> streamDescriptions = new ArrayList<>(mediaDescriptions.length());
 
         for (int i = 0; i < mediaDescriptions.length(); i++) {
             JSONObject mediaDescription = mediaDescriptions.optJSONObject(i);
@@ -129,14 +129,18 @@ public class SessionDescriptions {
         String appLabel;
 
         String type = json.getString("type");
-        if ("audio".equals(type)) {
-            streamType = StreamDescription.Type.AUDIO;
-        } else if ("video".equals(type)) {
-            streamType = StreamDescription.Type.VIDEO;
-        } else if ("application".equals(type)) {
-            streamType = StreamDescription.Type.DATA;
-        } else {
-            throw new InvalidDescriptionException("invalid type: " + type);
+        switch (type) {
+            case "audio":
+                streamType = StreamDescription.Type.AUDIO;
+                break;
+            case "video":
+                streamType = StreamDescription.Type.VIDEO;
+                break;
+            case "application":
+                streamType = StreamDescription.Type.DATA;
+                break;
+            default:
+                throw new InvalidDescriptionException("invalid type: " + type);
         }
 
         String modeString = json.optString("mode", null);
@@ -169,7 +173,7 @@ public class SessionDescriptions {
 
         JSONArray candidateArr = ice.optJSONArray("candidates");
         if (candidateArr != null) {
-            candidates = new ArrayList<RtcCandidate>(candidateArr.length());
+            candidates = new ArrayList<>(candidateArr.length());
 
             for (int i = 0; i < candidateArr.length(); i++) {
                 try {
@@ -199,14 +203,14 @@ public class SessionDescriptions {
 
             JSONArray ssrcArr = json.optJSONArray("ssrcs");
             if (ssrcArr != null) {
-                ssrcs = new ArrayList<Long>(ssrcArr.length());
+                ssrcs = new ArrayList<>(ssrcArr.length());
                 for (int i = 0; i < ssrcArr.length(); i++) {
                     ssrcs.add(ssrcArr.getLong(i));
                 }
             }
 
             JSONArray payloadArr = json.getJSONArray("payloads");
-            payloads = new ArrayList<RtcPayload>(payloadArr.length());
+            payloads = new ArrayList<>(payloadArr.length());
             for (int i = 0; i < payloadArr.length(); i++) {
                 JSONObject payload = payloadArr.getJSONObject(i);
                 String encodingName = "<unknown>";
@@ -235,7 +239,7 @@ public class SessionDescriptions {
             return null;
         }
 
-        Map<String, Object> parameters = new HashMap<String, Object>();
+        Map<String, Object> parameters = new HashMap<>();
 
         Iterator it = json.keys();
         while (it.hasNext()) {
@@ -260,16 +264,17 @@ public class SessionDescriptions {
     }
     private static RtcCandidate.CandidateType candidateTypeFromOwrJson(JSONObject json) throws JSONException {
         String type = json.getString("type");
-        if ("host".equals(type)) {
-            return RtcCandidate.CandidateType.HOST;
-        } else if ("srflx".equals(type)) {
-            return RtcCandidate.CandidateType.SERVER_REFLEXIVE;
-        } else if ("prflx".equals(type)) {
-            return RtcCandidate.CandidateType.PEER_REFLEXIVE;
-        } else if ("relay".equals(type)) {
-            return RtcCandidate.CandidateType.RELAY;
-        } else {
-            throw new JSONException("unknown candidate type: " + type);
+        switch (type) {
+            case "host":
+                return RtcCandidate.CandidateType.HOST;
+            case "srflx":
+                return RtcCandidate.CandidateType.SERVER_REFLEXIVE;
+            case "prflx":
+                return RtcCandidate.CandidateType.PEER_REFLEXIVE;
+            case "relay":
+                return RtcCandidate.CandidateType.RELAY;
+            default:
+                throw new JSONException("unknown candidate type: " + type);
         }
     }
 
@@ -287,21 +292,23 @@ public class SessionDescriptions {
 
     private static RtcCandidate.TransportType transportTypeFromOwrJson(JSONObject json) throws JSONException {
         String transportType = json.getString("transport");
-        if (transportType.equals("TCP")) {
-            String tcpType = json.getString("tcpType");
-            if ("active".equals(tcpType)) {
-                return RtcCandidate.TransportType.TCP_ACTIVE;
-            } else if ("passive".equals(tcpType)) {
-                return RtcCandidate.TransportType.TCP_PASSIVE;
-            } else if ("so".equals(tcpType)) {
-                return RtcCandidate.TransportType.TCP_SO;
-            } else {
-                throw new JSONException("unknown tcp type: " + tcpType);
-            }
-        } else if (transportType.equals("UDP")) {
-            return RtcCandidate.TransportType.UDP;
-        } else {
-            throw new JSONException("unknown transport type: " + transportType);
+        switch (transportType) {
+            case "TCP":
+                String tcpType = json.getString("tcpType");
+                switch (tcpType) {
+                    case "active":
+                        return RtcCandidate.TransportType.TCP_ACTIVE;
+                    case "passive":
+                        return RtcCandidate.TransportType.TCP_PASSIVE;
+                    case "so":
+                        return RtcCandidate.TransportType.TCP_SO;
+                    default:
+                        throw new JSONException("unknown tcp type: " + tcpType);
+                }
+            case "UDP":
+                return RtcCandidate.TransportType.UDP;
+            default:
+                throw new JSONException("unknown transport type: " + transportType);
         }
     }
 

@@ -341,7 +341,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertNotNull(jsonPayloads);
         assertEquals(payloads.length, jsonPayloads.length());
 
-        SparseArray<MediaPayload> payloadMap = new SparseArray<MediaPayload>();
+        SparseArray<MediaPayload> payloadMap = new SparseArray<>();
         for (MediaPayload payload : payloads) {
             payloadMap.put(payload.mPayloadType, payload);
         }
@@ -370,7 +370,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         }
         assertNotNull(jsonCandidates);
         assertEquals(candidates.length, jsonCandidates.length());
-        LinkedList<IceCandidate> remainingCandidates = new LinkedList<IceCandidate>(Arrays.asList(candidates));
+        LinkedList<IceCandidate> remainingCandidates = new LinkedList<>(Arrays.asList(candidates));
 
         for (int i = 0; i < jsonCandidates.length(); i++) {
             JSONObject jsonCandidate = jsonCandidates.optJSONObject(i);
@@ -415,7 +415,7 @@ public class SdpProcessorTest extends AndroidTestCase {
         private final String mFoundation;
         private final int mComponentId;
         private final String mTransport;
-        private long mPriority;
+        private final long mPriority;
         private final String mAddress;
         private final int mPort;
         private final String mRelatedAddress;

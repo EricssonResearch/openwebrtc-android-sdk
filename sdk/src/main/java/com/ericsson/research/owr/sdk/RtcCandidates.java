@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * An uninstantiable class that provides utility methods for RtcCandidate
  */
 public class RtcCandidates {
-    public static final String TAG = "RtcCandidates";
+    private static final String TAG = "RtcCandidates";
 
     private RtcCandidates(){}
 
@@ -171,24 +171,24 @@ public class RtcCandidates {
             "(1|2) " + // component
             "(UDP|TCP) " + // transport
             "([\\d\\.]*) " + // priority
-            "([\\d\\.a-f\\:]*) " + // address, ipv4 or ipv6
+            "([\\d\\.a-f:]*) " + // address, ipv4 or ipv6
             "(\\d*)" + // port
             " typ (host|srflx|prflx|relay)" + // type
-            "(?: raddr ([\\d\\.a-f\\:]*) rport (\\d*))?" + // reflexive address and port
+            "(?: raddr ([\\d\\.a-f:]*) rport (\\d*))?" + // reflexive address and port
             "(?: tcptype (active|passive|so))?.*" + // tcp type
             "(?:\\r\\n)?$"
     );
 
-    private static int PATTERN_GROUP_ATTRIBUTE_FOUNDATION = 1;
-    private static int PATTERN_GROUP_ATTRIBUTE_COMPONENT = 2;
-    private static int PATTERN_GROUP_ATTRIBUTE_TRANSPORT = 3;
-    private static int PATTERN_GROUP_ATTRIBUTE_PRIORITY = 4;
-    private static int PATTERN_GROUP_ATTRIBUTE_ADDRESS = 5;
-    private static int PATTERN_GROUP_ATTRIBUTE_PORT = 6;
-    private static int PATTERN_GROUP_ATTRIBUTE_TYPE = 7;
-    private static int PATTERN_GROUP_ATTRIBUTE_RELATED_ADDRESS = 8;
-    private static int PATTERN_GROUP_ATTRIBUTE_RELATED_PORT = 9;
-    private static int PATTERN_GROUP_ATTRIBUTE_TCP_TYPE = 10;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_FOUNDATION = 1;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_COMPONENT = 2;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_TRANSPORT = 3;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_PRIORITY = 4;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_ADDRESS = 5;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_PORT = 6;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_TYPE = 7;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_RELATED_ADDRESS = 8;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_RELATED_PORT = 9;
+    @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_TCP_TYPE = 10;
 
     /**
      * Parses an attribute line of the format "candidate:...." with an optional "a=" prefix
@@ -225,26 +225,39 @@ public class RtcCandidates {
             componentType = RtcCandidate.ComponentType.RTCP;
         }
 
-        if ("host".equals(type)) {
-            candidateType = RtcCandidate.CandidateType.HOST;
-        } else if ("srflx".equals(type)) {
-            candidateType = RtcCandidate.CandidateType.SERVER_REFLEXIVE;
-        } else if ("prflx".equals(type)) {
-            candidateType = RtcCandidate.CandidateType.PEER_REFLEXIVE;
-        } else {
-            candidateType = RtcCandidate.CandidateType.RELAY;
+        switch (type) {
+            case "host":
+                candidateType = RtcCandidate.CandidateType.HOST;
+                break;
+            case "srflx":
+                candidateType = RtcCandidate.CandidateType.SERVER_REFLEXIVE;
+                break;
+            case "prflx":
+                candidateType = RtcCandidate.CandidateType.PEER_REFLEXIVE;
+                break;
+            case "relay":
+                candidateType = RtcCandidate.CandidateType.RELAY;
+                break;
+            default:
+                return null;
         }
 
         if ("UDP".equals(transport)) {
             transportType = RtcCandidate.TransportType.UDP;
         } else {
             if (tcpType != null) {
-                if ("active".equals(tcpType)) {
-                    transportType = RtcCandidate.TransportType.TCP_ACTIVE;
-                } else if ("passive".equals(tcpType)) {
-                    transportType = RtcCandidate.TransportType.TCP_PASSIVE;
-                } else {
-                    transportType = RtcCandidate.TransportType.TCP_SO;
+                switch (tcpType) {
+                    case "active":
+                        transportType = RtcCandidate.TransportType.TCP_ACTIVE;
+                        break;
+                    case "passive":
+                        transportType = RtcCandidate.TransportType.TCP_PASSIVE;
+                        break;
+                    case "so":
+                        transportType = RtcCandidate.TransportType.TCP_SO;
+                        break;
+                    default:
+                        return null;
                 }
             } else if (port == 0 || port == 9) {
                 transportType = RtcCandidate.TransportType.TCP_ACTIVE;

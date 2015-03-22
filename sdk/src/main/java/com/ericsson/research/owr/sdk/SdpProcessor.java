@@ -35,7 +35,7 @@ import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
 class SdpProcessor {
-    public static final String TAG = "SdpProcessor";
+    private static final String TAG = "SdpProcessor";
 
     private static SdpProcessor sInstance = null;
 

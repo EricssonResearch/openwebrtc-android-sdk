@@ -28,19 +28,19 @@ package com.ericsson.research.owr.sdk;
 class PlainRtcCandidate implements RtcCandidate {
     public static String TAG = "PlainRtcCandidate";
 
-    public int mStreamIndex;
-    public String mStreamId;
-    public String mUfrag;
-    public String mPassword;
-    public String mFoundation;
-    public ComponentType mComponentType;
-    public TransportType mTransportType;
-    public int mPriority;
-    public String mAddress;
-    public int mPort;
-    public CandidateType mType;
-    public String mRelatedAddress;
-    public int mRelatedPort;
+    private int mStreamIndex;
+    private String mStreamId;
+    private String mUfrag;
+    private String mPassword;
+    private final String mFoundation;
+    private final ComponentType mComponentType;
+    private final TransportType mTransportType;
+    private final int mPriority;
+    private final String mAddress;
+    private final int mPort;
+    private final CandidateType mType;
+    private final String mRelatedAddress;
+    private final int mRelatedPort;
 
     PlainRtcCandidate(int streamIndex, String streamId, String ufrag, String password, String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
         mStreamIndex = streamIndex;

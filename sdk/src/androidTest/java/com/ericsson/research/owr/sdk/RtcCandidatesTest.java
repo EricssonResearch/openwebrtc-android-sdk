@@ -33,7 +33,7 @@ import org.json.JSONObject;
 public class RtcCandidatesTest extends TestCase {
     public static final String TAG = "RtcCandidatesTest";
 
-    private static String[] validAttributeLines = new String[] {
+    private static final String[] validAttributeLines = new String[] {
             "candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host\r\n",
             "candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host",
             "a=candidate:2 1 UDP 2130379007 172.20.10.2 51850 typ host\r\n",
@@ -48,7 +48,7 @@ public class RtcCandidatesTest extends TestCase {
             "a=candidate:11 2 UDP 100401150 192.36.158.14 61720 typ relay raddr 192.36.158.14 rport 61720\r\n"
     };
 
-    private static String[] invalidAttributeLines = new String[] {
+    private static final String[] invalidAttributeLines = new String[] {
             "andidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host",
             "candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host\r",
             "candidate:2 1 UDP 2130379007 172.20.10.2 51850 typ host\n",
@@ -89,7 +89,7 @@ public class RtcCandidatesTest extends TestCase {
     }
 
 
-    public static String[] validJsepJsons = new String[] {
+    private static String[] validJsepJsons = new String[] {
             "{\"sdpMid\":\"video\",\"sdpMLineIndex\":1,\"candidate\":\"candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host\"}",
             "{\"sdpMid\":null,\"sdpMLineIndex\":1,\"candidate\":\"candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host\"}",
             "{\"sdpMid\":\"video\",\"candidate\":\"candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host\"}",
