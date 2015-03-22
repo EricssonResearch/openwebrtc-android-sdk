@@ -38,11 +38,10 @@ public interface RtcSession {
 
     /**
      * Initiate the session and get ready to receive media and generate a SessionDescription for the other peer.
-     *
-     * @param config the configuration that should be used for the call
+     * @param streamSet the configuration that should be used for the call
      * @param callback a callback that is called with a SessionDescription that should be sent to the other peer.
      */
-    public void setup(RtcConfig config, SetupCompleteCallback callback);
+    public void setup(StreamSet streamSet, SetupCompleteCallback callback);
 
     /**
      * If the session is an outbound call, the answer needs to be provided once it's received from the other peer.
