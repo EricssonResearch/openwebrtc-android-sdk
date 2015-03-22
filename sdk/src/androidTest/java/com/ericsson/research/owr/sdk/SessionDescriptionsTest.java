@@ -17,7 +17,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class SessionDescriptionsTest extends AndroidTestCase {
-    private SdpProcessor mSdpProcessor;
 
     {
         Owr.init();
@@ -214,12 +213,6 @@ public class SessionDescriptionsTest extends AndroidTestCase {
             "a=setup:active\\r\\n" +
             "\",\"type\":\"answer\"}";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        mSdpProcessor = SdpProcessor.fromAssets(getContext().getAssets());
-    }
-
     public void testSessionDescription() throws JSONException, InvalidDescriptionException {
         RtcCandidate candidate = new PlainRtcCandidate("4375",
                 RtcCandidate.ComponentType.RTP, RtcCandidate.TransportType.UDP,
@@ -244,12 +237,12 @@ public class SessionDescriptionsTest extends AndroidTestCase {
                 5000, 512, "webrtc-datachannel");
         SessionDescription sessionDescription = new SessionDescriptionImpl(
                 SessionDescription.Type.OFFER, "123456789", Arrays.asList(stream1, stream2, stream3));
-        JSONObject jsep = SessionDescriptions.toJsep(sessionDescription, mSdpProcessor);
+        JSONObject jsep = SessionDescriptions.toJsep(sessionDescription);
         assertNotNull(jsep);
         assertEquals("offer", jsep.getString("type"));
         String sdp = jsep.getString("sdp");
         assertNotNull(sdp);
-        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        JSONObject sdpJson = SdpProcessor.sdpToJson(sdp);
         assertNotNull(sdpJson);
         assertEquals("123456789", sdpJson.getJSONObject("originator").getString("sessionId"));
         JSONArray mediaDescriptions = sdpJson.getJSONArray("mediaDescriptions");
@@ -330,13 +323,13 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals("webrtc-datachannel", mediaDesc3.getJSONObject("sctp").getString("app"));
         assertEquals(5000, mediaDesc3.getJSONObject("sctp").getInt("port"));
 
-        SessionDescription sameDesc = SessionDescriptions.fromJsep(jsep, mSdpProcessor);
+        SessionDescription sameDesc = SessionDescriptions.fromJsep(jsep);
         assertNotNull(sameDesc);
     }
 
     public void testSimpleOffer() throws JSONException, InvalidDescriptionException {
         JSONObject simpleOffer = new JSONObject(sSimpleOffer);
-        SessionDescription offer = SessionDescriptions.fromJsep(simpleOffer, mSdpProcessor);
+        SessionDescription offer = SessionDescriptions.fromJsep(simpleOffer);
         assertNotNull(offer);
         assertEquals(SessionDescription.Type.OFFER, offer.getType());
         assertEquals("1426854267315236600", offer.getSessionId());
@@ -344,19 +337,19 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertFalse(offer.hasStreamType(StreamType.AUDIO));
         assertFalse(offer.hasStreamType(StreamType.VIDEO));
         assertFalse(offer.hasStreamType(StreamType.DATA));
-        JSONObject jsep = SessionDescriptions.toJsep(offer, mSdpProcessor);
+        JSONObject jsep = SessionDescriptions.toJsep(offer);
         assertNotNull(jsep);
         assertEquals("offer", jsep.getString("type"));
         String sdp = jsep.getString("sdp");
         assertNotNull(sdp);
-        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        JSONObject sdpJson = SdpProcessor.sdpToJson(sdp);
         assertNotNull(sdpJson);
         assertEquals("1426854267315236600", sdpJson.getJSONObject("originator").getString("sessionId"));
     }
 
     public void testSimpleAnswer() throws JSONException, InvalidDescriptionException {
         JSONObject simpleAnswer = new JSONObject(sSimpleAnswer);
-        SessionDescription answer = SessionDescriptions.fromJsep(simpleAnswer, mSdpProcessor);
+        SessionDescription answer = SessionDescriptions.fromJsep(simpleAnswer);
         assertNotNull(answer);
         assertEquals(SessionDescription.Type.ANSWER, answer.getType());
         assertEquals("1426854267315236600", answer.getSessionId());
@@ -364,19 +357,19 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertFalse(answer.hasStreamType(StreamType.AUDIO));
         assertFalse(answer.hasStreamType(StreamType.VIDEO));
         assertFalse(answer.hasStreamType(StreamType.DATA));
-        JSONObject jsep = SessionDescriptions.toJsep(answer, mSdpProcessor);
+        JSONObject jsep = SessionDescriptions.toJsep(answer);
         assertNotNull(jsep);
         assertEquals("answer", jsep.getString("type"));
         String sdp = jsep.getString("sdp");
         assertNotNull(sdp);
-        JSONObject sdpJson = mSdpProcessor.sdpToJson(sdp);
+        JSONObject sdpJson = SdpProcessor.sdpToJson(sdp);
         assertNotNull(sdpJson);
         assertEquals("1426854267315236600", sdpJson.getJSONObject("originator").getString("sessionId"));
     }
 
     public void testChromeOffer() throws JSONException, InvalidDescriptionException {
         JSONObject json = new JSONObject(sChromeOffer);
-        SessionDescription desc = SessionDescriptions.fromJsep(json, mSdpProcessor);
+        SessionDescription desc = SessionDescriptions.fromJsep(json);
         assertNotNull(desc);
         assertEquals("7407423127539558064", desc.getSessionId());
         assertEquals(SessionDescription.Type.OFFER, desc.getType());
@@ -421,7 +414,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject json = new JSONObject(sInvalidType);
         assertNotNull(json);
         try {
-            SessionDescriptions.fromJsep(json, mSdpProcessor);
+            SessionDescriptions.fromJsep(json);
         } catch (InvalidDescriptionException e) {
             assertNull(e.getCause());
             return;
@@ -433,7 +426,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject json = new JSONObject(sMissingType);
         assertNotNull(json);
         try {
-            SessionDescriptions.fromJsep(json, mSdpProcessor);
+            SessionDescriptions.fromJsep(json);
         } catch (InvalidDescriptionException e) {
             assertTrue(e.getCause() instanceof JSONException);
             return;
@@ -445,7 +438,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject json = new JSONObject(sMissingSdp);
         assertNotNull(json);
         try {
-            SessionDescriptions.fromJsep(json, mSdpProcessor);
+            SessionDescriptions.fromJsep(json);
         } catch (InvalidDescriptionException e) {
             assertTrue(e.getCause() instanceof JSONException);
             return;
@@ -457,7 +450,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         JSONObject json = new JSONObject(sInvalidSdp);
         assertNotNull(json);
         try {
-            SessionDescriptions.fromJsep(json, mSdpProcessor);
+            SessionDescriptions.fromJsep(json);
         } catch (InvalidDescriptionException e) {
             assertTrue(e.getCause() instanceof JSONException);
             return;

@@ -19,7 +19,6 @@ import java.util.Map;
 public class SdpProcessorTest extends AndroidTestCase {
     public static final String TAG = "SdpUtilsTest";
 
-    private SdpProcessor mSdpProcessor;
     private static final String sFfSdp = "" +
             "v=0\r\n" +
             "o=Mozilla-SIPUA-35.0.1 1021 0 IN IP4 0.0.0.0\r\n" +
@@ -117,33 +116,27 @@ public class SdpProcessorTest extends AndroidTestCase {
             "a=sendrecv\r\n";
     private static final String sInvalidSdp = "y=application 0 NONE\r";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        mSdpProcessor = SdpProcessor.fromAssets(getContext().getAssets());
-    }
-
     public void testSimple() throws InvalidDescriptionException {
-        JSONObject json = mSdpProcessor.sdpToJson(sSimpleSdp);
+        JSONObject json = SdpProcessor.sdpToJson(sSimpleSdp);
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
         assertNotNull(mediaDescriptions);
         assertEquals(1, mediaDescriptions.length());
         assertEquals("application", mediaDescriptions.optJSONObject(0).optString("type"));
         assertEquals("0", mediaDescriptions.optJSONObject(0).optString("port"));
         assertEquals("NONE", mediaDescriptions.optJSONObject(0).optString("protocol"));
-        String sdp = mSdpProcessor.jsonToSdp(json);
+        String sdp = SdpProcessor.jsonToSdp(json);
         assertNotNull(sdp);
         assertEquals(sSimpleSdp, sdp);
     }
 
     public void testSimpleGen() throws InvalidDescriptionException, JSONException {
-        String sdp = mSdpProcessor.jsonToSdp(new JSONObject("{\"originator\":{\"sessionId\":123456789}}"));
+        String sdp = SdpProcessor.jsonToSdp(new JSONObject("{\"originator\":{\"sessionId\":123456789}}"));
         assertNotNull(sdp);
         assertEquals("v=0\r\no=- 123456789 1 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\n", sdp);
     }
 
     public void testInvalidSdp() throws InvalidDescriptionException {
-        JSONObject json = mSdpProcessor.sdpToJson(sInvalidSdp);
+        JSONObject json = SdpProcessor.sdpToJson(sInvalidSdp);
         assertNotNull(json);
         JSONArray mediaDescriptions = json.optJSONArray("mediaDescriptions");
         assertNotNull(mediaDescriptions);
@@ -151,8 +144,8 @@ public class SdpProcessorTest extends AndroidTestCase {
     }
 
     public void testDatachannelSdp() throws InvalidDescriptionException {
-        JSONObject json = mSdpProcessor.sdpToJson(sDcSdp);
-        assertNotNull(mSdpProcessor.jsonToSdp(json));
+        JSONObject json = SdpProcessor.sdpToJson(sDcSdp);
+        assertNotNull(SdpProcessor.jsonToSdp(json));
         assertEquals("0", json.optString("version"));
         assertEquals("0", json.optString("startTime"));
         assertEquals("-", json.optString("sessionName"));
@@ -181,8 +174,8 @@ public class SdpProcessorTest extends AndroidTestCase {
     }
 
     public void testFirefoxSdp() throws InvalidDescriptionException {
-        JSONObject json = mSdpProcessor.sdpToJson(sFfSdp);
-        assertNotNull(mSdpProcessor.jsonToSdp(json));
+        JSONObject json = SdpProcessor.sdpToJson(sFfSdp);
+        assertNotNull(SdpProcessor.jsonToSdp(json));
         assertEquals("0", json.optString("version"));
         assertEquals("0", json.optString("startTime"));
         assertEquals("SIP Call", json.optString("sessionName"));

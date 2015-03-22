@@ -19,7 +19,7 @@ import java.util.Map;
 public class SessionDescriptions {
     public static final String TAG = "SessionDescriptions";
 
-    public static SessionDescription fromJsep(JSONObject json, SdpProcessor sdpProcessor) throws InvalidDescriptionException {
+    public static SessionDescription fromJsep(JSONObject json) throws InvalidDescriptionException {
         String type;
         String sdpStr;
         try {
@@ -32,7 +32,7 @@ public class SessionDescriptions {
         } catch (JSONException e) {
             throw new InvalidDescriptionException("jsep message has no sdp", e);
         }
-        JSONObject sdp = sdpProcessor.sdpToJson(sdpStr);
+        JSONObject sdp = SdpProcessor.sdpToJson(sdpStr);
 
         SessionDescription.Type descriptionType;
         switch (type) {
@@ -284,7 +284,7 @@ public class SessionDescriptions {
         }
     }
 
-    public static JSONObject toJsep(SessionDescription sessionDescription, SdpProcessor sdpProcessor) {
+    public static JSONObject toJsep(SessionDescription sessionDescription) {
         JSONObject json = new JSONObject();
         String type;
         String sdpStr;
@@ -302,7 +302,7 @@ public class SessionDescriptions {
 
         try {
             JSONObject sdpJson = sessionDescriptionToOwrJson(sessionDescription);
-            sdpStr = sdpProcessor.jsonToSdp(sdpJson);
+            sdpStr = SdpProcessor.jsonToSdp(sdpJson);
         } catch (InvalidDescriptionException | JSONException e) {
             throw new IllegalArgumentException("json to sdp conversion failed: " + e.getMessage(), e);
         }
