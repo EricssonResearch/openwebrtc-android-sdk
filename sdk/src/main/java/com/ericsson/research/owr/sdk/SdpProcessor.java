@@ -34,7 +34,7 @@ import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
-public class SdpProcessor {
+class SdpProcessor {
     public static final String TAG = "SdpProcessor";
 
     private static SdpProcessor sInstance = null;
@@ -70,7 +70,7 @@ public class SdpProcessor {
         }
     }
 
-    public static JSONObject sdpToJson(String sdp) throws InvalidDescriptionException {
+    static JSONObject sdpToJson(String sdp) throws InvalidDescriptionException {
         synchronized (SdpProcessor.class) {
             if (sInstance == null) {
                 sInstance = new SdpProcessor();
@@ -96,7 +96,7 @@ public class SdpProcessor {
         return null;
     }
 
-    public static String jsonToSdp(JSONObject json) throws InvalidDescriptionException {
+    static String jsonToSdp(JSONObject json) throws InvalidDescriptionException {
         synchronized (SdpProcessor.class) {
             if (sInstance == null) {
                 sInstance = new SdpProcessor();
