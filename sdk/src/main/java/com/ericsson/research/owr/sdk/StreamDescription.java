@@ -33,9 +33,9 @@ import java.util.List;
 public interface StreamDescription {
     public String getId();
 
-    public StreamType getStreamType();
+    public Type getType();
 
-    public StreamMode getMode();
+    public Mode getMode();
 
     public String getUfrag();
 
@@ -68,4 +68,12 @@ public interface StreamDescription {
     public int getMaxMessageSize();
 
     public String getAppLabel();
+
+    public enum Type {
+        AUDIO, VIDEO, DATA
+    }
+
+    public enum Mode {
+        SEND_RECEIVE, SEND_ONLY, RECEIVE_ONLY, INACTIVE
+    }
 }

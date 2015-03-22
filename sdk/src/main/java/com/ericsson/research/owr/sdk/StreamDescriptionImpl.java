@@ -32,8 +32,8 @@ class StreamDescriptionImpl implements StreamDescription {
     public static final String TAG = "StreamDescriptionImpl";
 
     private final String mId;
-    private final StreamType mStreamType;
-    private final StreamMode mMode;
+    private final Type mType;
+    private final Mode mMode;
     private final String mUfrag;
     private final String mPassword;
     private final List<RtcCandidate> mCandidates;
@@ -52,9 +52,9 @@ class StreamDescriptionImpl implements StreamDescription {
     private final int mMaxMessageSize;
     private final String mAppLabel;
 
-    private StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
+    private StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
         mId = id;
-        mStreamType = streamType;
+        mType = streamType;
         mMode = mode;
         mUfrag = ufrag;
         mPassword = password;
@@ -85,11 +85,11 @@ class StreamDescriptionImpl implements StreamDescription {
         mAppLabel = appLabel;
     }
 
-    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
+    StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
         this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads, -1, -1, null);
     }
 
-    StreamDescriptionImpl(String id, StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
+    StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
         this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, null, null, false, null, null, sctpPort, maxMessageSize, appLabel);
     }
 
@@ -99,12 +99,12 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public StreamType getStreamType() {
-        return mStreamType;
+    public Type getType() {
+        return mType;
     }
 
     @Override
-    public StreamMode getMode() {
+    public Mode getMode() {
         return mMode;
     }
 

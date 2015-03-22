@@ -107,8 +107,8 @@ public class SessionDescriptions {
     }
 
     private static StreamDescription mediaDescriptionJsonToStreamDescription(JSONObject json, int index) throws JSONException, InvalidDescriptionException {
-        StreamType streamType;
-        StreamMode mode;
+        StreamDescription.Type streamType;
+        StreamDescription.Mode mode;
         String id;
         String ufrag;
         String password;
@@ -130,26 +130,26 @@ public class SessionDescriptions {
 
         String type = json.getString("type");
         if ("audio".equals(type)) {
-            streamType = StreamType.AUDIO;
+            streamType = StreamDescription.Type.AUDIO;
         } else if ("video".equals(type)) {
-            streamType = StreamType.VIDEO;
+            streamType = StreamDescription.Type.VIDEO;
         } else if ("application".equals(type)) {
-            streamType = StreamType.DATA;
+            streamType = StreamDescription.Type.DATA;
         } else {
             throw new InvalidDescriptionException("invalid type: " + type);
         }
 
         String modeString = json.optString("mode", null);
         if (modeString == null) {
-            mode = StreamMode.SEND_RECEIVE;
+            mode = StreamDescription.Mode.SEND_RECEIVE;
         } else if (modeString.equals("sendrecv")) {
-            mode = StreamMode.SEND_RECEIVE;
+            mode = StreamDescription.Mode.SEND_RECEIVE;
         } else if (modeString.equals("recvonly")) {
-            mode = StreamMode.RECEIVE_ONLY;
+            mode = StreamDescription.Mode.RECEIVE_ONLY;
         } else if (modeString.equals("sendonly")) {
-            mode = StreamMode.SEND_ONLY;
+            mode = StreamDescription.Mode.SEND_ONLY;
         } else if (modeString.equals("inactive")) {
-            mode = StreamMode.INACTIVE;
+            mode = StreamDescription.Mode.INACTIVE;
         } else {
             throw new InvalidDescriptionException(type + " has invalid mode: " + modeString);
         }
@@ -160,7 +160,7 @@ public class SessionDescriptions {
         ufrag = ice.getString("ufrag");
         password = ice.getString("password");
 
-        if (streamType == StreamType.DATA) {
+        if (streamType == StreamDescription.Type.DATA) {
             rtcpMux = false;
         } else {
             JSONObject rtcp = json.optJSONObject("rtcp");
@@ -185,7 +185,7 @@ public class SessionDescriptions {
         fingerprint = dtls.getString("fingerprint");
         dtlsSetup = dtls.getString("setup");
 
-        if (streamType == StreamType.DATA) {
+        if (streamType == StreamDescription.Type.DATA) {
             JSONObject sctp = json.getJSONObject("sctp");
             sctpPort = sctp.getInt("port");
             appLabel = sctp.getString("app");
@@ -368,7 +368,7 @@ public class SessionDescriptions {
         JSONObject json = new JSONObject();
         String type = "unknown";
 
-        switch (streamDescription.getStreamType()) {
+        switch (streamDescription.getType()) {
             case AUDIO:
                 type = "audio";
                 break;
@@ -387,7 +387,7 @@ public class SessionDescriptions {
 
         json.put("port", streamDescription.getCandidates().get(0).getPort());
 
-        if (streamDescription.getStreamType() == StreamType.DATA) {
+        if (streamDescription.getType() == StreamDescription.Type.DATA) {
             json.put("protocol", "DTLS/SCTP");
         } else {
             json.put("protocol", "RTP/SAVPF");
@@ -413,7 +413,7 @@ public class SessionDescriptions {
         json.put("mediaStreamId", streamDescription.getMediaStreamId());
         json.put("mediaStreamTrackId", streamDescription.getMediaStreamTrackId());
 
-        if (streamDescription.getStreamType() != StreamType.DATA) {
+        if (streamDescription.getType() != StreamDescription.Type.DATA) {
             JSONArray payloads = new JSONArray();
             for (RtcPayload payload : streamDescription.getPayloads()) {
                 JSONObject jsonPayload = new JSONObject();
@@ -430,7 +430,7 @@ public class SessionDescriptions {
                     jsonPayload.put("parameters", parameters);
                 }
 
-                if (streamDescription.getStreamType() == StreamType.VIDEO) {
+                if (streamDescription.getType() == StreamDescription.Type.VIDEO) {
                     jsonPayload.put("nack", payload.isNack());
                     jsonPayload.put("nackpli", payload.isNackPli());
                     jsonPayload.put("ccmfir", payload.isCcmFir());

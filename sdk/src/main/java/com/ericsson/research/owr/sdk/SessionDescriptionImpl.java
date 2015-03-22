@@ -61,9 +61,9 @@ class SessionDescriptionImpl implements SessionDescription {
     }
 
     @Override
-    public boolean hasStreamType(final StreamType streamType) {
+    public boolean hasStreamType(StreamDescription.Type streamType) {
         for (StreamDescription streamDescription : mStreamDescriptions) {
-            if (streamDescription.getStreamType() == streamType) {
+            if (streamDescription.getType() == streamType) {
                 return true;
             }
         }
