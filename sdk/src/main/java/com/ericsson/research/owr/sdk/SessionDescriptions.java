@@ -381,20 +381,12 @@ public class SessionDescriptions {
         }
         json.put("type", type);
 
-        if (streamDescription.getCandidates().isEmpty()) {
-            throw new IllegalArgumentException("stream description does not have any candidates: " + type);
-        }
-
-        json.put("port", streamDescription.getCandidates().get(0).getPort());
-
         if (streamDescription.getType() == StreamDescription.Type.DATA) {
             json.put("protocol", "DTLS/SCTP");
         } else {
             json.put("protocol", "RTP/SAVPF");
         }
-        json.put("netType", "IN");
-        json.put("addressType", "IP4");
-        json.put("address", "0.0.0.0");
+
         switch (streamDescription.getMode()) {
             case SEND_RECEIVE:
                 json.put("mode", "sendrecv");
