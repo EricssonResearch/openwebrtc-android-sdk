@@ -39,7 +39,13 @@ public abstract class StreamSet {
      * An interface that represents a single audio, video or data stream.
      * The stream interface Stream should not be implemented directly, but through the MediaStream and DataStream interfaces.
      */
-    interface Stream {}
+    interface Stream {
+        /**
+         * Called once the final mode has been determined for the stream
+         * @param mode of the stream
+         */
+        abstract void setStreamMode(StreamDescription.Mode mode);
+    }
 
     /**
      * An interface that represents a single audio or video stream.
@@ -85,12 +91,6 @@ public abstract class StreamSet {
          * @param mediaSourceDelegate the delegate to use to set the media source.
          */
         abstract void setMediaSourceDelegate(MediaSourceDelegate mediaSourceDelegate);
-
-        /**
-         * Called once the final mode has been determined for the stream
-         * @param mode of the stream
-         */
-        abstract void setStreamMode(StreamDescription.Mode mode);
     }
 
     /**
