@@ -94,6 +94,13 @@ public abstract class StreamSet {
     }
 
     /**
+     * An interface that represents a data stream.
+     */
+    abstract class DataStream implements Stream {
+        // TODO
+    }
+
+    /**
      * Implementations should return a list of streams that are sent and/or received.
      * The list needs to match any remote description that might have been set.
      * @return a list of streams
