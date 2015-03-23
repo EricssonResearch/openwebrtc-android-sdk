@@ -77,11 +77,14 @@ public abstract class StreamSet {
         abstract void onRemoteMediaSource(MediaSource mediaSource);
 
         /**
-         * Implementations should return the media source for the stream.
+         * Implementations should use the media source delegate to set the media source
+         * for the stream. The delegate can be called at any time, but may be ignored if
+         * the stream is not active. The most recent stream to be sent to the delegate
+         * is always the one that will be used.
          * The media source type type should be the same as the media type of the stream.
-         * @return a media source matching the media type of the stream
+         * @param mediaSourceDelegate the delegate to use to set the media source.
          */
-        abstract MediaSource getMediaSource();
+        abstract void setMediaSourceDelegate(MediaSourceDelegate mediaSourceDelegate);
 
         /**
          * Called once the final mode has been determined for the stream
@@ -96,4 +99,8 @@ public abstract class StreamSet {
      * @return a list of streams
      */
     abstract List<Stream> getStreams();
+
+    public interface MediaSourceDelegate {
+        public void setMediaSource(MediaSource mediaSource);
+    }
 }
