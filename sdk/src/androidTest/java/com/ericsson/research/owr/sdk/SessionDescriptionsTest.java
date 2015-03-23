@@ -241,18 +241,18 @@ public class SessionDescriptionsTest extends AndroidTestCase {
                 new HashMap<String, Object>(){{put("speed", "full");}}, 5, false, false, false);
         RtcPayload payload2 = new PlainRtcPayload(102, "wpm8", 1337,
                 new HashMap<String, Object>(){{put("speed", "full");}}, -2, true, true, true);
-        StreamDescription stream1 = new StreamDescriptionImpl(
-                "audio1", StreamDescription.Type.AUDIO, StreamDescription.Mode.RECEIVE_ONLY, "admin", "qweasd",
+        StreamDescription stream1 = new StreamDescriptionImpl(StreamDescription.Type.AUDIO,
+                StreamDescription.Mode.RECEIVE_ONLY, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
                 Arrays.asList(837456324L), Arrays.asList(payload1));
-        StreamDescription stream2 = new StreamDescriptionImpl(
-                "video1", StreamDescription.Type.VIDEO, StreamDescription.Mode.SEND_ONLY, "admin", "qweasd",
+        StreamDescription stream2 = new StreamDescriptionImpl(StreamDescription.Type.VIDEO,
+                StreamDescription.Mode.SEND_ONLY, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
                 Arrays.asList(837456324L), Arrays.asList(payload2));
-        StreamDescription stream3 = new StreamDescriptionImpl(
-                "data1", StreamDescription.Type.DATA, StreamDescription.Mode.SEND_RECEIVE, "admin", "qweasd",
+        StreamDescription stream3 = new StreamDescriptionImpl(StreamDescription.Type.DATA,
+                StreamDescription.Mode.SEND_RECEIVE, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 5000, 512, "webrtc-datachannel");
         SessionDescription sessionDescription = new SessionDescriptionImpl(
@@ -406,7 +406,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals("sha-256", audio.getFingerprintHashFunction());
         String fingerprint = "A8:B1:8B:70:89:B2:56:10:98:87:4F:A2:4A:0D:FE:76:C6:5C:8D:9D:4F:0B:12:4C:DB:B0:FC:08:8E:FF:B5:43";
         assertEquals(fingerprint, audio.getFingerprint());
-        assertEquals("KJgfgjRFHmkuBHKhgoIHPkGpBRzErIAU4qQ3", audio.getId());
+        assertEquals("KJgfgjRFHmkuBHKhgoIHPkGpBRzErIAU4qQ3", audio.getMediaStreamId());
         assertEquals(4, audio.getCandidates().size());
         assertEquals("4000241536", audio.getCandidates().get(0).getFoundation());
         assertEquals(RtcCandidate.ComponentType.RTP, audio.getCandidates().get(0).getComponentType());

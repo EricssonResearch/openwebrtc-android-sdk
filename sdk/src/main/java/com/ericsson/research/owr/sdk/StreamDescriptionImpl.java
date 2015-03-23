@@ -31,7 +31,6 @@ import java.util.List;
 class StreamDescriptionImpl implements StreamDescription {
     public static final String TAG = "StreamDescriptionImpl";
 
-    private final String mId;
     private final Type mType;
     private final Mode mMode;
     private final String mUfrag;
@@ -52,8 +51,7 @@ class StreamDescriptionImpl implements StreamDescription {
     private final int mMaxMessageSize;
     private final String mAppLabel;
 
-    private StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
-        mId = id;
+    private StreamDescriptionImpl(Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
         mType = streamType;
         mMode = mode;
         mUfrag = ufrag;
@@ -85,17 +83,12 @@ class StreamDescriptionImpl implements StreamDescription {
         mAppLabel = appLabel;
     }
 
-    StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
-        this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads, -1, -1, null);
+    StreamDescriptionImpl(Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
+        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads, -1, -1, null);
     }
 
-    StreamDescriptionImpl(String id, Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
-        this(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, null, null, false, null, null, sctpPort, maxMessageSize, appLabel);
-    }
-
-    @Override
-    public String getId() {
-        return mId;
+    StreamDescriptionImpl(Type streamType, Mode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
+        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, null, null, false, null, null, sctpPort, maxMessageSize, appLabel);
     }
 
     @Override

@@ -195,7 +195,7 @@ public class SessionDescriptions {
             appLabel = sctp.getString("app");
             maxMessageSize = sctp.getInt("maxMessageSize");
 
-            return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, sctpPort, maxMessageSize, appLabel);
+            return new StreamDescriptionImpl(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, sctpPort, maxMessageSize, appLabel);
         } else { // audio or video
             cname = json.optString("cname", null);
             mediaStreamId = json.optString("mediaStreamId", null);
@@ -230,7 +230,7 @@ public class SessionDescriptions {
                     Log.d(TAG, "ignoring payload \"" + encodingName + "\": " + e.getMessage());
                 }
             }
-            return new StreamDescriptionImpl(id, streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads);
+            return new StreamDescriptionImpl(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads);
         }
     }
 

@@ -31,8 +31,6 @@ import java.util.List;
  * An interface for describing a stream that is a part of a rtc session
  */
 public interface StreamDescription {
-    public String getId();
-
     public Type getType();
 
     public Mode getMode();
