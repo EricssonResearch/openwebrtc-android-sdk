@@ -102,7 +102,9 @@ public abstract class StreamSet {
 
     /**
      * Implementations should return a list of streams that are sent and/or received.
-     * The list needs to match any remote description that might have been set.
+     * The streams should be ordered in highest-to-lowest priority. If enough streams of a particular
+     * type are not received in the remote description, the excess streams will be invalidated, beginning
+     * at the end of the list.
      * @return a list of streams
      */
     abstract List<Stream> getStreams();
