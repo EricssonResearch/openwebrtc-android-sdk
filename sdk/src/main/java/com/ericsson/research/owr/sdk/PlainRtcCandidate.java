@@ -25,6 +25,8 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import com.ericsson.research.owr.Candidate;
+
 class PlainRtcCandidate implements RtcCandidate {
     public static String TAG = "PlainRtcCandidate";
 
@@ -138,5 +140,22 @@ class PlainRtcCandidate implements RtcCandidate {
     @Override
     public int getRelatedPort() {
         return mRelatedPort;
+    }
+
+    static PlainRtcCandidate fromOwrCandidate(Candidate candidate) {
+        return new PlainRtcCandidate(
+                -1, null,
+                candidate.getUfrag(),
+                candidate.getPassword(),
+                candidate.getFoundation(),
+                ComponentType.valueOf(candidate.getComponentType().name()),
+                TransportType.valueOf(candidate.getTransportType().name()),
+                candidate.getPriority(),
+                candidate.getAddress(),
+                candidate.getPort(),
+                CandidateType.valueOf(candidate.getType().name()),
+                candidate.getBaseAddress(),
+                candidate.getBasePort()
+        );
     }
 }

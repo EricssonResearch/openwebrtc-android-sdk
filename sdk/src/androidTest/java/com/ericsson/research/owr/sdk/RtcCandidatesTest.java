@@ -25,6 +25,11 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import com.ericsson.research.owr.Candidate;
+import com.ericsson.research.owr.CandidateType;
+import com.ericsson.research.owr.ComponentType;
+import com.ericsson.research.owr.TransportType;
+
 import junit.framework.TestCase;
 
 import org.json.JSONException;
@@ -149,5 +154,113 @@ public class RtcCandidatesTest extends TestCase {
         assertEquals(-1, backToJson[5].optInt("sdpMLineIndex", -1));
         assertEquals(-1, backToJson[6].optInt("sdpMLineIndex", -1));
         assertEquals(1, backToJson[7].optInt("sdpMLineIndex"));
+    }
+
+    public void testFromOwrCandidate() {
+        Candidate candidate = new Candidate(CandidateType.PEER_REFLEXIVE, ComponentType.RTP);
+        candidate.setUfrag("asd");
+        candidate.setPassword("123");
+        candidate.setFoundation("0");
+        candidate.setTransportType(TransportType.TCP_PASSIVE);
+        candidate.setPriority(5);
+        candidate.setAddress("1.2.3.4");
+        candidate.setPort(1234);
+        candidate.setBaseAddress("2.3.4.5");
+        candidate.setBasePort(2345);
+
+        RtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals("asd", rtcCandidate.getUfrag());
+        assertEquals("123", rtcCandidate.getPassword());
+        assertEquals("0", rtcCandidate.getFoundation());
+        assertEquals(RtcCandidate.ComponentType.RTP, rtcCandidate.getComponentType());
+        assertEquals(RtcCandidate.TransportType.TCP_PASSIVE, rtcCandidate.getTransportType());
+        assertEquals(5, rtcCandidate.getPriority());
+        assertEquals("1.2.3.4", rtcCandidate.getAddress());
+        assertEquals(1234, rtcCandidate.getPort());
+        assertEquals(RtcCandidate.CandidateType.PEER_REFLEXIVE, rtcCandidate.getType());
+        assertEquals("2.3.4.5", rtcCandidate.getRelatedAddress());
+        assertEquals(2345, rtcCandidate.getRelatedPort());
+
+        candidate.setTransportType(TransportType.TCP_ACTIVE);
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals(RtcCandidate.TransportType.TCP_ACTIVE, rtcCandidate.getTransportType());
+
+        candidate.setTransportType(TransportType.TCP_SO);
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals(RtcCandidate.TransportType.TCP_SO, rtcCandidate.getTransportType());
+
+        candidate.setTransportType(TransportType.UDP);
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals(RtcCandidate.TransportType.UDP, rtcCandidate.getTransportType());
+
+        candidate = new Candidate(CandidateType.HOST, ComponentType.RTCP);
+        candidate.setUfrag("asd");
+        candidate.setPassword("123");
+        candidate.setFoundation("0");
+        candidate.setTransportType(TransportType.UDP);
+        candidate.setPriority(5);
+        candidate.setAddress("1.2.3.4");
+        candidate.setPort(1234);
+
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals("asd", rtcCandidate.getUfrag());
+        assertEquals("123", rtcCandidate.getPassword());
+        assertEquals("0", rtcCandidate.getFoundation());
+        assertEquals(RtcCandidate.ComponentType.RTCP, rtcCandidate.getComponentType());
+        assertEquals(RtcCandidate.TransportType.UDP, rtcCandidate.getTransportType());
+        assertEquals(5, rtcCandidate.getPriority());
+        assertEquals("1.2.3.4", rtcCandidate.getAddress());
+        assertEquals(1234, rtcCandidate.getPort());
+        assertEquals(RtcCandidate.CandidateType.HOST, rtcCandidate.getType());
+
+
+        candidate = new Candidate(CandidateType.RELAY, ComponentType.RTP);
+        candidate.setUfrag("asd");
+        candidate.setPassword("123");
+        candidate.setFoundation("0");
+        candidate.setTransportType(TransportType.TCP_SO);
+        candidate.setPriority(5);
+        candidate.setAddress("1.2.3.4");
+        candidate.setPort(1234);
+        candidate.setBaseAddress("2.3.4.5");
+        candidate.setBasePort(2345);
+
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals("asd", rtcCandidate.getUfrag());
+        assertEquals("123", rtcCandidate.getPassword());
+        assertEquals("0", rtcCandidate.getFoundation());
+        assertEquals(RtcCandidate.ComponentType.RTP, rtcCandidate.getComponentType());
+        assertEquals(RtcCandidate.TransportType.TCP_SO, rtcCandidate.getTransportType());
+        assertEquals(5, rtcCandidate.getPriority());
+        assertEquals("1.2.3.4", rtcCandidate.getAddress());
+        assertEquals(1234, rtcCandidate.getPort());
+        assertEquals(RtcCandidate.CandidateType.RELAY, rtcCandidate.getType());
+        assertEquals("2.3.4.5", rtcCandidate.getRelatedAddress());
+        assertEquals(2345, rtcCandidate.getRelatedPort());
+
+
+        candidate = new Candidate(CandidateType.SERVER_REFLEXIVE, ComponentType.RTCP);
+        candidate.setUfrag("asd");
+        candidate.setPassword("123");
+        candidate.setFoundation("0");
+        candidate.setTransportType(TransportType.TCP_ACTIVE);
+        candidate.setPriority(5);
+        candidate.setAddress("1.2.3.4");
+        candidate.setPort(1234);
+        candidate.setBaseAddress("2.3.4.5");
+        candidate.setBasePort(2345);
+
+        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        assertEquals("asd", rtcCandidate.getUfrag());
+        assertEquals("123", rtcCandidate.getPassword());
+        assertEquals("0", rtcCandidate.getFoundation());
+        assertEquals(RtcCandidate.ComponentType.RTCP, rtcCandidate.getComponentType());
+        assertEquals(RtcCandidate.TransportType.TCP_ACTIVE, rtcCandidate.getTransportType());
+        assertEquals(5, rtcCandidate.getPriority());
+        assertEquals("1.2.3.4", rtcCandidate.getAddress());
+        assertEquals(1234, rtcCandidate.getPort());
+        assertEquals(RtcCandidate.CandidateType.SERVER_REFLEXIVE, rtcCandidate.getType());
+        assertEquals("2.3.4.5", rtcCandidate.getRelatedAddress());
+        assertEquals(2345, rtcCandidate.getRelatedPort());
     }
 }
