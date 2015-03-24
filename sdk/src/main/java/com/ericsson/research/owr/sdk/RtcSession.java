@@ -48,7 +48,7 @@ public interface RtcSession {
      *
      * @param remoteDescription the SessionDescription received form the other peer.
      */
-    public void provideAnswer(SessionDescription remoteDescription);
+    public void provideAnswer(SessionDescription remoteDescription) throws InvalidDescriptionException;
 
     /**
      * Add a RtcCandidate that is received form the other peer.
