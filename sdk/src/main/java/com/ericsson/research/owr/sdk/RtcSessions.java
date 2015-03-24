@@ -33,8 +33,4 @@ public class RtcSessions {
     public static RtcSession create(RtcConfig config) {
         return new RtcSessionImpl(config);
     }
-
-    public static RtcSession fromOffer(RtcConfig config, SessionDescription sessionDescription) {
-        return new RtcSessionImpl(config, sessionDescription);
-    }
 }

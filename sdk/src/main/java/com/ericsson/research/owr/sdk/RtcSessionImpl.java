@@ -48,14 +48,14 @@ class RtcSessionImpl implements RtcSession {
     private static final String TAG = "RtcSessionImpl";
 
     private enum State {
-        INITIALIZED, SETUP, AWAITING_ANSWER, ACTIVE, STOPPED
+        INIT, RECEIVED_OFFER, SETUP, AWAITING_ANSWER, ACTIVE, STOPPED
     }
 
     private static final String DEFAULT_HASH_FUNCTION = "sha-256";
 
-    private final TransportAgent mTransportAgent;
+    private TransportAgent mTransportAgent;
 
-    private final boolean mIsInitiator;
+    private boolean mIsInitiator;
     private final String mSessionId;
     private final RtcConfig mConfig;
 
@@ -69,31 +69,11 @@ class RtcSessionImpl implements RtcSession {
 
     private static Random sRandom = new Random();
 
-    private RtcSessionImpl(RtcConfig config, boolean isInitiator) {
-        mIsInitiator = isInitiator;
-        mTransportAgent = new TransportAgent(isInitiator);
+    RtcSessionImpl(RtcConfig config) {
         mSessionId = "" + (sRandom.nextLong() + new Date().getTime());
         mConfig = config;
-        mState = State.INITIALIZED;
-
-        for (RtcConfig.HelperServer helperServer : config.getHelperServers()) {
-            mTransportAgent.addHelperServer(
-                    helperServer.getType(),
-                    helperServer.getAddress(),
-                    helperServer.getPort(),
-                    helperServer.getUsername(),
-                    helperServer.getPassword()
-            );
-        }
-    }
-
-    RtcSessionImpl(RtcConfig config) {
-        this(config, false);
-    }
-
-    RtcSessionImpl(RtcConfig config, SessionDescription sessionDescription) {
-        this(config, true);
-        mRemoteDescription = sessionDescription;
+        mState = State.INIT;
+        mIsInitiator = true;
     }
 
     @Override
@@ -103,7 +83,7 @@ class RtcSessionImpl implements RtcSession {
 
     @Override
     public synchronized void setup(final StreamSet streamSet, final SetupCompleteCallback callback) {
-        if (mState != State.INITIALIZED) {
+        if (mState != State.INIT && mState != State.RECEIVED_OFFER) {
             throw new IllegalStateException("setup called at wrong state: " + mState.name());
         }
         if (streamSet == null) {
@@ -113,6 +93,18 @@ class RtcSessionImpl implements RtcSession {
             throw new NullPointerException("callback may not be null");
         }
         mSetupCompleteCallback = callback;
+
+        mTransportAgent = new TransportAgent(mIsInitiator);
+
+        for (RtcConfig.HelperServer helperServer : mConfig.getHelperServers()) {
+            mTransportAgent.addHelperServer(
+                    helperServer.getType(),
+                    helperServer.getAddress(),
+                    helperServer.getPort(),
+                    helperServer.getUsername(),
+                    helperServer.getPassword()
+            );
+        }
 
         mStreamHandlers = new LinkedList<>();
         if (mIsInitiator) {
@@ -170,6 +162,11 @@ class RtcSessionImpl implements RtcSession {
                 stream.setStreamMode(StreamMode.INACTIVE);
             }
         }
+        for (StreamHandler handler : mStreamHandlers) {
+            if (handler.getSession() != null) {
+                mTransportAgent.addSession(handler.getSession());
+            }
+        }
         mState = State.SETUP;
 
         if (mRemoteCandidateBuffer != null) {
@@ -218,15 +215,24 @@ class RtcSessionImpl implements RtcSession {
     }
 
     @Override
-    public synchronized void provideAnswer(final SessionDescription remoteDescription) throws InvalidDescriptionException {
-        if (mState != State.AWAITING_ANSWER) {
-            throw new IllegalStateException("provideAnswer called at wrong state: " + mState.name());
-        }
-        if (!mIsInitiator) {
-            throw new IllegalStateException("answer should only be provided when initiating");
+    public synchronized void setRemoteDescription(final SessionDescription remoteDescription) throws InvalidDescriptionException {
+        if (mState != State.AWAITING_ANSWER && mState != State.INIT) {
+            throw new IllegalStateException("setRemoteDescription called at wrong state: " + mState.name());
         }
         if (mRemoteDescription != null) {
             throw new IllegalStateException("answer has already been set");
+        }
+        if (remoteDescription == null) {
+            throw new NullPointerException("remote description should not be null");
+        }
+        if (mState == State.INIT) {
+            mRemoteDescription = remoteDescription;
+            mIsInitiator = false;
+            mState = State.RECEIVED_OFFER;
+            return;
+        }
+        if (!mIsInitiator) {
+            throw new IllegalStateException("answer should only be provided when initiating");
         }
         if (mSetupCompleteCallback != null) {
             throw new IllegalStateException("tried to set answer during setup");
@@ -257,7 +263,7 @@ class RtcSessionImpl implements RtcSession {
     public synchronized void addRemoteCandidate(final RtcCandidate candidate) {
         if (mState == State.STOPPED) {
             return;
-        } else if (mState == State.INITIALIZED) {
+        } else if (mState == State.INIT || mState == State.RECEIVED_OFFER) {
             if (mRemoteCandidateBuffer == null) {
                 mRemoteCandidateBuffer = new LinkedList<>();
             }

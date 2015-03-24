@@ -44,11 +44,12 @@ public interface RtcSession {
     public void setup(StreamSet streamSet, SetupCompleteCallback callback);
 
     /**
-     * If the session is an outbound call, the answer needs to be provided once it's received from the other peer.
+     * Sets the remote description of the session. This method should only be called once, and only after
+     * setup has been called for outbound calls, and before setup for inbound calls.
      *
      * @param remoteDescription the SessionDescription received form the other peer.
      */
-    public void provideAnswer(SessionDescription remoteDescription) throws InvalidDescriptionException;
+    public void setRemoteDescription(SessionDescription remoteDescription) throws InvalidDescriptionException;
 
     /**
      * Add a RtcCandidate that is received form the other peer.
