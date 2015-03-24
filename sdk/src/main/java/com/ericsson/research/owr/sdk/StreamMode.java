@@ -35,11 +35,23 @@ public enum StreamMode {
         mReceive = receive;
     }
 
-    public boolean isReceive() {
+    public boolean wantReceive() {
         return mReceive;
     }
 
-    public boolean isSend() {
+    public boolean wantSend() {
         return mSend;
+    }
+
+    public static StreamMode get(boolean wantSend, boolean wantReceive) {
+        if (wantSend && wantReceive) {
+           return SEND_RECEIVE;
+        } else if (wantSend) {
+           return SEND_ONLY;
+        } else if (wantReceive) {
+           return RECEIVE_ONLY;
+        } else {
+           return INACTIVE;
+        }
     }
 }

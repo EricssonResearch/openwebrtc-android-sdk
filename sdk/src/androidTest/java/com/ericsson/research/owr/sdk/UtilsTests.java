@@ -271,4 +271,11 @@ public class UtilsTests extends TestCase {
             }
         }
     }
+
+    public void testStreamMode() {
+        assertSame(StreamMode.SEND_RECEIVE, StreamMode.get(true, true));
+        assertSame(StreamMode.SEND_ONLY, StreamMode.get(true, false));
+        assertSame(StreamMode.RECEIVE_ONLY, StreamMode.get(false, true));
+        assertSame(StreamMode.INACTIVE, StreamMode.get(false, false));
+    }
 }
