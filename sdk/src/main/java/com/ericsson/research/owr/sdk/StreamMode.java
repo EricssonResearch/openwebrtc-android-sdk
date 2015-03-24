@@ -26,5 +26,20 @@
 package com.ericsson.research.owr.sdk;
 
 public enum StreamMode {
-    SEND_RECEIVE, SEND_ONLY, RECEIVE_ONLY, INACTIVE
+    SEND_RECEIVE(true, true), SEND_ONLY(true, false), RECEIVE_ONLY(false, true), INACTIVE(false, false);
+    private final boolean mReceive;
+    private final boolean mSend;
+
+    private StreamMode(boolean send, boolean receive) {
+        mSend = send;
+        mReceive = receive;
+    }
+
+    public boolean isReceive() {
+        return mReceive;
+    }
+
+    public boolean isSend() {
+        return mSend;
+    }
 }
