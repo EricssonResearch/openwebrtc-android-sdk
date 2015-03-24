@@ -35,6 +35,7 @@ import com.ericsson.research.owr.VideoPayload;
 
 import junit.framework.TestCase;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -229,5 +230,45 @@ public class UtilsTests extends TestCase {
         assertEquals(false, intersection5.get(0).isNack());
         assertEquals(false, intersection5.get(0).isNackPli());
         assertEquals(false, intersection5.get(0).isCcmFir());
+    }
+
+    private static String sFingerprint = "55:20:0F:C6:8D:99:19:A2:09:AF:F3:64:C9:43:53:B6:C8:E0:C7:C9:B6:20:B7:91:11:E9:8B:77:57:D6:43:9B";
+    private static String sFingerprintHashFunction = "sha-256";
+    private static String sPem = "-----BEGIN CERTIFICATE-----\n" +
+            "MIIBmTCCAQKgAwIBAgIEf/zbODANBgkqhkiG9w0BAQsFADARMQ8wDQYDVQQDDAZX\n" +
+            "ZWJSVEMwHhcNMTUwMzIzMTA1NzQxWhcNMTUwNDIyMTA1NzQxWjARMQ8wDQYDVQQD\n" +
+            "DAZXZWJSVEMwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGBAMJ4CHcE8NNCWIMO\n" +
+            "uWs1wF79LJ46kfLZzNzCWaGzc0PdCo8pdjfS1cWvnleXdNaIg8qpLqW9C71Jx3A5\n" +
+            "gx2HUCDopX/TOslhVk5OnjSknTPR5qq3JhF/s+/qxFkd0y3sbAVUTocQ0uiAb+eK\n" +
+            "zzY8x8rvw6ge5A7/hCA2i3fXdaHxAgMBAAEwDQYJKoZIhvcNAQELBQADgYEApknp\n" +
+            "WGIXxUMaTQq/ULCJhPXzB+a7eBZtOL8xbe5OiHfD+lJxvifh9pZXH6n6yw+IkcxY\n" +
+            "IHiheIjRdcEngg1K7RAZf2dg2utWPj6U3KrZ6vlqU1EYsb/26zV4DZUjtfS5iQJL\n" +
+            "HGZ/v03ZrrOkJCrWC1ISmDDJcONRiZcpMV2V3mI=\n" +
+            "-----END CERTIFICATE-----";
+
+    public void testRandomString() {
+        for (int i = 0; i < 10; i++) {
+            String str = Utils.randomString(i);
+            assertEquals(str, i, str.length());
+        }
+    }
+
+    public void testFingerprint() {
+        String fingerprint = Utils.fingerprintFromPem(sPem, sFingerprintHashFunction);
+        assertEquals(sFingerprint, fingerprint);
+        fingerprint = Utils.fingerprintFromPem(sPem + "\n", sFingerprintHashFunction);
+        assertEquals(sFingerprint, fingerprint);
+        fingerprint = Utils.fingerprintFromPem(sPem + "\n\n", sFingerprintHashFunction);
+        assertEquals(sFingerprint, fingerprint);
+        String fingerprintInvalidPem = Utils.fingerprintFromPem("derp derp", sFingerprintHashFunction);
+        assertNull(fingerprintInvalidPem);
+        try {
+            Utils.fingerprintFromPem(sPem, "coolcrypt-2000");
+            throw new RuntimeException("should not be reached");
+        } catch (RuntimeException e) {
+            if (!(e.getCause() instanceof NoSuchAlgorithmException)) {
+                throw new RuntimeException("invalid exception", e);
+            }
+        }
     }
 }

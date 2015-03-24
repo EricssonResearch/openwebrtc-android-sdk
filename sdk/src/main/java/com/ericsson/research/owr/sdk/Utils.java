@@ -25,20 +25,32 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.util.Base64;
 import android.util.Log;
 
 import com.ericsson.research.owr.AudioPayload;
 import com.ericsson.research.owr.CodecType;
 import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.Owr;
 import com.ericsson.research.owr.Payload;
 import com.ericsson.research.owr.VideoPayload;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 class Utils {
     private static final String TAG = "Utils";
+
+    static {
+        Owr.init();
+    }
 
     static List<Payload> transformPayloads(List<RtcPayload> payloads, MediaType mediaType) {
         if (payloads == null) {
@@ -172,5 +184,49 @@ class Utils {
             }
         }
         return result;
+    }
+
+
+    private static final Random sRandom = new Random();
+
+    static String randomString(int length) {
+        byte[] randomBytes = new byte[(int) Math.ceil(length * 3.0 / 4.0)];
+        sRandom.nextBytes(randomBytes);
+        return new String(Base64.encode(randomBytes, Base64.NO_WRAP | Base64.NO_PADDING)).substring(0, length);
+    }
+
+    private static final Pattern sPemPattern = Pattern.compile(
+            ".*-----BEGIN CERTIFICATE-----(.*)-----END CERTIFICATE-----.*",
+            Pattern.DOTALL
+    );
+
+    static String fingerprintFromPem(String pem, String hashFunction) {
+        Matcher matcher = sPemPattern.matcher(pem);
+        if (!matcher.matches()) {
+            return null;
+        }
+        String base64der = matcher.replaceFirst("$1").replaceAll("\r?\n", "");
+        try {
+            byte[] der = Base64.decode(base64der.getBytes("UTF8"), Base64.NO_WRAP | Base64.NO_PADDING | Base64.CRLF);
+            if (der != null) {
+                MessageDigest digest = MessageDigest.getInstance(hashFunction.toUpperCase());
+                byte[] derHash = digest.digest(der);
+
+                StringBuilder fingerprintBuilder = new StringBuilder(derHash.length * 3 - 1);
+                for (int i = 0; i < derHash.length; i++) {
+                    if (i > 0) {
+                        fingerprintBuilder.append(':');
+                    }
+                    fingerprintBuilder.append(Character.forDigit((derHash[i] >> 4) & 0xF, 16));
+                    fingerprintBuilder.append(Character.forDigit(derHash[i] & 0xF, 16));
+                }
+
+                return fingerprintBuilder.toString().toUpperCase();
+            }
+            return null;
+        } catch (NoSuchAlgorithmException | UnsupportedEncodingException exception) {
+            Log.e(TAG, "failed to parse pem certificate: " + exception);
+            throw new RuntimeException(exception);
+        }
     }
 }
