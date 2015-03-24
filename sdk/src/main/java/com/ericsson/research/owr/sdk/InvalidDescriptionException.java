@@ -25,7 +25,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
-public class InvalidDescriptionException extends Exception {
+public class InvalidDescriptionException extends RuntimeException {
     public InvalidDescriptionException(final String detailMessage) {
         super(detailMessage);
     }
