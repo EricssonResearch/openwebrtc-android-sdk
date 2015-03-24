@@ -50,7 +50,7 @@ public interface SessionDescription {
      * @param streamType a stream type
      * @return true if the session description contains a stream of type streamType, false otherwise
      */
-    public boolean hasStreamType(StreamDescription.Type streamType);
+    public boolean hasStreamType(StreamType streamType);
 
     public enum Type {
         OFFER, ANSWER

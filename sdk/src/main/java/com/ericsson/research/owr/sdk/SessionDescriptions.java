@@ -107,8 +107,8 @@ public class SessionDescriptions {
     }
 
     private static StreamDescription mediaDescriptionJsonToStreamDescription(JSONObject json, int index) throws JSONException, InvalidDescriptionException {
-        StreamDescription.Type streamType;
-        StreamDescription.Mode mode;
+        StreamType streamType;
+        StreamMode mode;
         String id;
         String ufrag;
         String password;
@@ -131,13 +131,13 @@ public class SessionDescriptions {
         String type = json.getString("type");
         switch (type) {
             case "audio":
-                streamType = StreamDescription.Type.AUDIO;
+                streamType = StreamType.AUDIO;
                 break;
             case "video":
-                streamType = StreamDescription.Type.VIDEO;
+                streamType = StreamType.VIDEO;
                 break;
             case "application":
-                streamType = StreamDescription.Type.DATA;
+                streamType = StreamType.DATA;
                 break;
             default:
                 throw new InvalidDescriptionException("invalid type: " + type);
@@ -145,15 +145,15 @@ public class SessionDescriptions {
 
         String modeString = json.optString("mode", null);
         if (modeString == null) {
-            mode = StreamDescription.Mode.SEND_RECEIVE;
+            mode = StreamMode.SEND_RECEIVE;
         } else if (modeString.equals("sendrecv")) {
-            mode = StreamDescription.Mode.SEND_RECEIVE;
+            mode = StreamMode.SEND_RECEIVE;
         } else if (modeString.equals("recvonly")) {
-            mode = StreamDescription.Mode.RECEIVE_ONLY;
+            mode = StreamMode.RECEIVE_ONLY;
         } else if (modeString.equals("sendonly")) {
-            mode = StreamDescription.Mode.SEND_ONLY;
+            mode = StreamMode.SEND_ONLY;
         } else if (modeString.equals("inactive")) {
-            mode = StreamDescription.Mode.INACTIVE;
+            mode = StreamMode.INACTIVE;
         } else {
             throw new InvalidDescriptionException(type + " has invalid mode: " + modeString);
         }
@@ -164,7 +164,7 @@ public class SessionDescriptions {
         ufrag = ice.getString("ufrag");
         password = ice.getString("password");
 
-        if (streamType == StreamDescription.Type.DATA) {
+        if (streamType == StreamType.DATA) {
             rtcpMux = false;
         } else {
             JSONObject rtcp = json.optJSONObject("rtcp");
@@ -189,7 +189,7 @@ public class SessionDescriptions {
         fingerprint = dtls.getString("fingerprint");
         dtlsSetup = dtls.getString("setup");
 
-        if (streamType == StreamDescription.Type.DATA) {
+        if (streamType == StreamType.DATA) {
             JSONObject sctp = json.getJSONObject("sctp");
             sctpPort = sctp.getInt("port");
             appLabel = sctp.getString("app");
@@ -388,7 +388,7 @@ public class SessionDescriptions {
         }
         json.put("type", type);
 
-        if (streamDescription.getType() == StreamDescription.Type.DATA) {
+        if (streamDescription.getType() == StreamType.DATA) {
             json.put("protocol", "DTLS/SCTP");
         } else {
             json.put("protocol", "RTP/SAVPF");
@@ -412,7 +412,7 @@ public class SessionDescriptions {
         json.put("mediaStreamId", streamDescription.getMediaStreamId());
         json.put("mediaStreamTrackId", streamDescription.getMediaStreamTrackId());
 
-        if (streamDescription.getType() != StreamDescription.Type.DATA) {
+        if (streamDescription.getType() != StreamType.DATA) {
             JSONArray payloads = new JSONArray();
             for (RtcPayload payload : streamDescription.getPayloads()) {
                 JSONObject jsonPayload = new JSONObject();
@@ -429,7 +429,7 @@ public class SessionDescriptions {
                     jsonPayload.put("parameters", parameters);
                 }
 
-                if (streamDescription.getType() == StreamDescription.Type.VIDEO) {
+                if (streamDescription.getType() == StreamType.VIDEO) {
                     jsonPayload.put("nack", payload.isNack());
                     jsonPayload.put("nackpli", payload.isNackPli());
                     jsonPayload.put("ccmfir", payload.isCcmFir());

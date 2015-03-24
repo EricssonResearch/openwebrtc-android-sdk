@@ -241,18 +241,18 @@ public class SessionDescriptionsTest extends AndroidTestCase {
                 new HashMap<String, Object>(){{put("speed", "full");}}, 5, false, false, false);
         RtcPayload payload2 = new PlainRtcPayload(102, "wpm8", 1337,
                 new HashMap<String, Object>(){{put("speed", "full");}}, -2, true, true, true);
-        StreamDescription stream1 = new StreamDescriptionImpl(StreamDescription.Type.AUDIO,
-                StreamDescription.Mode.RECEIVE_ONLY, "admin", "qweasd",
+        StreamDescription stream1 = new StreamDescriptionImpl(StreamType.AUDIO,
+                StreamMode.RECEIVE_ONLY, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
                 Arrays.asList(837456324L), Arrays.asList(payload1));
-        StreamDescription stream2 = new StreamDescriptionImpl(StreamDescription.Type.VIDEO,
-                StreamDescription.Mode.SEND_ONLY, "admin", "qweasd",
+        StreamDescription stream2 = new StreamDescriptionImpl(StreamType.VIDEO,
+                StreamMode.SEND_ONLY, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 "userycnfseuirymc", "mlsieudhsleiurm", "assdfg", true,
                 Arrays.asList(837456324L), Arrays.asList(payload2));
-        StreamDescription stream3 = new StreamDescriptionImpl(StreamDescription.Type.DATA,
-                StreamDescription.Mode.SEND_RECEIVE, "admin", "qweasd",
+        StreamDescription stream3 = new StreamDescriptionImpl(StreamType.DATA,
+                StreamMode.SEND_RECEIVE, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
                 5000, 512, "webrtc-datachannel");
         SessionDescription sessionDescription = new SessionDescriptionImpl(
@@ -354,9 +354,9 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals(SessionDescription.Type.OFFER, offer.getType());
         assertEquals("1426854267315236600", offer.getSessionId());
         assertTrue(offer.getStreamDescriptions().isEmpty());
-        assertFalse(offer.hasStreamType(StreamDescription.Type.AUDIO));
-        assertFalse(offer.hasStreamType(StreamDescription.Type.VIDEO));
-        assertFalse(offer.hasStreamType(StreamDescription.Type.DATA));
+        assertFalse(offer.hasStreamType(StreamType.AUDIO));
+        assertFalse(offer.hasStreamType(StreamType.VIDEO));
+        assertFalse(offer.hasStreamType(StreamType.DATA));
         JSONObject jsep = SessionDescriptions.toJsep(offer);
         assertNotNull(jsep);
         assertEquals("offer", jsep.getString("type"));
@@ -374,9 +374,9 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals(SessionDescription.Type.ANSWER, answer.getType());
         assertEquals("1426854267315236600", answer.getSessionId());
         assertTrue(answer.getStreamDescriptions().isEmpty());
-        assertFalse(answer.hasStreamType(StreamDescription.Type.AUDIO));
-        assertFalse(answer.hasStreamType(StreamDescription.Type.VIDEO));
-        assertFalse(answer.hasStreamType(StreamDescription.Type.DATA));
+        assertFalse(answer.hasStreamType(StreamType.AUDIO));
+        assertFalse(answer.hasStreamType(StreamType.VIDEO));
+        assertFalse(answer.hasStreamType(StreamType.DATA));
         JSONObject jsep = SessionDescriptions.toJsep(answer);
         assertNotNull(jsep);
         assertEquals("answer", jsep.getString("type"));
@@ -417,7 +417,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertEquals(RtcCandidate.CandidateType.HOST, audio.getCandidates().get(0).getType());
         assertEquals("eNiJLDtGPTtx8J8b", audio.getCandidates().get(0).getUfrag());
         assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getCandidates().get(0).getPassword());
-        assertEquals(StreamDescription.Mode.SEND_RECEIVE, audio.getMode());
+        assertEquals(StreamMode.SEND_RECEIVE, audio.getMode());
         assertEquals("eNiJLDtGPTtx8J8b", audio.getUfrag());
         assertEquals("7f1lY4bUNTcw/DxFk4a0LY3j", audio.getPassword());
         assertEquals(10, audio.getPayloads().size());

@@ -25,45 +25,6 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import java.util.List;
-
-/**
- * An interface for describing a stream that is a part of a rtc session
- */
-public interface StreamDescription {
-    public StreamType getType();
-
-    public StreamMode getMode();
-
-    public String getUfrag();
-
-    public String getPassword();
-
-    public List<RtcCandidate> getCandidates();
-
-    public String getDtlsSetup();
-
-    public String getFingerprint();
-
-    public String getFingerprintHashFunction();
-
-    // media only
-    public String getMediaStreamId();
-
-    public String getMediaStreamTrackId();
-
-    public String getCname();
-
-    public boolean isRtcpMux();
-
-    public List<Long> getSsrcs();
-
-    public List<RtcPayload> getPayloads();
-
-    // data only
-    public int getSctpPort();
-
-    public int getMaxMessageSize();
-
-    public String getAppLabel();
+public enum StreamMode {
+    SEND_RECEIVE, SEND_ONLY, RECEIVE_ONLY, INACTIVE
 }

@@ -43,13 +43,13 @@ public abstract class StreamSet {
         /**
          * @return the type of the stream
          */
-        abstract StreamDescription.Type getType();
+        abstract StreamType getType();
 
         /**
          * Called once the final mode has been determined for the stream
          * @param mode of the stream
          */
-        abstract void setStreamMode(StreamDescription.Mode mode);
+        abstract void setStreamMode(StreamMode mode);
     }
 
     /**
@@ -57,8 +57,8 @@ public abstract class StreamSet {
      */
     abstract class MediaStream implements Stream {
         @Override
-        public StreamDescription.Type getType() {
-            return getMediaType() == MediaType.AUDIO ? StreamDescription.Type.AUDIO : StreamDescription.Type.VIDEO;
+        public StreamType getType() {
+            return getMediaType() == MediaType.AUDIO ? StreamType.AUDIO : StreamType.VIDEO;
         }
 
         /**
@@ -108,8 +108,8 @@ public abstract class StreamSet {
      */
     abstract class DataStream implements Stream {
         @Override
-        public StreamDescription.Type getType() {
-            return StreamDescription.Type.DATA;
+        public StreamType getType() {
+            return StreamType.DATA;
         }
 
         // TODO
