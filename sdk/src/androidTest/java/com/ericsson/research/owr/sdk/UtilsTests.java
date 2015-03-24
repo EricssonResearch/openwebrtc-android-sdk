@@ -28,9 +28,13 @@ package com.ericsson.research.owr.sdk;
 import android.test.MoreAsserts;
 
 import com.ericsson.research.owr.AudioPayload;
+import com.ericsson.research.owr.Candidate;
+import com.ericsson.research.owr.CandidateType;
 import com.ericsson.research.owr.CodecType;
+import com.ericsson.research.owr.ComponentType;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.Payload;
+import com.ericsson.research.owr.TransportType;
 import com.ericsson.research.owr.VideoPayload;
 
 import junit.framework.TestCase;
@@ -39,6 +43,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 public class UtilsTests extends TestCase {
@@ -277,5 +282,59 @@ public class UtilsTests extends TestCase {
         assertSame(StreamMode.SEND_ONLY, StreamMode.get(true, false));
         assertSame(StreamMode.RECEIVE_ONLY, StreamMode.get(false, true));
         assertSame(StreamMode.INACTIVE, StreamMode.get(false, false));
+    }
+
+    private static final String[] candidateLines = new String[] {
+            "candidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host",
+            "candidate:1 2 TCP 2130379006 172.20.10.2 9 typ host",
+            "candidate:2 1 UDP 1694236671 90.237.24.157 35856 typ srflx raddr 172.20.10.2 rport 51850",
+            "candidate:3 2 TCP 1694236670 90.237.24.157 9 typ srflx raddr 172.20.10.2 rport 61466",
+            "candidate:4 2 TCP 1694236670 90.237.24.157 32790 typ srflx raddr 172.20.10.2 rport 61466 tcptype active",
+            "candidate:5 2 TCP 1694236670 90.237.24.157 32790 typ srflx raddr 172.20.10.2 rport 61466 tcptype passive",
+            "candidate:6 2 TCP 1694236670 90.237.24.157 32790 typ srflx raddr 172.20.10.2 rport 61466 tcptype so",
+            "candidate:7 1 UDP 100401151 192.36.158.14 55300 typ relay raddr 192.36.158.14 rport 55300",
+            "candidate:8 2 TCP 100401150 192.36.158.14 9 typ relay raddr 192.36.158.14 rport 61720",
+    };
+
+    public void testCandidateTransform() {
+        List<Candidate> candidates = new LinkedList<>();
+        for (String candidateLine : candidateLines) {
+            RtcCandidate rtcCandidate = RtcCandidates.fromSdpAttribute(candidateLine);
+            assertNotNull(candidateLine, rtcCandidate);
+            Candidate candidate = Utils.transformCandidate(rtcCandidate);
+            assertNotNull(candidateLine, candidate);
+            candidates.add(candidate);
+        }
+
+        Candidate candidate0 = candidates.get(0);
+        assertEquals("0", candidate0.getFoundation());
+        assertEquals(ComponentType.RTP, candidate0.getComponentType());
+        assertEquals(TransportType.UDP, candidate0.getTransportType());
+        assertEquals(2130379007, candidate0.getPriority());
+        assertEquals("172.20.10.2", candidate0.getAddress());
+        assertEquals(51850, candidate0.getPort());
+        assertEquals(CandidateType.HOST, candidate0.getType());
+
+        assertEquals(TransportType.TCP_ACTIVE, candidates.get(1).getTransportType());
+        assertEquals(TransportType.TCP_ACTIVE, candidates.get(4).getTransportType());
+        assertEquals(TransportType.TCP_PASSIVE, candidates.get(5).getTransportType());
+        assertEquals(TransportType.TCP_SO, candidates.get(6).getTransportType());
+
+        RtcCandidate rtcCandidate = new PlainRtcCandidate(0, null, "asd", "123", "234",
+                RtcCandidate.ComponentType.RTP, RtcCandidate.TransportType.UDP, 3, "127.1", 13,
+                RtcCandidate.CandidateType.PEER_REFLEXIVE, "192.1", 14);
+        Candidate candidate = Utils.transformCandidate(rtcCandidate);
+
+        assertEquals("asd", candidate.getUfrag());
+        assertEquals("123", candidate.getPassword());
+        assertEquals("234", candidate.getFoundation());
+        assertEquals(ComponentType.RTP, candidate.getComponentType());
+        assertEquals(TransportType.UDP, candidate.getTransportType());
+        assertEquals(3, candidate.getPriority());
+        assertEquals("127.1", candidate.getAddress());
+        assertEquals(13, candidate.getPort());
+        assertEquals(CandidateType.PEER_REFLEXIVE, candidate.getType());
+        assertEquals("192.1", candidate.getBaseAddress());
+        assertEquals(14, candidate.getBasePort());
     }
 }

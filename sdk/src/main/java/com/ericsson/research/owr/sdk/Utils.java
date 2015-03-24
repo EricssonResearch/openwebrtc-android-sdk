@@ -29,10 +29,14 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.ericsson.research.owr.AudioPayload;
+import com.ericsson.research.owr.Candidate;
+import com.ericsson.research.owr.CandidateType;
 import com.ericsson.research.owr.CodecType;
+import com.ericsson.research.owr.ComponentType;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.Owr;
 import com.ericsson.research.owr.Payload;
+import com.ericsson.research.owr.TransportType;
 import com.ericsson.research.owr.VideoPayload;
 
 import java.io.UnsupportedEncodingException;
@@ -50,6 +54,23 @@ class Utils {
 
     static {
         Owr.init();
+    }
+
+    static Candidate transformCandidate(RtcCandidate rtcCandidate) {
+        Candidate candidate = new Candidate(
+                CandidateType.valueOf(rtcCandidate.getType().name()),
+                ComponentType.valueOf(rtcCandidate.getComponentType().name())
+        );
+        candidate.setUfrag(rtcCandidate.getUfrag());
+        candidate.setPassword(rtcCandidate.getPassword());
+        candidate.setFoundation(rtcCandidate.getFoundation());
+        candidate.setTransportType(TransportType.valueOf(rtcCandidate.getTransportType().name()));
+        candidate.setPriority(rtcCandidate.getPriority());
+        candidate.setAddress(rtcCandidate.getAddress());
+        candidate.setPort(rtcCandidate.getPort());
+        candidate.setBaseAddress(rtcCandidate.getRelatedAddress());
+        candidate.setBasePort(rtcCandidate.getRelatedPort());
+        return candidate;
     }
 
     static List<Payload> transformPayloads(List<RtcPayload> payloads, MediaType mediaType) {
