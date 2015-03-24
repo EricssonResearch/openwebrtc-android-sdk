@@ -54,4 +54,35 @@ public enum StreamMode {
            return INACTIVE;
         }
     }
+
+    public StreamMode reverse(boolean wantSend, boolean wantReceive) {
+        switch (this) {
+            case INACTIVE:
+                return StreamMode.INACTIVE;
+            case SEND_ONLY:
+                if (wantReceive) {
+                    return StreamMode.RECEIVE_ONLY;
+                } else {
+                    return StreamMode.INACTIVE;
+                }
+            case RECEIVE_ONLY:
+                if (wantSend) {
+                    return StreamMode.SEND_ONLY;
+                } else {
+                    return StreamMode.INACTIVE;
+                }
+            case SEND_RECEIVE:
+                if (wantSend && wantReceive) {
+                    return StreamMode.SEND_RECEIVE;
+                } else if (wantSend) {
+                    return StreamMode.SEND_ONLY;
+                } else if (wantReceive) {
+                    return StreamMode.RECEIVE_ONLY;
+                } else {
+                    return StreamMode.INACTIVE;
+                }
+            default:
+                return StreamMode.INACTIVE;
+        }
+    }
 }
