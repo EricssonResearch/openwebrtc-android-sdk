@@ -41,6 +41,11 @@ public abstract class StreamSet {
      */
     interface Stream {
         /**
+         * @return the type of the stream
+         */
+        abstract StreamDescription.Type getType();
+
+        /**
          * Called once the final mode has been determined for the stream
          * @param mode of the stream
          */
@@ -51,6 +56,11 @@ public abstract class StreamSet {
      * An interface that represents a single audio or video stream.
      */
     abstract class MediaStream implements Stream {
+        @Override
+        public StreamDescription.Type getType() {
+            return getMediaType() == MediaType.AUDIO ? StreamDescription.Type.AUDIO : StreamDescription.Type.VIDEO;
+        }
+
         /**
          * Implementations should return a unique identifier for the stream, or null.
          * @return a unique identifier, or null
@@ -97,6 +107,11 @@ public abstract class StreamSet {
      * An interface that represents a data stream.
      */
     abstract class DataStream implements Stream {
+        @Override
+        public StreamDescription.Type getType() {
+            return StreamDescription.Type.DATA;
+        }
+
         // TODO
     }
 
