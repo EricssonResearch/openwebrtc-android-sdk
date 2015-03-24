@@ -25,9 +25,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import com.ericsson.research.owr.AudioPayload;
 import com.ericsson.research.owr.HelperServerType;
-import com.ericsson.research.owr.VideoPayload;
 
 import java.util.Collection;
 import java.util.List;
@@ -41,13 +39,13 @@ public abstract class RtcConfig {
      * Implementations should return a list of payloads, ordered by most-preferred to least-preferred.
      * @return a list of payload
      */
-    abstract List<VideoPayload> getDefaultVideoPayloads();
+    abstract List<RtcPayload> getDefaultVideoPayloads();
 
     /**
      * Implementations should return a list of payloads, ordered by most-preferred to least-preferred.
      * @return a list of payload
      */
-    abstract List<AudioPayload> getDefaultAudioPayloads();
+    abstract List<RtcPayload> getDefaultAudioPayloads();
 
     /**
      * Implementations should return a list of helper servers that are used for ICE.

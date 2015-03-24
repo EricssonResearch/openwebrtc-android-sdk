@@ -60,7 +60,7 @@ public class RtcConfigTest extends AndroidTestCase {
     public void testDefaultConfig() {
         RtcConfig config = RtcConfigs.defaultConfig("stun.example.com:12345");
         assertEquals(3, config.getDefaultAudioPayloads().size());
-        assertEquals(2, config.getDefaultVideoPayloads().size());
+        assertEquals(3, config.getDefaultVideoPayloads().size());
         assertEquals(1, config.getHelperServers().size());
         RtcConfig.HelperServer helper = config.getHelperServers().iterator().next();
         assertEquals("stun.example.com", helper.getAddress());

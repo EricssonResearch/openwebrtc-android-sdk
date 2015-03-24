@@ -25,13 +25,12 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import com.ericsson.research.owr.AudioPayload;
-import com.ericsson.research.owr.CodecType;
 import com.ericsson.research.owr.HelperServerType;
-import com.ericsson.research.owr.VideoPayload;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 
 public class RtcConfigs {
@@ -49,16 +48,29 @@ public class RtcConfigs {
     }
 
     private static class Default extends RtcConfig {
-        private static final List<VideoPayload> sDefaultVideoPayloads = Arrays.asList(
-                new VideoPayload(CodecType.H264, 103, 90000, true, true),
-                new VideoPayload(CodecType.VP8, 100, 90000, true, true)
-        );
+        private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>(3);
+        static {
+            sDefaultVideoPayloads.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+                put("packetization-mode", 1);
+            }}, 0, false, true, true));
+//            FIXME: Enable when Chrome can handle an offer with RTX for H264
+/*            sDefaultVideoPayloads.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+                put("apt", 103);
+                put("rtx-time", 200);
+            }}, 0, false, false, false));*/
+            sDefaultVideoPayloads.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+            sDefaultVideoPayloads.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+                put("apt", 100);
+                put("rtx-time", 200);
+            }}, 0, false, false, false));
+        }
 
-        private static final List<AudioPayload> sDefaultAudioPayloads = Arrays.asList(
-                new AudioPayload(CodecType.OPUS, 111, 48000, 2),
-                new AudioPayload(CodecType.PCMA, 8, 8000, 1),
-                new AudioPayload(CodecType.PCMU, 0, 8000, 1)
-        );
+        private static final List<RtcPayload> sDefaultAudioPayloads = new ArrayList<>(3);
+        static {
+            sDefaultAudioPayloads.add(new PlainRtcPayload(111, "OPUS", 48000, null, 2, false, false, false));
+            sDefaultAudioPayloads.add(new PlainRtcPayload(8, "PCMA", 8000, null, 1, false, false, false));
+            sDefaultAudioPayloads.add(new PlainRtcPayload(0, "PCMU", 8000, null, 1, false, false, false));
+        }
 
         private final Collection<HelperServer> mHelperServers;
 
@@ -81,12 +93,12 @@ public class RtcConfigs {
         }
 
         @Override
-        List<VideoPayload> getDefaultVideoPayloads() {
+        List<RtcPayload> getDefaultVideoPayloads() {
             return sDefaultVideoPayloads;
         }
 
         @Override
-        List<AudioPayload> getDefaultAudioPayloads() {
+        List<RtcPayload> getDefaultAudioPayloads() {
             return sDefaultAudioPayloads;
         }
 
