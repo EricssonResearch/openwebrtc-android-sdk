@@ -52,10 +52,6 @@ import java.util.regex.Pattern;
 class Utils {
     private static final String TAG = "Utils";
 
-    static {
-        Owr.init();
-    }
-
     static Candidate transformCandidate(RtcCandidate rtcCandidate) {
         Candidate candidate = new Candidate(
                 CandidateType.valueOf(rtcCandidate.getType().name()),

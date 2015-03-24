@@ -33,6 +33,7 @@ import com.ericsson.research.owr.CandidateType;
 import com.ericsson.research.owr.CodecType;
 import com.ericsson.research.owr.ComponentType;
 import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.Owr;
 import com.ericsson.research.owr.Payload;
 import com.ericsson.research.owr.TransportType;
 import com.ericsson.research.owr.VideoPayload;
@@ -47,7 +48,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class UtilsTests extends TestCase {
+    static {
+        Owr.init();
+    }
+
     private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>();
+
     static {
         sDefaultVideoPayloads.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
