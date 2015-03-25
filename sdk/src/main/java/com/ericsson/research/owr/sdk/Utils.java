@@ -57,15 +57,23 @@ class Utils {
                 CandidateType.valueOf(rtcCandidate.getType().name()),
                 ComponentType.valueOf(rtcCandidate.getComponentType().name())
         );
-        candidate.setUfrag(rtcCandidate.getUfrag());
-        candidate.setPassword(rtcCandidate.getPassword());
+        if (rtcCandidate.getUfrag() != null) {
+            candidate.setUfrag(rtcCandidate.getUfrag());
+        }
+        if (rtcCandidate.getPassword() != null) {
+            candidate.setPassword(rtcCandidate.getPassword());
+        }
         candidate.setFoundation(rtcCandidate.getFoundation());
         candidate.setTransportType(TransportType.valueOf(rtcCandidate.getTransportType().name()));
         candidate.setPriority(rtcCandidate.getPriority());
         candidate.setAddress(rtcCandidate.getAddress());
         candidate.setPort(rtcCandidate.getPort());
-        candidate.setBaseAddress(rtcCandidate.getRelatedAddress());
-        candidate.setBasePort(rtcCandidate.getRelatedPort());
+        if (candidate.getBaseAddress() != null) {
+            candidate.setBaseAddress(rtcCandidate.getRelatedAddress());
+        }
+        if (candidate.getBasePort() >= 0) {
+            candidate.setBasePort(rtcCandidate.getRelatedPort());
+        }
         return candidate;
     }
 
