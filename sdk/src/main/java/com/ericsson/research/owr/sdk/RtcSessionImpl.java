@@ -38,6 +38,7 @@ import com.ericsson.research.owr.Session;
 import com.ericsson.research.owr.TransportAgent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -81,6 +82,21 @@ class RtcSessionImpl implements RtcSession {
         mLocalCandidateListener = listener;
     }
 
+    private void log(String msg) {
+        String streams;
+        if (mStreamHandlers == null) {
+            streams = "[]";
+        } else {
+            streams = Arrays.toString(mStreamHandlers.toArray(new StreamHandler[mStreamHandlers.size()]));
+        }
+        Log.d(TAG, "[RtcSession" +
+                " initiator=" + isInitiator() +
+                " state=" + mState.name() +
+                " streams=" + streams +
+                " candidates=" + (mRemoteCandidateBuffer == null ? 0 : mRemoteCandidateBuffer.size()) +
+                " ] " + msg);
+    }
+
     @Override
     public synchronized void setup(final StreamSet streamSet, final SetupCompleteCallback callback) {
         if (mState != State.INIT && mState != State.RECEIVED_OFFER) {
@@ -92,6 +108,7 @@ class RtcSessionImpl implements RtcSession {
         if (callback == null) {
             throw new NullPointerException("callback may not be null");
         }
+        log("setup called");
         mSetupCompleteCallback = callback;
 
         mTransportAgent = new TransportAgent(mIsInitiator);
@@ -176,6 +193,7 @@ class RtcSessionImpl implements RtcSession {
         }
 
         mState = State.SETUP;
+        log("initial setup complete");
     }
 
     private void maybeFinishSetup() {
@@ -192,6 +210,7 @@ class RtcSessionImpl implements RtcSession {
                     return;
                 }
             }
+            log("setup complete");
 
             List<StreamDescription> streamDescriptions = new ArrayList<>(mStreamHandlers.size());
 
@@ -230,9 +249,11 @@ class RtcSessionImpl implements RtcSession {
             mRemoteDescription = remoteDescription;
             mIsInitiator = false;
             mState = State.RECEIVED_OFFER;
+            log("received offer");
             return;
         }
         mRemoteDescription = remoteDescription;
+        log("received answer");
 
         List<StreamDescription> streamDescriptions = remoteDescription.getStreamDescriptions();
         int numStreamDescriptions = streamDescriptions.size();
@@ -270,6 +291,7 @@ class RtcSessionImpl implements RtcSession {
                 mRemoteCandidateBuffer = new LinkedList<>();
             }
             mRemoteCandidateBuffer.add(candidate);
+            Log.d(TAG, "[RtcSession] buffering candidate for stream " + candidate.getStreamIndex());
             return;
         }
 
@@ -292,6 +314,7 @@ class RtcSessionImpl implements RtcSession {
         }
 
         if (streamHandler != null) {
+            Log.d(TAG, "[RtcSession] got remote candidate for " + streamHandler);
             streamHandler.onRemoteCandidate(candidate);
         }
     }
@@ -314,6 +337,7 @@ class RtcSessionImpl implements RtcSession {
             if (mStreamHandlers.get(i) == streamHandler) {
                 rtcCandidate.setStreamIndex(i);
                 mLocalCandidateListener.onLocalCandidate(rtcCandidate);
+                Log.d(TAG, "[RtcSession] got local candidate for " + streamHandler);
                 return;
             }
         }
@@ -459,6 +483,13 @@ class RtcSessionImpl implements RtcSession {
             candidate.setUfrag(getRemoteStreamDescription().getUfrag());
             candidate.setPassword(getRemoteStreamDescription().getPassword());
             getSession().addRemoteCandidate(candidate);
+        }
+
+        @Override
+        public String toString() {
+            return "Stream{" +
+                    getLocalStreamDescription().getType().name() + "," +
+                    getLocalStreamDescription().getMode().name() + "}";
         }
     }
 
