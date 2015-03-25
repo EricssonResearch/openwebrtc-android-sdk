@@ -452,8 +452,11 @@ class RtcSessionImpl implements RtcSession {
             }
         }
 
-        public void onRemoteCandidate(RtcCandidate candidate) {
-            getSession().addRemoteCandidate(Utils.transformCandidate(candidate));
+        public void onRemoteCandidate(RtcCandidate rtcCandidate) {
+            Candidate candidate = Utils.transformCandidate(rtcCandidate);
+            candidate.setUfrag(getRemoteStreamDescription().getUfrag());
+            candidate.setPassword(getRemoteStreamDescription().getPassword());
+            getSession().addRemoteCandidate(candidate);
         }
     }
 
