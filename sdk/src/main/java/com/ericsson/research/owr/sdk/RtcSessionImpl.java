@@ -221,7 +221,7 @@ class RtcSessionImpl implements RtcSession {
             throw new IllegalStateException("setRemoteDescription called at wrong state: " + mState.name());
         }
         if (mRemoteDescription != null) {
-            throw new IllegalStateException("answer has already been set");
+            throw new IllegalStateException("remote description has already been set");
         }
         if (remoteDescription == null) {
             throw new NullPointerException("remote description should not be null");
@@ -231,12 +231,6 @@ class RtcSessionImpl implements RtcSession {
             mIsInitiator = false;
             mState = State.RECEIVED_OFFER;
             return;
-        }
-        if (!mIsInitiator) {
-            throw new IllegalStateException("answer should only be provided when initiating");
-        }
-        if (mSetupCompleteCallback != null) {
-            throw new IllegalStateException("tried to set answer during setup");
         }
         mRemoteDescription = remoteDescription;
 
