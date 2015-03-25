@@ -113,6 +113,9 @@ public class SimpleStreamSet extends StreamSet {
                             mVideoSources.add(mediaSource);
                         }
                     }
+                    if (mWantVideo && !mVideoSources.isEmpty()) {
+                        mSelfViewRenderer.setSource(mVideoSources.get(0));
+                    }
                     if (mVideoSourceDelegate != null && !mVideoSources.isEmpty()) {
                         mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
                     }
