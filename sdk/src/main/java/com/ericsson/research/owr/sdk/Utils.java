@@ -68,10 +68,10 @@ class Utils {
         candidate.setPriority(rtcCandidate.getPriority());
         candidate.setAddress(rtcCandidate.getAddress());
         candidate.setPort(rtcCandidate.getPort());
-        if (candidate.getBaseAddress() != null) {
+        if (rtcCandidate.getRelatedAddress() != null) {
             candidate.setBaseAddress(rtcCandidate.getRelatedAddress());
         }
-        if (candidate.getBasePort() >= 0) {
+        if (rtcCandidate.getRelatedPort() >= 0) {
             candidate.setBasePort(rtcCandidate.getRelatedPort());
         }
         return candidate;
