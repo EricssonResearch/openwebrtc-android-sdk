@@ -167,14 +167,15 @@ class RtcSessionImpl implements RtcSession {
                 mTransportAgent.addSession(handler.getSession());
             }
         }
-        mState = State.SETUP;
 
-        if (mRemoteCandidateBuffer != null) {
+        if (mRemoteDescription != null && mRemoteCandidateBuffer != null) {
             for (RtcCandidate candidate : mRemoteCandidateBuffer) {
                 addRemoteCandidate(candidate);
             }
             mRemoteCandidateBuffer = null;
         }
+
+        mState = State.SETUP;
     }
 
     private void maybeFinishSetup() {
@@ -257,13 +258,20 @@ class RtcSessionImpl implements RtcSession {
             }
             streamHandler.provideAnswer(streamDescription);
         }
+
+        if (mRemoteCandidateBuffer != null) {
+            for (RtcCandidate candidate : mRemoteCandidateBuffer) {
+                addRemoteCandidate(candidate);
+            }
+            mRemoteCandidateBuffer = null;
+        }
     }
 
     @Override
     public synchronized void addRemoteCandidate(final RtcCandidate candidate) {
         if (mState == State.STOPPED) {
             return;
-        } else if (mState == State.INIT || mState == State.RECEIVED_OFFER) {
+        } else if (mRemoteDescription == null || mState == State.RECEIVED_OFFER) {
             if (mRemoteCandidateBuffer == null) {
                 mRemoteCandidateBuffer = new LinkedList<>();
             }
