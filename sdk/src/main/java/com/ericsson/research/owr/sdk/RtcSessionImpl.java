@@ -438,7 +438,8 @@ class RtcSessionImpl implements RtcSession {
         }
 
         public boolean isReady() {
-            return mHaveCandidate && mHaveFingerprint;
+            boolean isInactive = getLocalStreamDescription().getMode() == StreamMode.INACTIVE;
+            return mHaveCandidate && mHaveFingerprint || isInactive;
         }
 
         public void provideAnswer(StreamDescription remoteStreamDescription) {
@@ -613,7 +614,8 @@ class RtcSessionImpl implements RtcSession {
 
         @Override
         public boolean isReady() {
-            return super.isReady() && mHaveSsrc && mHaveCname;
+            boolean isInactive = getLocalStreamDescription().getMode() == StreamMode.INACTIVE;
+            return super.isReady() && mHaveSsrc && mHaveCname || isInactive;
         }
         
         @Override
