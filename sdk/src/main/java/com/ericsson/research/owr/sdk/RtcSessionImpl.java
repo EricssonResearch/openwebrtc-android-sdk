@@ -111,7 +111,7 @@ class RtcSessionImpl implements RtcSession {
         log("setup called");
         mSetupCompleteCallback = callback;
 
-        mTransportAgent = new TransportAgent(mIsInitiator);
+        mTransportAgent = new TransportAgent(!mIsInitiator);
 
         for (RtcConfig.HelperServer helperServer : mConfig.getHelperServers()) {
             mTransportAgent.addHelperServer(
