@@ -25,14 +25,105 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.annotation.TargetApi;
+import android.graphics.SurfaceTexture;
+import android.os.Build;
+import android.util.Log;
 import android.view.Surface;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
+import com.ericsson.research.owr.AudioRenderer;
+import com.ericsson.research.owr.CaptureSourcesCallback;
+import com.ericsson.research.owr.MediaSource;
+import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.Owr;
+import com.ericsson.research.owr.VideoRenderer;
+import com.ericsson.research.owr.WindowRegistry;
+
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 
 public class SimpleStreamSet extends StreamSet {
+    private static final String TAG = "SimpleStreamSet";
+
+    private final boolean mWantVideo;
+    private final boolean mWantAudio;
+
+    private final String mSelfViewTag;
+    private final String mRemoteViewTag;
+
+    private SurfaceViewTagger mSelfViewSurfaceTagger;
+    private TextureViewTagger mSelfViewTextureTagger;
+    private SurfaceViewTagger mRemoteViewSurfaceTagger;
+    private TextureViewTagger mRemoteViewTextureTagger;
+
+    private final VideoRenderer mRemoteViewRenderer;
+    private final VideoRenderer mSelfViewRenderer;
+    private final AudioRenderer mAudioRenderer;
+
+    private final LinkedList<MediaSource> mAudioSources;
+    private final LinkedList<MediaSource> mVideoSources;
+    private MediaSourceDelegate mVideoSourceDelegate;
+    private MediaSourceDelegate mAudioSourceDelegate;
+
+    private SimpleStreamSet(boolean sendAudio, boolean sendVideo) {
+        mSelfViewTag = Utils.randomString(32);
+        mRemoteViewTag = Utils.randomString(32);
+        mWantAudio = sendAudio;
+        mWantVideo = sendVideo;
+
+        mAudioRenderer = new AudioRenderer();
+
+        mRemoteViewRenderer = new VideoRenderer(mRemoteViewTag);
+        mRemoteViewRenderer.setWidth(512);
+        mRemoteViewRenderer.setHeight(512);
+        mRemoteViewRenderer.setMaxFramerate(30);
+
+        if (mWantVideo) {
+            mSelfViewRenderer = new VideoRenderer(mSelfViewTag);
+            mSelfViewRenderer.setWidth(512);
+            mSelfViewRenderer.setHeight(512);
+            mSelfViewRenderer.setMaxFramerate(30);
+        } else {
+            mSelfViewRenderer = null;
+        }
+
+        EnumSet<MediaType> mediaTypes = EnumSet.noneOf(MediaType.class);
+        if (mWantAudio) {
+            mediaTypes.add(MediaType.AUDIO);
+        }
+        if (mWantVideo) {
+            mediaTypes.add(MediaType.VIDEO);
+        }
+        mAudioSources = new LinkedList<>();
+        mVideoSources = new LinkedList<>();
+        Owr.getCaptureSources(mediaTypes, new CaptureSourcesCallback() {
+            @Override
+            public void onCaptureSourcesCallback(final List<MediaSource> mediaSources) {
+                synchronized (SimpleStreamSet.this) {
+                    for (MediaSource mediaSource : mediaSources) {
+                        if (mediaSource.getMediaType().contains(MediaType.AUDIO)) {
+                            mAudioSources.add(mediaSource);
+                        } else {
+                            mVideoSources.add(mediaSource);
+                        }
+                    }
+                    if (mVideoSourceDelegate != null && !mVideoSources.isEmpty()) {
+                        mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
+                    }
+                    if (mAudioSourceDelegate != null && !mAudioSources.isEmpty()) {
+                        mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
+                    }
+                }
+            }
+        });
+    }
+
     /**
      * Creates a configuration for setting up a basic audio/video call.
      *
@@ -40,8 +131,8 @@ public class SimpleStreamSet extends StreamSet {
      * @param sendVideo true if video should be sent, video may still be received
      * @return a new RtcConfig with a simple audio/video call configuration
      */
-    public static StreamSet defaultConfig(boolean sendAudio, boolean sendVideo) {
-        return null;
+    public static SimpleStreamSet defaultConfig(boolean sendAudio, boolean sendVideo) {
+        return new SimpleStreamSet(sendAudio, sendVideo);
     }
 
     /**
@@ -51,27 +142,52 @@ public class SimpleStreamSet extends StreamSet {
      * @param surface The surface to render the self-view on, or null to disable the self-view.
      */
     public void setSelfView(Surface surface) {
-
+        if (!mWantVideo) {
+            return;
+        }
+        stopSelfView();
+        WindowRegistry.get().register(mSelfViewTag, surface);
     }
 
     /**
      * Set the view in which the self-view should be rendered.
      * If a self-view is set it will be rendered even if video is not sent to the other peer.
      *
-     * @param surface The view to render the self-view in, or null to disable the self-view.
+     * @param surfaceView The view to render the self-view in, or null to disable the self-view.
      */
-    public void setSelfView(SurfaceView surface) {
-
+    public void setSelfView(SurfaceView surfaceView) {
+        if (!mWantVideo) {
+            return;
+        }
+        stopSelfView();
+        mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
     }
 
     /**
      * Set the view in which the self-view should be rendered.
      * If a self-view is set it will be rendered even if video is not sent to the other peer.
      *
-     * @param surface The view to render the self-view in, or null to disable the self-view.
+     * @param textureView The view to render the self-view in, or null to disable the self-view.
      */
-    public void setSelfView(TextureView surface) {
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    public void setSelfView(TextureView textureView) {
+        if (!mWantVideo) {
+            return;
+        }
+        stopSelfView();
+        mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
+    }
 
+    private void stopSelfView() {
+        if (mSelfViewTextureTagger != null) {
+            mSelfViewTextureTagger.stop();
+            mSelfViewTextureTagger = null;
+        }
+        if (mSelfViewSurfaceTagger != null) {
+            mSelfViewSurfaceTagger.stop();
+            mSelfViewSurfaceTagger = null;
+        }
+        WindowRegistry.get().unregister(mSelfViewTag);
     }
 
     /**
@@ -81,31 +197,175 @@ public class SimpleStreamSet extends StreamSet {
      * @param surface The surface to render the remote-view on, or null to disable the remote-view.
      */
     public void setRemoteView(Surface surface) {
-
+        stopRemoteView();
+        WindowRegistry.get().register(mRemoteViewTag, surface);
     }
 
     /**
      * Set the view in which the remote-view should be rendered.
      * The remote-view will only be rendered if the peer is streaming video.
      *
-     * @param surface The view to render the remote-view in, or null to disable the remote-view.
+     * @param surfaceView The view to render the remote-view in, or null to disable the remote-view.
      */
-    public void setRemoteView(SurfaceView surface) {
-
+    public void setRemoteView(SurfaceView surfaceView) {
+        stopRemoteView();
+        mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
     }
 
     /**
      * Set the view in which the remote-view should be rendered.
      * The remote-view will only be rendered if the peer is streaming video.
      *
-     * @param surface The view to render the remote-view in, or null to disable the remote-view.
+     * @param textureView The view to render the remote-view in, or null to disable the remote-view.
      */
-    public void setRemoteView(TextureView surface) {
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    public void setRemoteView(TextureView textureView) {
+        stopRemoteView();
+        mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
+    }
 
+    private void stopRemoteView() {
+        if (mRemoteViewTextureTagger != null) {
+            mRemoteViewTextureTagger.stop();
+            mRemoteViewTextureTagger = null;
+        }
+        if (mRemoteViewSurfaceTagger != null) {
+            mRemoteViewSurfaceTagger.stop();
+            mRemoteViewSurfaceTagger = null;
+        }
+        WindowRegistry.get().unregister(mRemoteViewTag);
     }
 
     @Override
-    List<Stream> getStreams() {
-        return null;
+    List<? extends Stream> getStreams() {
+        return Arrays.asList(new SimpleMediaStream(false), new SimpleMediaStream(true));
+    }
+
+    private class SimpleMediaStream extends MediaStream {
+        private final String mId;
+        private final boolean mIsVideo;
+
+        private SimpleMediaStream(boolean isVideo) {
+            mIsVideo = isVideo;
+            mId = Utils.randomString(27);
+        }
+
+        @Override
+        String getId() {
+            return mId;
+        }
+
+        @Override
+        MediaType getMediaType() {
+            return mIsVideo ? MediaType.VIDEO : MediaType.AUDIO;
+        }
+
+        @Override
+        boolean wantSend() {
+            return mIsVideo ? mWantVideo : mWantAudio;
+        }
+
+        @Override
+        boolean wantReceive() {
+            return true;
+        }
+
+        @Override
+        void onRemoteMediaSource(final MediaSource mediaSource) {
+            if (mIsVideo) {
+                mRemoteViewRenderer.setSource(mediaSource);
+            } else {
+                mAudioRenderer.setSource(mediaSource);
+            }
+        }
+
+        @Override
+        void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
+            synchronized (SimpleStreamSet.this) {
+                if (mIsVideo) {
+                    mVideoSourceDelegate = mediaSourceDelegate;
+                    if (!mVideoSources.isEmpty()) {
+                        mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
+                    }
+                } else {
+                    mAudioSourceDelegate = mediaSourceDelegate;
+                    if (!mAudioSources.isEmpty()) {
+                        mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
+                    }
+                }
+            }
+        }
+
+        @Override
+        public void setStreamMode(final StreamMode mode) {
+            Log.i(TAG, (mIsVideo ? "video" : "audio") + " stream mode set: " + mode.name());
+        }
+    }
+
+    private class SurfaceViewTagger implements SurfaceHolder.Callback {
+        private final String mTag;
+        private SurfaceView mSurfaceView;
+
+        private SurfaceViewTagger(String tag, SurfaceView surfaceView) {
+            mTag = tag;
+            mSurfaceView = surfaceView;
+            mSurfaceView.getHolder().addCallback(this);
+        }
+
+        private void stop() {
+            mSurfaceView.getHolder().removeCallback(this);
+            WindowRegistry.get().unregister(mTag);
+        }
+
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+            WindowRegistry.get().register(mTag, holder.getSurface());
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            WindowRegistry.get().unregister(mTag);
+        }
+    }
+
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    private class TextureViewTagger implements TextureView.SurfaceTextureListener {
+        private final String mTag;
+        private TextureView mTextureView;
+
+        private TextureViewTagger(String tag, TextureView textureView) {
+            mTag = tag;
+            mTextureView = textureView;
+            mTextureView.setSurfaceTextureListener(this);
+        }
+
+        private synchronized void stop() {
+            mTextureView.setSurfaceTextureListener(null);
+            WindowRegistry.get().unregister(mTag);
+        }
+
+        @Override
+        public synchronized void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+            Surface surface = new Surface(surfaceTexture);
+            WindowRegistry.get().register(mTag, surface);
+        }
+
+        @Override
+        public synchronized boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            WindowRegistry.get().unregister(mTag);
+            return false;
+        }
+
+        @Override
+        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        }
     }
 }

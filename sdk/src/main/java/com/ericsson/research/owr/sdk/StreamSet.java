@@ -122,7 +122,7 @@ public abstract class StreamSet {
      * at the end of the list.
      * @return a list of streams
      */
-    abstract List<Stream> getStreams();
+    abstract List<? extends Stream> getStreams();
 
     public interface MediaSourceDelegate {
         public void setMediaSource(MediaSource mediaSource);
