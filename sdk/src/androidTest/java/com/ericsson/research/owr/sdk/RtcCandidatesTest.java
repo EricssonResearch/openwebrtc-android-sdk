@@ -53,6 +53,15 @@ public class RtcCandidatesTest extends TestCase {
             "a=candidate:11 2 UDP 100401150 192.36.158.14 61720 typ relay raddr 192.36.158.14 rport 61720\r\n"
     };
 
+    private static final String[] validNoMirrorAttributeLines = new String[] {
+            "candidate:3918727013 1 udp 2122260223 192.168.59.3 54334 typ host generation 0",
+            "candidate:739435397 1 udp 2122194687 129.192.20.168 65202 typ host generation 0",
+            "candidate:470028125 1 udp 2122129151 129.192.20.144 65532 typ host generation 0",
+            "candidate:2848939570 1 udp 41819903 192.36.158.14 59508 typ relay raddr 129.192.20.168 rport 65202 generation 0",
+            "candidate:2802908053 1 tcp 1518280447 192.168.59.3 0 typ host tcptype active generation 0",
+            "candidate:1653677941 1 tcp 1518214911 129.192.20.168 0 typ host tcptype active generation 0",
+    };
+
     private static final String[] invalidAttributeLines = new String[] {
             "andidate:0 1 UDP 2130379007 172.20.10.2 51850 typ host",
             "candidate:1 2 UDP 2130379006 172.20.10.2 61466 typ host\r",
@@ -86,6 +95,10 @@ public class RtcCandidatesTest extends TestCase {
                 line = line.substring(0, line.length() - 2);
             }
             assertEquals(line, newLine);
+        }
+        for (String line : validNoMirrorAttributeLines) {
+            RtcCandidate candidate = RtcCandidates.fromSdpAttribute(line);
+            assertNotNull(line, candidate);
         }
         for (String invalidLine : invalidAttributeLines) {
             RtcCandidate candidate = RtcCandidates.fromSdpAttribute(invalidLine);

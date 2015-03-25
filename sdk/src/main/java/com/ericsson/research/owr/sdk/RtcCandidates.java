@@ -175,8 +175,10 @@ public class RtcCandidates {
             "(\\d*)" + // port
             " typ (host|srflx|prflx|relay)" + // type
             "(?: raddr ([\\d\\.a-f:]*) rport (\\d*))?" + // reflexive address and port
-            "(?: tcptype (active|passive|so))?.*" + // tcp type
+            "(?: tcptype (active|passive|so))?" + // tcp type
+            ".*" + // ignore the rest
             "(?:\\r\\n)?$"
+            , Pattern.CASE_INSENSITIVE
     );
 
     @SuppressWarnings("FieldCanBeLocal") private static int PATTERN_GROUP_ATTRIBUTE_FOUNDATION = 1;
@@ -225,7 +227,7 @@ public class RtcCandidates {
             componentType = RtcCandidate.ComponentType.RTCP;
         }
 
-        switch (type) {
+        switch (type.toLowerCase()) {
             case "host":
                 candidateType = RtcCandidate.CandidateType.HOST;
                 break;
@@ -242,11 +244,11 @@ public class RtcCandidates {
                 return null;
         }
 
-        if ("UDP".equals(transport)) {
+        if ("udp".equals(transport.toLowerCase())) {
             transportType = RtcCandidate.TransportType.UDP;
         } else {
             if (tcpType != null) {
-                switch (tcpType) {
+                switch (tcpType.toLowerCase()) {
                     case "active":
                         transportType = RtcCandidate.TransportType.TCP_ACTIVE;
                         break;
