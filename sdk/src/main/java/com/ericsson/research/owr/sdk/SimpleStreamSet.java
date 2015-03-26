@@ -139,20 +139,6 @@ public class SimpleStreamSet extends StreamSet {
     }
 
     /**
-     * Set the surface on which the self-view should be rendered.
-     * If a self-view is set it will be rendered even if video is not sent to the other peer.
-     *
-     * @param surface The surface to render the self-view on, or null to disable the self-view.
-     */
-    public void setSelfView(Surface surface) {
-        if (!mWantVideo) {
-            return;
-        }
-        stopSelfView();
-        WindowRegistry.get().register(mSelfViewTag, surface);
-    }
-
-    /**
      * Set the view in which the self-view should be rendered.
      * If a self-view is set it will be rendered even if video is not sent to the other peer.
      *
@@ -163,7 +149,9 @@ public class SimpleStreamSet extends StreamSet {
             return;
         }
         stopSelfView();
-        mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
+        if (surfaceView != null) {
+            mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
+        }
     }
 
     /**
@@ -178,7 +166,9 @@ public class SimpleStreamSet extends StreamSet {
             return;
         }
         stopSelfView();
-        mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
+        if (textureView != null) {
+            mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
+        }
     }
 
     private void stopSelfView() {
@@ -190,18 +180,6 @@ public class SimpleStreamSet extends StreamSet {
             mSelfViewSurfaceTagger.stop();
             mSelfViewSurfaceTagger = null;
         }
-        WindowRegistry.get().unregister(mSelfViewTag);
-    }
-
-    /**
-     * Set the surface on which the remote-view should be rendered.
-     * The remote-view will only be rendered if the peer is streaming video.
-     *
-     * @param surface The surface to render the remote-view on, or null to disable the remote-view.
-     */
-    public void setRemoteView(Surface surface) {
-        stopRemoteView();
-        WindowRegistry.get().register(mRemoteViewTag, surface);
     }
 
     /**
@@ -212,7 +190,9 @@ public class SimpleStreamSet extends StreamSet {
      */
     public void setRemoteView(SurfaceView surfaceView) {
         stopRemoteView();
-        mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
+        if (surfaceView != null) {
+            mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
+        }
     }
 
     /**
@@ -224,7 +204,9 @@ public class SimpleStreamSet extends StreamSet {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public void setRemoteView(TextureView textureView) {
         stopRemoteView();
-        mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
+        if (textureView != null) {
+            mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
+        }
     }
 
     private void stopRemoteView() {
@@ -236,7 +218,6 @@ public class SimpleStreamSet extends StreamSet {
             mRemoteViewSurfaceTagger.stop();
             mRemoteViewSurfaceTagger = null;
         }
-        WindowRegistry.get().unregister(mRemoteViewTag);
     }
 
     @Override
