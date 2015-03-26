@@ -335,9 +335,11 @@ class RtcSessionImpl implements RtcSession {
     private void sendCandidateForStream(StreamHandler streamHandler, PlainRtcCandidate rtcCandidate) {
         for (int i = 0; i < mStreamHandlers.size(); i++) {
             if (mStreamHandlers.get(i) == streamHandler) {
-                rtcCandidate.setStreamIndex(i);
-                mLocalCandidateListener.onLocalCandidate(rtcCandidate);
                 Log.d(TAG, "[RtcSession] got local candidate for " + streamHandler);
+                rtcCandidate.setStreamIndex(i);
+                if (mLocalCandidateListener != null) {
+                    mLocalCandidateListener.onLocalCandidate(rtcCandidate);
+                }
                 return;
             }
         }
