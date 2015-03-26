@@ -480,6 +480,10 @@ class RtcSessionImpl implements RtcSession {
         }
 
         public void onRemoteCandidate(RtcCandidate rtcCandidate) {
+            boolean isRtcp = rtcCandidate.getComponentType() == RtcCandidate.ComponentType.RTCP;
+            if (getLocalStreamDescription().isRtcpMux() && isRtcp) {
+                return;
+            }
             Candidate candidate = Utils.transformCandidate(rtcCandidate);
             candidate.setUfrag(getRemoteStreamDescription().getUfrag());
             candidate.setPassword(getRemoteStreamDescription().getPassword());
