@@ -341,7 +341,7 @@ public class SimpleStreamSet extends StreamSet {
         @Override
         public synchronized boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
             WindowRegistry.get().unregister(mTag);
-            return false;
+            return true;
         }
 
         @Override
