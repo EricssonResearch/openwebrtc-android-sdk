@@ -202,7 +202,7 @@ class RtcSessionImpl implements RtcSession {
 
         synchronized (this) {
             if (mState != State.SETUP) {
-                Log.w(TAG, "maybeFinishSetup called at wrong state: " + mState.name());
+                Log.w(TAG, "maybeFinishSetup called at wrong state: " + mState);
                 return;
             }
             for (StreamHandler streamHandler : mStreamHandlers) {
@@ -237,7 +237,7 @@ class RtcSessionImpl implements RtcSession {
     @Override
     public synchronized void setRemoteDescription(final SessionDescription remoteDescription) throws InvalidDescriptionException {
         if (mState != State.AWAITING_ANSWER && mState != State.INIT) {
-            throw new IllegalStateException("setRemoteDescription called at wrong state: " + mState.name());
+            throw new IllegalStateException("setRemoteDescription called at wrong state: " + mState);
         }
         if (mRemoteDescription != null) {
             throw new IllegalStateException("remote description has already been set");
@@ -269,7 +269,7 @@ class RtcSessionImpl implements RtcSession {
             StreamHandler streamHandler = mStreamHandlers.get(i);
             if (streamDescription.getType() != streamHandler.getStream().getType()) {
                 throw new InvalidDescriptionException("stream description types do not match: " +
-                        streamDescription.getType().name() + " != " + streamHandler.getStream().getType().name());
+                        streamDescription.getType() + " != " + streamHandler.getStream().getType());
             }
             streamHandler.provideAnswer(streamDescription);
         }
@@ -488,9 +488,12 @@ class RtcSessionImpl implements RtcSession {
 
         @Override
         public String toString() {
+            if (getLocalStreamDescription() == null) {
+                return "Stream{}";
+            }
             return "Stream{" +
-                    getLocalStreamDescription().getType().name() + "," +
-                    getLocalStreamDescription().getMode().name() + "}";
+                    getLocalStreamDescription().getType() + "," +
+                    getLocalStreamDescription().getMode() + "}";
         }
     }
 
