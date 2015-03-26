@@ -111,7 +111,7 @@ class RtcSessionImpl implements RtcSession {
         log("setup called");
         mSetupCompleteCallback = callback;
 
-        mTransportAgent = new TransportAgent(!mIsInitiator);
+        mTransportAgent = new TransportAgent(mIsInitiator);
 
         for (RtcConfig.HelperServer helperServer : mConfig.getHelperServers()) {
             mTransportAgent.addHelperServer(
@@ -508,7 +508,7 @@ class RtcSessionImpl implements RtcSession {
         private boolean mHaveSsrc = false;
 
         MediaStreamHandler(StreamDescription streamDescription, StreamSet.MediaStream mediaStream) {
-            super(streamDescription, mediaStream, new MediaSession(isInitiator()));
+            super(streamDescription, mediaStream, new MediaSession(!isInitiator()));
             getMediaSession().addCnameChangeListener(this);
             getMediaSession().addSendSsrcChangeListener(this);
             getMediaSession().addOnIncomingSourceListener(this);
