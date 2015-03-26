@@ -624,7 +624,7 @@ class RtcSessionImpl implements RtcSession {
             boolean isInactive = getLocalStreamDescription().getMode() == StreamMode.INACTIVE;
             return super.isReady() && mHaveSsrc && mHaveCname || isInactive;
         }
-        
+
         @Override
         public void onCnameChanged(String cname) {
             getLocalStreamDescription().setCname(cname);
