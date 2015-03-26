@@ -401,7 +401,7 @@ class RtcSessionImpl implements RtcSession {
 
             if (isInitiator()) {
                 fingerprintHashFunction = DEFAULT_HASH_FUNCTION;
-                dtlsSetup = "passive";
+                dtlsSetup = "actpass";
             } else {
                 fingerprintHashFunction = getRemoteStreamDescription().getFingerprintHashFunction();
                 dtlsSetup = "active";
