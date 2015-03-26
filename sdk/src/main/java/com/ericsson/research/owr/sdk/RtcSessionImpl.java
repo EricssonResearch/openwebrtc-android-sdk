@@ -468,7 +468,6 @@ class RtcSessionImpl implements RtcSession {
                 getLocalStreamDescription().setUfrag(candidate.getUfrag());
                 getLocalStreamDescription().setPassword(candidate.getPassword());
             }
-            mHaveCandidate = true;
 
             PlainRtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
             if (mLocalDescriptionCreated) {
@@ -476,8 +475,13 @@ class RtcSessionImpl implements RtcSession {
             } else {
                 getLocalStreamDescription().addCandidate(rtcCandidate);
             }
-            if (isReady()) {
-                maybeFinishSetup();
+
+
+            if (!mHaveCandidate) {
+                mHaveCandidate = true;
+                if (isReady()) {
+                    maybeFinishSetup();
+                }
             }
         }
 
