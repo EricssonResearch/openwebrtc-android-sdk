@@ -26,6 +26,7 @@
 package com.ericsson.research.owr.sdk;
 
 import android.util.Log;
+import android.util.Pair;
 
 import com.ericsson.research.owr.Candidate;
 import com.ericsson.research.owr.DataSession;
@@ -42,7 +43,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Random;
 
 class RtcSessionImpl implements RtcSession {
@@ -130,53 +130,8 @@ class RtcSessionImpl implements RtcSession {
                 mStreamHandlers.add(createStreamHandler(null, stream));
             }
         } else {
-            // For inbound calls the requested streams are split by type
-            Queue<StreamSet.Stream> audioStreams = new LinkedList<>();
-            Queue<StreamSet.Stream> videoStreams = new LinkedList<>();
-            Queue<StreamSet.Stream> dataStreams = new LinkedList<>();
-            for (StreamSet.Stream stream : streamSet.getStreams()) {
-                switch (stream.getType()) {
-                    case AUDIO:
-                        audioStreams.add(stream);
-                        break;
-                    case VIDEO:
-                        videoStreams.add(stream);
-                        break;
-                    case DATA:
-                        dataStreams.add(stream);
-                        break;
-                }
-            }
-            // Pair each requested stream with a stream from the remote session description
-            for (StreamDescription streamDescription : mRemoteDescription.getStreamDescriptions()) {
-                StreamSet.Stream stream = null;
-                switch (streamDescription.getType()) {
-                    case AUDIO:
-                        stream = audioStreams.poll();
-                        break;
-                    case VIDEO:
-                        stream = videoStreams.poll();
-                        break;
-                    case DATA:
-                        stream = dataStreams.poll();
-                        break;
-                }
-                if (stream == null) {
-                    // If we've run out of requested streams, the stream is inactivated
-                    mStreamHandlers.add(createInactiveStreamHandler(streamDescription));
-                } else {
-                    mStreamHandlers.add(createStreamHandler(streamDescription, stream));
-                }
-            }
-            // Any requested streams that are left are inactivated
-            for (StreamSet.Stream stream : audioStreams) {
-                stream.setStreamMode(StreamMode.INACTIVE);
-            }
-            for (StreamSet.Stream stream : videoStreams) {
-                stream.setStreamMode(StreamMode.INACTIVE);
-            }
-            for (StreamSet.Stream stream : dataStreams) {
-                stream.setStreamMode(StreamMode.INACTIVE);
+            for (Pair<StreamDescription, StreamSet.Stream> pair : Utils.resolveOfferedStreams(mRemoteDescription, streamSet.getStreams())) {
+                mStreamHandlers.add(createStreamHandler(pair.first, pair.second));
             }
         }
         for (StreamHandler handler : mStreamHandlers) {
@@ -354,6 +309,9 @@ class RtcSessionImpl implements RtcSession {
     }
 
     private StreamHandler createStreamHandler(StreamDescription streamDescription, StreamSet.Stream stream) {
+        if (stream == null) {
+            return createInactiveStreamHandler(streamDescription);
+        }
         if (stream.getType() == StreamType.DATA) {
             return new DataStreamHandler(streamDescription, (StreamSet.DataStream) stream);
         } else {

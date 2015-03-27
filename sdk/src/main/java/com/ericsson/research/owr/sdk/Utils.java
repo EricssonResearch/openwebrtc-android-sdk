@@ -27,6 +27,7 @@ package com.ericsson.research.owr.sdk;
 
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 
 import com.ericsson.research.owr.AudioPayload;
 import com.ericsson.research.owr.Candidate;
@@ -45,6 +46,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -254,5 +256,56 @@ class Utils {
             Log.e(TAG, "failed to parse pem certificate: " + exception);
             throw new RuntimeException(exception);
         }
+    }
+
+    static List<Pair<StreamDescription, StreamSet.Stream>> resolveOfferedStreams(SessionDescription remoteDescription, List<? extends StreamSet.Stream> streams) {
+        if (remoteDescription.getType() == SessionDescription.Type.ANSWER) {
+            throw new IllegalArgumentException("remote session description should not be an answer");
+        }
+        List<Pair<StreamDescription, StreamSet.Stream>> result = new LinkedList<>();
+        // For inbound calls the requested streams are split by type
+        Queue<StreamSet.Stream> audioStreams = new LinkedList<>();
+        Queue<StreamSet.Stream> videoStreams = new LinkedList<>();
+        Queue<StreamSet.Stream> dataStreams = new LinkedList<>();
+        for (StreamSet.Stream stream : streams) {
+            switch (stream.getType()) {
+                case AUDIO:
+                    audioStreams.add(stream);
+                    break;
+                case VIDEO:
+                    videoStreams.add(stream);
+                    break;
+                case DATA:
+                    dataStreams.add(stream);
+                    break;
+            }
+        }
+        // Pair each requested stream with a stream from the remote session description
+        for (StreamDescription streamDescription : remoteDescription.getStreamDescriptions()) {
+            StreamSet.Stream stream = null;
+            switch (streamDescription.getType()) {
+                case AUDIO:
+                    stream = audioStreams.poll();
+                    break;
+                case VIDEO:
+                    stream = videoStreams.poll();
+                    break;
+                case DATA:
+                    stream = dataStreams.poll();
+                    break;
+            }
+            result.add(new Pair<>(streamDescription, stream));
+        }
+        // Any requested streams that are left are inactivated
+        for (StreamSet.Stream stream : audioStreams) {
+            stream.setStreamMode(StreamMode.INACTIVE);
+        }
+        for (StreamSet.Stream stream : videoStreams) {
+            stream.setStreamMode(StreamMode.INACTIVE);
+        }
+        for (StreamSet.Stream stream : dataStreams) {
+            stream.setStreamMode(StreamMode.INACTIVE);
+        }
+        return result;
     }
 }

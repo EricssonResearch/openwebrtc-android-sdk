@@ -26,6 +26,7 @@
 package com.ericsson.research.owr.sdk;
 
 import android.test.MoreAsserts;
+import android.util.Pair;
 
 import com.ericsson.research.owr.AudioPayload;
 import com.ericsson.research.owr.Candidate;
@@ -42,6 +43,7 @@ import junit.framework.TestCase;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -342,5 +344,592 @@ public class UtilsTests extends TestCase {
         assertEquals(CandidateType.PEER_REFLEXIVE, candidate.getType());
         assertEquals("192.1", candidate.getBaseAddress());
         assertEquals(14, candidate.getBasePort());
+    }
+
+    private SessionDescription sAudioOnlyOffer = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO)
+    );
+
+    private SessionDescription s10AudioOffer = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO)
+    );
+
+    private SessionDescription s10EachTypeOfferOrdered = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA)
+    );
+
+    private SessionDescription s10EachTypeOfferUnordered = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA)
+    );
+
+    private SessionDescription s5EachTypeOfferOrdered = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.DATA)
+    );
+
+    private SessionDescription s5EachTypeOfferUnordered = new SessionDescriptionMock(SessionDescription.Type.OFFER,
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.VIDEO),
+            new StreamDescriptionMock(StreamType.DATA),
+            new StreamDescriptionMock(StreamType.AUDIO),
+            new StreamDescriptionMock(StreamType.DATA)
+    );
+
+    private List<? extends StreamSet.Stream> sSingleAudioStream = Arrays.asList(new StreamMock(StreamType.AUDIO));
+
+    private List<? extends StreamSet.Stream> s10AudioStreams = Arrays.asList(
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO)
+    );
+
+    private List<? extends StreamSet.Stream> s10EachTypeStreamsOrdered = Arrays.asList(
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA)
+    );
+
+    private List<? extends StreamSet.Stream> s10EachTypeStreamsUnordered = Arrays.asList(
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA)
+    );
+
+    private List<? extends StreamSet.Stream> s5EachTypeStreamsOrdered = Arrays.asList(
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA)
+    );
+
+    private List<? extends StreamSet.Stream> s5EachTypeStreamsUnordered = Arrays.asList(
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.VIDEO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.DATA),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.AUDIO),
+            new StreamMock(StreamType.VIDEO)
+    );
+
+    private ResultCount countResult(List<Pair<StreamDescription, StreamSet.Stream>> result) {
+        ResultCount count = new ResultCount();
+
+        for (Pair<StreamDescription, StreamSet.Stream> pair : result) {
+            if (pair.second != null) {
+                assertSame(pair.first.getType(), pair.second.getType());
+            }
+            switch (pair.first.getType()) {
+                case AUDIO:
+                    if (pair.second == null) {
+                        count.nullAudio += 1;
+                    } else {
+                        count.activeAudio += 1;
+                    }
+                    break;
+                case VIDEO:
+                    if (pair.second == null) {
+                        count.nullVideo += 1;
+                    } else {
+                        count.activeVideo += 1;
+                    }
+                    break;
+                case DATA:
+                    if (pair.second == null) {
+                        count.nullData += 1;
+                    } else {
+                        count.activeData += 1;
+                    }
+                    break;
+            }
+        }
+        return count;
+    }
+
+    private void countInactive(final ResultCount count, final List<? extends StreamSet.Stream> streams) {
+        for (StreamSet.Stream stream : streams) {
+            switch (stream.getType()) {
+                case AUDIO:
+                    if (((StreamMock) stream).getStreamMode() == StreamMode.INACTIVE) {
+                        count.inactiveAudio += 1;
+                    }
+                    break;
+                case VIDEO:
+                    if (((StreamMock) stream).getStreamMode() == StreamMode.INACTIVE) {
+                        count.inactiveVideo += 1;
+                    }
+                    break;
+                case DATA:
+                    if (((StreamMock) stream).getStreamMode() == StreamMode.INACTIVE) {
+                        count.inactiveData += 1;
+                    }
+                    break;
+            }
+        }
+    }
+
+    private class ResultCount {
+        public int activeAudio;
+        public int activeVideo;
+        public int activeData;
+        public int inactiveAudio;
+        public int inactiveVideo;
+        public int inactiveData;
+        public int nullAudio;
+        public int nullVideo;
+        public int nullData;
+
+        public void assertAudioCount(int activeCount, int inactiveCount, int nullCount) {
+            assertEquals(activeCount, activeAudio);
+            assertEquals(inactiveCount, inactiveAudio);
+            assertEquals(nullCount, nullAudio);
+        }
+
+        public void assertVideoCount(int activeCount, int inactiveCount, int nullCount) {
+            assertEquals(activeCount, activeVideo);
+            assertEquals(inactiveCount, inactiveVideo);
+            assertEquals(nullCount, nullVideo);
+        }
+
+        public void assertDataCount(int activeCount, int inactiveCount, int nullCount) {
+            assertEquals(activeCount, activeData);
+            assertEquals(inactiveCount, inactiveData);
+            assertEquals(nullCount, nullData);
+        }
+
+        public void assertAllCounts(int activeCount, int inactiveCount, int nullCount) {
+            assertAudioCount(activeCount, inactiveCount, nullCount);
+            assertVideoCount(activeCount, inactiveCount, nullCount);
+            assertDataCount(activeCount, inactiveCount, nullCount);
+        }
+    }
+
+    private ResultCount runResolveCounter(SessionDescription remoteDescription, List<? extends StreamSet.Stream> streams) {
+        for (StreamSet.Stream stream : streams) {
+            stream.setStreamMode(StreamMode.SEND_RECEIVE);
+        }
+        ResultCount count = countResult(Utils.resolveOfferedStreams(remoteDescription, streams));
+        countInactive(count, streams);
+        return count;
+    }
+
+    public void testResolveOfferedStreams() {
+        List<Pair<StreamDescription, StreamSet.Stream>> result;
+        ResultCount count;
+        StreamMock streamMock;
+
+        result = Utils.resolveOfferedStreams(sAudioOnlyOffer, sSingleAudioStream);
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        streamMock = (StreamMock) result.get(0).second;
+        assertSame(StreamType.AUDIO, result.get(0).first.getType());
+        assertSame(StreamType.AUDIO, streamMock.getType());
+        assertNull(streamMock.getStreamMode());
+
+        try {
+            Utils.resolveOfferedStreams(new SessionDescriptionMock(SessionDescription.Type.ANSWER,
+                    new StreamDescriptionMock(StreamType.AUDIO)), sSingleAudioStream);
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalArgumentException ignored) {
+        }
+
+        // ordered
+        count = runResolveCounter(s10EachTypeOfferOrdered, s10EachTypeStreamsOrdered);
+        count.assertAllCounts(10, 0, 0);
+
+        count = runResolveCounter(s5EachTypeOfferOrdered, s10EachTypeStreamsOrdered);
+        count.assertAllCounts(5, 5, 0);
+
+        count = runResolveCounter(s10EachTypeOfferOrdered, s5EachTypeStreamsOrdered);
+        count.assertAllCounts(5, 0, 5);
+
+        // unordered
+        count = runResolveCounter(s10EachTypeOfferUnordered, s10EachTypeStreamsUnordered);
+        count.assertAllCounts(10, 0, 0);
+
+        count = runResolveCounter(s5EachTypeOfferUnordered, s10EachTypeStreamsUnordered);
+        count.assertAllCounts(5, 5, 0);
+
+        count = runResolveCounter(s10EachTypeOfferUnordered, s5EachTypeStreamsUnordered);
+        count.assertAllCounts(5, 0, 5);
+
+        // descriptions ordered
+        count = runResolveCounter(s10EachTypeOfferOrdered, s10EachTypeStreamsUnordered);
+        count.assertAllCounts(10, 0, 0);
+
+        count = runResolveCounter(s5EachTypeOfferOrdered, s10EachTypeStreamsUnordered);
+        count.assertAllCounts(5, 5, 0);
+
+        count = runResolveCounter(s10EachTypeOfferOrdered, s5EachTypeStreamsUnordered);
+        count.assertAllCounts(5, 0, 5);
+
+        // streams ordered
+        count = runResolveCounter(s10EachTypeOfferUnordered, s10EachTypeStreamsOrdered);
+        count.assertAllCounts(10, 0, 0);
+
+        count = runResolveCounter(s5EachTypeOfferUnordered, s10EachTypeStreamsOrdered);
+        count.assertAllCounts(5, 5, 0);
+
+        count = runResolveCounter(s10EachTypeOfferUnordered, s5EachTypeStreamsOrdered);
+        count.assertAllCounts(5, 0, 5);
+
+        // missing some streams
+        count = runResolveCounter(s10EachTypeOfferOrdered, s10AudioStreams);
+        count.assertAudioCount(10, 0, 0);
+        count.assertVideoCount(0, 0, 10);
+        count.assertDataCount(0, 0, 10);
+
+        count = runResolveCounter(s10EachTypeOfferUnordered, s10AudioStreams);
+        count.assertAudioCount(10, 0, 0);
+        count.assertVideoCount(0, 0, 10);
+        count.assertDataCount(0, 0, 10);
+
+        count = runResolveCounter(s5EachTypeOfferOrdered, s10AudioStreams);
+        count.assertAudioCount(5, 5, 0);
+        count.assertVideoCount(0, 0, 5);
+        count.assertDataCount(0, 0, 5);
+
+        count = runResolveCounter(s5EachTypeOfferUnordered, s10AudioStreams);
+        count.assertAudioCount(5, 5, 0);
+        count.assertVideoCount(0, 0, 5);
+        count.assertDataCount(0, 0, 5);
+
+        // missing some descriptions
+        count = runResolveCounter(s10AudioOffer, s10EachTypeStreamsOrdered);
+        count.assertAudioCount(10, 0, 0);
+        count.assertVideoCount(0, 10, 0);
+        count.assertDataCount(0, 10, 0);
+
+        count = runResolveCounter(s10AudioOffer, s10EachTypeStreamsUnordered);
+        count.assertAudioCount(10, 0, 0);
+        count.assertVideoCount(0, 10, 0);
+        count.assertDataCount(0, 10, 0);
+
+        count = runResolveCounter(s10AudioOffer, s5EachTypeStreamsOrdered);
+        count.assertAudioCount(5, 0, 5);
+        count.assertVideoCount(0, 5, 0);
+        count.assertDataCount(0, 5, 0);
+
+        count = runResolveCounter(s10AudioOffer, s5EachTypeStreamsUnordered);
+        count.assertAudioCount(5, 0, 5);
+        count.assertVideoCount(0, 5, 0);
+        count.assertDataCount(0, 5, 0);
+    }
+
+
+    private class SessionDescriptionMock implements SessionDescription {
+        private Type mType;
+        private List<StreamDescription> mStreamDescriptions;
+
+        private SessionDescriptionMock(Type type, StreamDescription... streamDescriptions) {
+            mType = type;
+            mStreamDescriptions = Arrays.asList(streamDescriptions);
+        }
+
+        @Override
+        public Type getType() {
+            return mType;
+        }
+
+        @Override
+        public List<StreamDescription> getStreamDescriptions() {
+            return mStreamDescriptions;
+        }
+
+        @Override
+        public String getSessionId() {
+            return null;
+        }
+
+        @Override
+        public boolean hasStreamType(final StreamType streamType) {
+            return false;
+        }
+    }
+
+    private class StreamDescriptionMock implements StreamDescription {
+        private StreamType mType;
+
+        private StreamDescriptionMock(final StreamType type) {
+            mType = type;
+        }
+
+        @Override
+        public StreamType getType() {
+            return mType;
+        }
+
+        @Override
+        public StreamMode getMode() {
+            return null;
+        }
+
+        @Override
+        public String getUfrag() {
+            return null;
+        }
+
+        @Override
+        public String getPassword() {
+            return null;
+        }
+
+        @Override
+        public List<RtcCandidate> getCandidates() {
+            return null;
+        }
+
+        @Override
+        public String getDtlsSetup() {
+            return null;
+        }
+
+        @Override
+        public String getFingerprint() {
+            return null;
+        }
+
+        @Override
+        public String getFingerprintHashFunction() {
+            return null;
+        }
+
+        @Override
+        public String getMediaStreamId() {
+            return null;
+        }
+
+        @Override
+        public String getMediaStreamTrackId() {
+            return null;
+        }
+
+        @Override
+        public String getCname() {
+            return null;
+        }
+
+        @Override
+        public boolean isRtcpMux() {
+            return false;
+        }
+
+        @Override
+        public List<Long> getSsrcs() {
+            return null;
+        }
+
+        @Override
+        public List<RtcPayload> getPayloads() {
+            return null;
+        }
+
+        @Override
+        public int getSctpPort() {
+            return 0;
+        }
+
+        @Override
+        public int getMaxMessageSize() {
+            return 0;
+        }
+
+        @Override
+        public String getAppLabel() {
+            return null;
+        }
+    }
+
+    private class StreamMock implements StreamSet.Stream {
+        private StreamMode mStreamMode;
+        private StreamType mType;
+
+        private StreamMock(final StreamType type) {
+            mType = type;
+        }
+
+        public StreamMode getStreamMode() {
+            return mStreamMode;
+        }
+
+        @Override
+        public StreamType getType() {
+            return mType;
+        }
+
+        @Override
+        public void setStreamMode(final StreamMode mode) {
+            mStreamMode = mode;
+        }
     }
 }
