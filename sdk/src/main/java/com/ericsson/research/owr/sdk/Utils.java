@@ -86,7 +86,8 @@ class Utils {
         }
         List<Payload> result = new LinkedList<>();
         for (RtcPayload payload : payloads) {
-            if ("RTX".equals(payload.getEncodingName())) {
+            String encodingName = payload.getEncodingName();
+            if (encodingName == null || "RTX".equals(encodingName.toUpperCase())) {
                 continue;
             }
             try {
