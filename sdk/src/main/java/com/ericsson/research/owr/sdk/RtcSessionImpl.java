@@ -347,6 +347,15 @@ class RtcSessionImpl implements RtcSession {
                 return;
             }
 
+            if (streamDescription != null) {
+                for (RtcCandidate rtcCandidate : getRemoteStreamDescription().getCandidates()) {
+                    Candidate candidate = Utils.transformCandidate(rtcCandidate);
+                    candidate.setUfrag(streamDescription.getUfrag());
+                    candidate.setPassword(streamDescription.getPassword());
+                    mSession.addRemoteCandidate(candidate);
+                }
+            }
+
             mSession.addDtlsCertificateChangeListener(this);
             mSession.addOnNewCandidateListener(this);
 
@@ -407,6 +416,13 @@ class RtcSessionImpl implements RtcSession {
                 throw new IllegalStateException("remote description set for outbound call");
             }
             mRemoteStreamDescription = remoteStreamDescription;
+
+            for (RtcCandidate rtcCandidate : getRemoteStreamDescription().getCandidates()) {
+                Candidate candidate = Utils.transformCandidate(rtcCandidate);
+                candidate.setUfrag(remoteStreamDescription.getUfrag());
+                candidate.setPassword(remoteStreamDescription.getPassword());
+                getSession().addRemoteCandidate(candidate);
+            }
         }
 
         @Override
@@ -576,9 +592,6 @@ class RtcSessionImpl implements RtcSession {
             }
             if (!getRemoteStreamDescription().isRtcpMux()) {
                 getMediaSession().setRtcpMux(false);
-            }
-            for (RtcCandidate candidate : getRemoteStreamDescription().getCandidates()) {
-                getSession().addRemoteCandidate(Utils.transformCandidate(candidate));
             }
 
             if (mode.wantSend()) {
