@@ -218,6 +218,22 @@ class Utils {
         return result;
     }
 
+    public static List<RtcPayload> selectPreferredPayload(final List<RtcPayload> payloads) {
+        List<RtcPayload> result = new LinkedList<>();
+        for (RtcPayload payload : payloads) {
+            if (!encodingNameMatches("RTX", payload)) {
+                result.add(payload);
+                break;
+            }
+        }
+        if (!result.isEmpty()) {
+            RtcPayload payload = findRtxPayloadForPayloadType(payloads, result.get(0).getPayloadType());
+            if (payload != null) {
+                result.add(payload);
+            }
+        }
+        return result;
+    }
 
     private static final Random sRandom = new Random();
 

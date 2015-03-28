@@ -83,6 +83,18 @@ public class UtilsTests extends TestCase {
         sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
     }
 
+    private static final List<RtcPayload> sDefaultVideoPayloadsNoH264Rtx = new ArrayList<>();
+    static {
+        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 100);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+    }
+
     private static final List<RtcPayload> sValidPayloads1 = new ArrayList<>();
     static {
         sValidPayloads1.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
@@ -376,6 +388,86 @@ public class UtilsTests extends TestCase {
         assertEquals(false, vp8_6_b.isNack());
         assertEquals(true, vp8_6_b.isNackPli());
         assertEquals(true, vp8_6_b.isCcmFir());
+    }
+
+    private static final List<RtcPayload> sDefaultVideoPayloadsRtxReordered = new ArrayList<>();
+    static {
+        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 103);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 100);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+    }
+
+    private static final List<RtcPayload> sDefaultVideoPayloadsRtxReorderedVp8 = new ArrayList<>();
+    static {
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 103);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 100);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+    }
+
+    private static final List<RtcPayload> sDefaultVideoPayloadsVp8RtxReorderedFirst = new ArrayList<>();
+    static {
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 100);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+    }
+
+    public void testPreferredPayloadSelection() {
+        List<RtcPayload> result;
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloads);
+        assertEquals(2, result.size());
+        assertEquals(103, result.get(0).getPayloadType());
+        assertEquals(123, result.get(1).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloadsNoVp8Rtx);
+        assertEquals(2, result.size());
+        assertEquals(103, result.get(0).getPayloadType());
+        assertEquals(123, result.get(1).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloadsNoH264Rtx);
+        assertEquals(1, result.size());
+        assertEquals(103, result.get(0).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sValidPayloads2);
+        assertEquals(1, result.size());
+        assertEquals(110, result.get(0).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloadsRtxReordered);
+        assertEquals(2, result.size());
+        assertEquals(103, result.get(0).getPayloadType());
+        assertEquals(123, result.get(1).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloadsRtxReorderedVp8);
+        assertEquals(2, result.size());
+        assertEquals(100, result.get(0).getPayloadType());
+        assertEquals(120, result.get(1).getPayloadType());
+
+        result = Utils.selectPreferredPayload(sDefaultVideoPayloadsVp8RtxReorderedFirst);
+        assertEquals(1, result.size());
+        assertEquals(103, result.get(0).getPayloadType());
     }
 
     private static String sFingerprint = "55:20:0F:C6:8D:99:19:A2:09:AF:F3:64:C9:43:53:B6:C8:E0:C7:C9:B6:20:B7:91:11:E9:8B:77:57:D6:43:9B";
