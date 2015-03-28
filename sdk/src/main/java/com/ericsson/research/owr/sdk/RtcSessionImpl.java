@@ -299,19 +299,14 @@ class RtcSessionImpl implements RtcSession {
         return mConfig;
     }
 
-    private StreamHandler createInactiveStreamHandler(int index, StreamDescription streamDescription) {
-        if (streamDescription.getType() == StreamType.DATA) {
-            return new DataStreamHandler(index, streamDescription);
-        } else {
-            return new MediaStreamHandler(index, streamDescription);
-        }
-    }
-
     private StreamHandler createStreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream) {
         if (stream == null) {
-            return createInactiveStreamHandler(index, streamDescription);
-        }
-        if (stream.getType() == StreamType.DATA) {
+            if (streamDescription.getType() == StreamType.DATA) {
+                return new DataStreamHandler(index, streamDescription);
+            } else {
+                return new MediaStreamHandler(index, streamDescription);
+            }
+        } else if (stream.getType() == StreamType.DATA) {
             return new DataStreamHandler(index, streamDescription, (StreamSet.DataStream) stream);
         } else {
             return new MediaStreamHandler(index, streamDescription, (StreamSet.MediaStream) stream);
