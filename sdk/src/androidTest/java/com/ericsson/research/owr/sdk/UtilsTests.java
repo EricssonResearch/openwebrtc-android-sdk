@@ -71,6 +71,18 @@ public class UtilsTests extends TestCase {
         }}, 0, false, false, false));
     }
 
+    private static final List<RtcPayload> sDefaultVideoPayloadsNoVp8Rtx = new ArrayList<>();
+    static {
+        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 103);
+            put("rtx-time", 200);
+        }}, 0, false, false, false));
+        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+    }
+
     private static final List<RtcPayload> sValidPayloads1 = new ArrayList<>();
     static {
         sValidPayloads1.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
@@ -117,6 +129,29 @@ public class UtilsTests extends TestCase {
         }}, 0, false, false, false));
     }
 
+    private static final List<RtcPayload> sValidPayloads6 = new ArrayList<>();
+    static {
+        sValidPayloads6.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 1);
+        }}, 0, false, true, true));
+        sValidPayloads6.add(new PlainRtcPayload(115, "H264", 90000, new HashMap<String, Object>(){{
+            put("packetization-mode", 0);
+        }}, 0, false, true, true));
+        sValidPayloads6.add(new PlainRtcPayload(112, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 110);
+            put("rtx-time", 200);
+        }}, 0, false, true, true));
+        sValidPayloads6.add(new PlainRtcPayload(117, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 115);
+            put("rtx-time", 200);
+        }}, 0, false, true, true));
+        sValidPayloads6.add(new PlainRtcPayload(111, "VP8", 90000, null, 0, false, true, true));
+        sValidPayloads6.add(new PlainRtcPayload(116, "RTX", 90000, new HashMap<String, Object>(){{
+            put("apt", 111);
+            put("rtx-time", 200);
+        }}, 0, false, true, true));
+    }
+
     private static final List<RtcPayload> sDefaultAudioPayloads = new ArrayList<>();
     static {
         sDefaultAudioPayloads.add(new PlainRtcPayload(111, "OPUS", 48000, null, 2, false, false, false));
@@ -157,6 +192,19 @@ public class UtilsTests extends TestCase {
         assertEquals(120, vp8.getRtxPayloadType());
         assertEquals(200, vp8.getRtxTime());
 
+        transformedVideo = Utils.transformPayloads(sDefaultVideoPayloadsNoVp8Rtx, MediaType.VIDEO);
+        assertEquals(2, transformedVideo.size());
+
+        vp8 = (VideoPayload) transformedVideo.get(1);
+        assertEquals(CodecType.VP8, vp8.getCodecType());
+        assertEquals(90000, vp8.getClockRate());
+        assertEquals(100, vp8.getPayloadType());
+        assertEquals(true, vp8.getCcmFir());
+        assertEquals(true, vp8.getNackPli());
+        assertTrue(vp8.getMediaType().contains(MediaType.VIDEO));
+        assertEquals(-1, vp8.getRtxPayloadType());
+        assertEquals(0, vp8.getRtxTime());
+
         List<Payload> transformedAudio = Utils.transformPayloads(sDefaultAudioPayloads, MediaType.AUDIO);
         assertEquals(3, transformedAudio.size());
         AudioPayload opus = (AudioPayload) transformedAudio.get(0);
@@ -190,7 +238,9 @@ public class UtilsTests extends TestCase {
     public void testIntersectPayloads() {
         List<RtcPayload> emptyIntersection = Utils.intersectPayloads(sDefaultVideoPayloads, Collections.<RtcPayload>emptyList());
         MoreAsserts.assertEmpty(emptyIntersection);
+    }
 
+    public void testSimpleIntersection() {
         List<RtcPayload> intersection1 = Utils.intersectPayloads(sValidPayloads1, sDefaultVideoPayloads);
         assertEquals(2, intersection1.size());
         RtcPayload h2641 = intersection1.get(0);
@@ -212,8 +262,9 @@ public class UtilsTests extends TestCase {
         assertEquals(false, h264rtx1.isNack());
         assertEquals(false, h264rtx1.isNackPli());
         assertEquals(false, h264rtx1.isCcmFir());
+    }
 
-
+    public void testh264NoRtxIntersection() {
         List<RtcPayload> intersection2 = Utils.intersectPayloads(sValidPayloads2, sDefaultVideoPayloads);
         assertEquals(1, intersection2.size());
         RtcPayload h2642 = intersection2.get(0);
@@ -225,24 +276,106 @@ public class UtilsTests extends TestCase {
         assertEquals(false, h2642.isNack());
         assertEquals(true, h2642.isNackPli());
         assertEquals(true, h2642.isCcmFir());
+    }
 
+    public void testNoNackPliIntersection() {
         List<RtcPayload> intersection3 = Utils.intersectPayloads(sValidPayloads3, sDefaultVideoPayloads);
         assertEquals(1, intersection3.size());
         assertEquals(false, intersection3.get(0).isNack());
         assertEquals(false, intersection3.get(0).isNackPli());
         assertEquals(true, intersection3.get(0).isCcmFir());
+    }
 
+    public void testNoCcmFirIntersection() {
         List<RtcPayload> intersection4 = Utils.intersectPayloads(sValidPayloads4, sDefaultVideoPayloads);
         assertEquals(1, intersection4.size());
         assertEquals(false, intersection4.get(0).isNack());
         assertEquals(true, intersection4.get(0).isNackPli());
         assertEquals(false, intersection4.get(0).isCcmFir());
+    }
 
+    public void testNoNackPliOrCcmFirIntersection() {
         List<RtcPayload> intersection5 = Utils.intersectPayloads(sValidPayloads5, sDefaultVideoPayloads);
         assertEquals(1, intersection5.size());
         assertEquals(false, intersection5.get(0).isNack());
         assertEquals(false, intersection5.get(0).isNackPli());
         assertEquals(false, intersection5.get(0).isCcmFir());
+    }
+
+    public void testFullRtxIntersection() {
+        List<RtcPayload> intersection6 = Utils.intersectPayloads(sValidPayloads6, sDefaultVideoPayloads);
+        assertEquals(4, intersection6.size());
+        RtcPayload h264_6 = intersection6.get(0);
+        assertEquals("H264", h264_6.getEncodingName());
+        assertEquals(90000, h264_6.getClockRate());
+        assertEquals(110, h264_6.getPayloadType());
+        assertEquals(0, h264_6.getChannels());
+        assertEquals(1, h264_6.getParameters().get("packetization-mode"));
+        assertEquals(false, h264_6.isNack());
+        assertEquals(true, h264_6.isNackPli());
+        assertEquals(true, h264_6.isCcmFir());
+        RtcPayload h264rtx_6 = intersection6.get(1);
+        assertEquals("RTX", h264rtx_6.getEncodingName());
+        assertEquals(90000, h264rtx_6.getClockRate());
+        assertEquals(112, h264rtx_6.getPayloadType());
+        assertEquals(0, h264rtx_6.getChannels());
+        assertEquals(110, h264rtx_6.getParameters().get("apt"));
+        assertEquals(200, h264rtx_6.getParameters().get("rtx-time"));
+        assertEquals(false, h264rtx_6.isNack());
+        assertEquals(true, h264rtx_6.isNackPli());
+        assertEquals(true, h264rtx_6.isCcmFir());
+        RtcPayload vp8_6 = intersection6.get(2);
+        assertEquals("VP8", vp8_6.getEncodingName());
+        assertEquals(90000, vp8_6.getClockRate());
+        assertEquals(111, vp8_6.getPayloadType());
+        assertEquals(0, vp8_6.getChannels());
+        assertNull(vp8_6.getParameters());
+        assertEquals(false, vp8_6.isNack());
+        assertEquals(true, vp8_6.isNackPli());
+        assertEquals(true, vp8_6.isCcmFir());
+        RtcPayload vp8rtx_6 = intersection6.get(3);
+        assertEquals("RTX", vp8rtx_6.getEncodingName());
+        assertEquals(90000, vp8rtx_6.getClockRate());
+        assertEquals(116, vp8rtx_6.getPayloadType());
+        assertEquals(0, vp8rtx_6.getChannels());
+        assertEquals(111, vp8rtx_6.getParameters().get("apt"));
+        assertEquals(200, vp8rtx_6.getParameters().get("rtx-time"));
+        assertEquals(false, vp8rtx_6.isNack());
+        assertEquals(true, vp8rtx_6.isNackPli());
+        assertEquals(true, vp8rtx_6.isCcmFir());
+    }
+
+    public void testFullH264RtxButNoVp8RtxIntersection () {
+        List<RtcPayload> intersection6_b = Utils.intersectPayloads(sValidPayloads6, sDefaultVideoPayloadsNoVp8Rtx);
+        assertEquals(3, intersection6_b.size());
+        RtcPayload h26_b4_6_b = intersection6_b.get(0);
+        assertEquals("H264", h26_b4_6_b.getEncodingName());
+        assertEquals(90000, h26_b4_6_b.getClockRate());
+        assertEquals(110, h26_b4_6_b.getPayloadType());
+        assertEquals(0, h26_b4_6_b.getChannels());
+        assertEquals(1, h26_b4_6_b.getParameters().get("packetization-mode"));
+        assertEquals(false, h26_b4_6_b.isNack());
+        assertEquals(true, h26_b4_6_b.isNackPli());
+        assertEquals(true, h26_b4_6_b.isCcmFir());
+        RtcPayload h26_b4rtx_6_b = intersection6_b.get(1);
+        assertEquals("RTX", h26_b4rtx_6_b.getEncodingName());
+        assertEquals(90000, h26_b4rtx_6_b.getClockRate());
+        assertEquals(112, h26_b4rtx_6_b.getPayloadType());
+        assertEquals(0, h26_b4rtx_6_b.getChannels());
+        assertEquals(110, h26_b4rtx_6_b.getParameters().get("apt"));
+        assertEquals(200, h26_b4rtx_6_b.getParameters().get("rtx-time"));
+        assertEquals(false, h26_b4rtx_6_b.isNack());
+        assertEquals(true, h26_b4rtx_6_b.isNackPli());
+        assertEquals(true, h26_b4rtx_6_b.isCcmFir());
+        RtcPayload vp8_6_b = intersection6_b.get(2);
+        assertEquals("VP8", vp8_6_b.getEncodingName());
+        assertEquals(90000, vp8_6_b.getClockRate());
+        assertEquals(111, vp8_6_b.getPayloadType());
+        assertEquals(0, vp8_6_b.getChannels());
+        assertNull(vp8_6_b.getParameters());
+        assertEquals(false, vp8_6_b.isNack());
+        assertEquals(true, vp8_6_b.isNackPli());
+        assertEquals(true, vp8_6_b.isCcmFir());
     }
 
     private static String sFingerprint = "55:20:0F:C6:8D:99:19:A2:09:AF:F3:64:C9:43:53:B6:C8:E0:C7:C9:B6:20:B7:91:11:E9:8B:77:57:D6:43:9B";
