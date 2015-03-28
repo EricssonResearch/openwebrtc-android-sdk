@@ -129,14 +129,17 @@ class RtcSessionImpl implements RtcSession {
         }
 
         mStreamHandlers = new LinkedList<>();
+        int index = 0;
         if (mIsInitiator) {
             // For outbound calls we initiate all streams without any remote description
             for (StreamSet.Stream stream : streamSet.getStreams()) {
-                mStreamHandlers.add(createStreamHandler(null, stream));
+                mStreamHandlers.add(createStreamHandler(index, null, stream));
+                index++;
             }
         } else {
             for (Pair<StreamDescription, StreamSet.Stream> pair : Utils.resolveOfferedStreams(mRemoteDescription, streamSet.getStreams())) {
-                mStreamHandlers.add(createStreamHandler(pair.first, pair.second));
+                mStreamHandlers.add(createStreamHandler(index, pair.first, pair.second));
+                index++;
             }
         }
         for (StreamHandler handler : mStreamHandlers) {
@@ -296,40 +299,22 @@ class RtcSessionImpl implements RtcSession {
         return mConfig;
     }
 
-    private void sendCandidateForStream(StreamHandler streamHandler, final PlainRtcCandidate rtcCandidate) {
-        for (int i = 0; i < mStreamHandlers.size(); i++) {
-            if (mStreamHandlers.get(i) == streamHandler) {
-                Log.d(TAG, "[RtcSession] got local candidate for " + streamHandler);
-                rtcCandidate.setStreamIndex(i);
-                if (mLocalCandidateListener != null) {
-                    mMainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mLocalCandidateListener.onLocalCandidate(rtcCandidate);
-                        }
-                    });
-                }
-                return;
-            }
-        }
-    }
-
-    private StreamHandler createInactiveStreamHandler(StreamDescription streamDescription) {
+    private StreamHandler createInactiveStreamHandler(int index, StreamDescription streamDescription) {
         if (streamDescription.getType() == StreamType.DATA) {
-            return new DataStreamHandler(streamDescription);
+            return new DataStreamHandler(index, streamDescription);
         } else {
-            return new MediaStreamHandler(streamDescription);
+            return new MediaStreamHandler(index, streamDescription);
         }
     }
 
-    private StreamHandler createStreamHandler(StreamDescription streamDescription, StreamSet.Stream stream) {
+    private StreamHandler createStreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream) {
         if (stream == null) {
-            return createInactiveStreamHandler(streamDescription);
+            return createInactiveStreamHandler(index, streamDescription);
         }
         if (stream.getType() == StreamType.DATA) {
-            return new DataStreamHandler(streamDescription, (StreamSet.DataStream) stream);
+            return new DataStreamHandler(index, streamDescription, (StreamSet.DataStream) stream);
         } else {
-            return new MediaStreamHandler(streamDescription, (StreamSet.MediaStream) stream);
+            return new MediaStreamHandler(index, streamDescription, (StreamSet.MediaStream) stream);
         }
     }
 
@@ -347,15 +332,17 @@ class RtcSessionImpl implements RtcSession {
     private abstract class StreamHandler implements Session.DtlsCertificateChangeListener, Session.OnNewCandidateListener {
         private final StreamSet.Stream mStream;
         private final MutableStreamDescription mLocalStreamDescription;
+        private final int mIndex;
         private StreamDescription mRemoteStreamDescription;
         private Session mSession;
         private boolean mHaveCandidate = false;
         private boolean mHaveFingerprint = false;
         private boolean mLocalDescriptionCreated = false;
 
-        StreamHandler(StreamDescription streamDescription, StreamSet.Stream stream, Session session) {
+        StreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream, Session session) {
             mLocalStreamDescription = new MutableStreamDescription();
             mRemoteStreamDescription = streamDescription;
+            mIndex = index;
             mStream = stream;
             mSession = session;
 
@@ -386,8 +373,12 @@ class RtcSessionImpl implements RtcSession {
         }
 
         // Inactive stream
-        StreamHandler(StreamDescription streamDescription) {
-            this(streamDescription, null, null);
+        StreamHandler(int index, StreamDescription streamDescription) {
+            this(index, streamDescription, null, null);
+        }
+
+        public int getIndex() {
+            return mIndex;
         }
 
         protected Session getSession() {
@@ -441,9 +432,16 @@ class RtcSessionImpl implements RtcSession {
                 getLocalStreamDescription().setPassword(candidate.getPassword());
             }
 
-            PlainRtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+            final PlainRtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
             if (mLocalDescriptionCreated) {
-                sendCandidateForStream(this, rtcCandidate);
+                Log.d(TAG, "[RtcSession] got local candidate for " + this);
+                rtcCandidate.setStreamIndex(getIndex());
+                mMainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mLocalCandidateListener.onLocalCandidate(rtcCandidate);
+                    }
+                });
             } else {
                 getLocalStreamDescription().addCandidate(rtcCandidate);
             }
@@ -477,7 +475,7 @@ class RtcSessionImpl implements RtcSession {
                 return "Stream{}";
             }
             return "Stream{" +
-                    getLocalStreamDescription().getType() + "," +
+                    getLocalStreamDescription().getType().toString().charAt(0) + getIndex() + "," +
                     getLocalStreamDescription().getMode() + "}";
         }
     }
@@ -486,8 +484,8 @@ class RtcSessionImpl implements RtcSession {
         private boolean mHaveCname = false;
         private boolean mHaveSsrc = false;
 
-        MediaStreamHandler(StreamDescription streamDescription, StreamSet.MediaStream mediaStream) {
-            super(streamDescription, mediaStream, new MediaSession(!isInitiator()));
+        MediaStreamHandler(int index, StreamDescription streamDescription, StreamSet.MediaStream mediaStream) {
+            super(index, streamDescription, mediaStream, new MediaSession(!isInitiator()));
             getMediaSession().addCnameChangeListener(this);
             getMediaSession().addSendSsrcChangeListener(this);
             getMediaSession().addOnIncomingSourceListener(this);
@@ -557,8 +555,8 @@ class RtcSessionImpl implements RtcSession {
         }
 
         // inactive stream
-        MediaStreamHandler(StreamDescription streamDescription) {
-            super(streamDescription);
+        MediaStreamHandler(int index, StreamDescription streamDescription) {
+            super(index, streamDescription);
         }
 
         public MediaSession getMediaSession() {
@@ -642,12 +640,12 @@ class RtcSessionImpl implements RtcSession {
 
     // TODO: do
     private class DataStreamHandler extends StreamHandler {
-        public DataStreamHandler(StreamDescription streamDescription, StreamSet.DataStream dataStream) {
-            super(streamDescription, dataStream, new DataSession(isInitiator()));
+        public DataStreamHandler(int index, StreamDescription streamDescription, StreamSet.DataStream dataStream) {
+            super(index, streamDescription, dataStream, new DataSession(isInitiator()));
         }
 
-        public DataStreamHandler(StreamDescription streamDescription) {
-            super(streamDescription);
+        public DataStreamHandler(int index, StreamDescription streamDescription) {
+            super(index, streamDescription);
         }
     }
 }
