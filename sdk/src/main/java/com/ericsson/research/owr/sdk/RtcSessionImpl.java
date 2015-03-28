@@ -445,6 +445,9 @@ class RtcSessionImpl implements RtcSession {
         }
 
         public void onRemoteCandidate(RtcCandidate rtcCandidate) {
+            if (getStream() == null) {
+                return;
+            }
             boolean isRtcp = rtcCandidate.getComponentType() == RtcCandidate.ComponentType.RTCP;
             if (getLocalStreamDescription().isRtcpMux() && isRtcp) {
                 return;
