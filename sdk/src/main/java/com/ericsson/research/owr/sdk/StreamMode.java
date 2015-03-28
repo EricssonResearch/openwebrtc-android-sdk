@@ -30,7 +30,7 @@ public enum StreamMode {
     private final boolean mReceive;
     private final boolean mSend;
 
-    private StreamMode(boolean send, boolean receive) {
+    StreamMode(boolean send, boolean receive) {
         mSend = send;
         mReceive = receive;
     }
