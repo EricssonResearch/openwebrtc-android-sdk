@@ -90,6 +90,7 @@ class RtcSessionImpl implements RtcSession {
             streams = Arrays.toString(mStreamHandlers.toArray(new StreamHandler[mStreamHandlers.size()]));
         }
         Log.d(TAG, "[RtcSession" +
+                " id=" + mSessionId +
                 " initiator=" + isInitiator() +
                 " state=" + mState.name() +
                 " streams=" + streams +
