@@ -79,6 +79,14 @@ class Utils {
         return candidate;
     }
 
+    private static boolean encodingNameMatches(String encodingName, RtcPayload payload) {
+        if (encodingName == null) {
+            return false;
+        }
+        String actualEncodingName = payload.getEncodingName();
+        return encodingName.toUpperCase().equals(actualEncodingName.toUpperCase());
+    }
+
     static List<Payload> transformPayloads(List<RtcPayload> payloads, MediaType mediaType) {
         if (payloads == null) {
             throw new NullPointerException("payloads should not be null");
@@ -88,8 +96,7 @@ class Utils {
         }
         List<Payload> result = new LinkedList<>();
         for (RtcPayload payload : payloads) {
-            String encodingName = payload.getEncodingName();
-            if (encodingName == null || "RTX".equals(encodingName.toUpperCase())) {
+            if (encodingNameMatches("RTX", payload)) {
                 continue;
             }
             try {
@@ -136,7 +143,7 @@ class Utils {
             return null;
         }
         for (RtcPayload payload : payloads) {
-            if ("RTX".equals(payload.getEncodingName())) {
+            if (encodingNameMatches("RTX", payload)) {
                 int apt = getAssociatedPayloadType(payload);
                 if (apt > 0 && apt == payloadType) {
                     return payload;
@@ -162,10 +169,7 @@ class Utils {
 
     private static RtcPayload findMatchingPayload(List<RtcPayload> payloads, RtcPayload matchingPayload) {
         for (RtcPayload payload : payloads) {
-            if (payload.getEncodingName() == null) {
-                continue;
-            }
-            if (!payload.getEncodingName().equals(matchingPayload.getEncodingName())) {
+            if (!encodingNameMatches(payload.getEncodingName(), matchingPayload)) {
                 continue;
             }
             try {
@@ -196,7 +200,7 @@ class Utils {
     static List<RtcPayload> intersectPayloads(List<RtcPayload> payloads, List<RtcPayload> filterPayloads) {
         List<RtcPayload> result = new LinkedList<>();
         for (RtcPayload payload : payloads) {
-            if ("RTX".equals(payload.getEncodingName())) {
+            if (encodingNameMatches("RTX", payload)) {
                 RtcPayload associatedPayload = findPayloadByPayloadType(payloads, getAssociatedPayloadType(payload));
                 RtcPayload matchingPayload = findMatchingPayload(filterPayloads, associatedPayload);
                 if (matchingPayload != null) {
