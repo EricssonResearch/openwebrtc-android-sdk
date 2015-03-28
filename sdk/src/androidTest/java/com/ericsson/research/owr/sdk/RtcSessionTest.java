@@ -25,6 +25,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.os.Looper;
 import android.test.AndroidTestCase;
 
 import com.ericsson.research.owr.MediaSource;
@@ -61,12 +62,14 @@ public class RtcSessionTest extends AndroidTestCase {
         out.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
             @Override
             public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
                 in.addRemoteCandidate(candidate);
             }
         });
         in.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
             @Override
             public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
                 out.addRemoteCandidate(candidate);
             }
         });
@@ -90,10 +93,12 @@ public class RtcSessionTest extends AndroidTestCase {
         out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
             @Override
             public void onSetupComplete(final SessionDescription localDescription) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
                 in.setRemoteDescription(localDescription);
                 in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
+                        assertSame(Looper.getMainLooper(), Looper.myLooper());
                         out.setRemoteDescription(localDescription);
                         lock.countDown();
                     }

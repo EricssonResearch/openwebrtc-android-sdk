@@ -25,6 +25,8 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Pair;
 
@@ -61,6 +63,7 @@ class RtcSessionImpl implements RtcSession {
     private final RtcConfig mConfig;
 
     private SessionDescription mRemoteDescription = null;
+    private final Handler mMainHandler;
 
     private OnLocalCandidateListener mLocalCandidateListener = null;
     private List<StreamHandler> mStreamHandlers;
@@ -75,6 +78,7 @@ class RtcSessionImpl implements RtcSession {
         mConfig = config;
         mState = State.INIT;
         mIsInitiator = true;
+        mMainHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
@@ -152,42 +156,46 @@ class RtcSessionImpl implements RtcSession {
         log("initial setup complete");
     }
 
-    private void maybeFinishSetup() {
-        SetupCompleteCallback callback;
-        SessionDescription sessionDescription;
+    private synchronized void maybeFinishSetup() {
+        final SetupCompleteCallback callback;
+        final SessionDescription sessionDescription;
 
-        synchronized (this) {
-            if (mState != State.SETUP) {
-                Log.w(TAG, "maybeFinishSetup called at wrong state: " + mState);
+        if (mState != State.SETUP) {
+            Log.w(TAG, "maybeFinishSetup called at wrong state: " + mState);
+            return;
+        }
+        for (StreamHandler streamHandler : mStreamHandlers) {
+            if (!streamHandler.isReady()) {
                 return;
             }
-            for (StreamHandler streamHandler : mStreamHandlers) {
-                if (!streamHandler.isReady()) {
-                    return;
-                }
-            }
-            log("setup complete");
-
-            List<StreamDescription> streamDescriptions = new ArrayList<>(mStreamHandlers.size());
-
-            for (StreamHandler streamHandler : mStreamHandlers) {
-                streamDescriptions.add(streamHandler.finishLocalStreamDescription());
-            }
-
-            SessionDescription.Type type;
-            if (mIsInitiator) {
-                type = SessionDescription.Type.OFFER;
-                mState = State.AWAITING_ANSWER;
-            } else {
-                type = SessionDescription.Type.ANSWER;
-                mState = State.ACTIVE;
-            }
-
-            sessionDescription = new SessionDescriptionImpl(type, mSessionId, streamDescriptions);
-            callback = mSetupCompleteCallback;
-            mSetupCompleteCallback = null;
         }
-        callback.onSetupComplete(sessionDescription);
+        log("setup complete");
+
+        List<StreamDescription> streamDescriptions = new ArrayList<>(mStreamHandlers.size());
+
+        for (StreamHandler streamHandler : mStreamHandlers) {
+            streamDescriptions.add(streamHandler.finishLocalStreamDescription());
+        }
+
+        SessionDescription.Type type;
+        if (mIsInitiator) {
+            type = SessionDescription.Type.OFFER;
+            mState = State.AWAITING_ANSWER;
+        } else {
+            type = SessionDescription.Type.ANSWER;
+            mState = State.ACTIVE;
+        }
+
+        sessionDescription = new SessionDescriptionImpl(type, mSessionId, streamDescriptions);
+        callback = mSetupCompleteCallback;
+        mSetupCompleteCallback = null;
+
+        mMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                callback.onSetupComplete(sessionDescription);
+            }
+        });
     }
 
     @Override
@@ -288,13 +296,18 @@ class RtcSessionImpl implements RtcSession {
         return mConfig;
     }
 
-    private void sendCandidateForStream(StreamHandler streamHandler, PlainRtcCandidate rtcCandidate) {
+    private void sendCandidateForStream(StreamHandler streamHandler, final PlainRtcCandidate rtcCandidate) {
         for (int i = 0; i < mStreamHandlers.size(); i++) {
             if (mStreamHandlers.get(i) == streamHandler) {
                 Log.d(TAG, "[RtcSession] got local candidate for " + streamHandler);
                 rtcCandidate.setStreamIndex(i);
                 if (mLocalCandidateListener != null) {
-                    mLocalCandidateListener.onLocalCandidate(rtcCandidate);
+                    mMainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mLocalCandidateListener.onLocalCandidate(rtcCandidate);
+                        }
+                    });
                 }
                 return;
             }
