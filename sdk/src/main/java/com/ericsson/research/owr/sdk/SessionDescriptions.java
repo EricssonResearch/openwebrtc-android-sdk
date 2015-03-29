@@ -196,10 +196,9 @@ public class SessionDescriptions {
             JSONObject sctp = json.getJSONObject("sctp");
             sctpPort = sctp.getInt("port");
             appLabel = sctp.getString("app");
-            sctpMaxMessageSize = sctp.optInt("maxMessageSize", -1);
             sctpStreamCount = sctp.optInt("streams", -1);
 
-            return new StreamDescriptionImpl(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, sctpPort, sctpMaxMessageSize, sctpStreamCount, appLabel);
+            return new StreamDescriptionImpl(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, sctpPort, sctpStreamCount, appLabel);
         } else { // audio or video
             cname = json.optString("cname", null);
             mediaStreamId = json.optString("mediaStreamId", null);
@@ -447,9 +446,6 @@ public class SessionDescriptions {
             JSONObject sctp = new JSONObject();
             sctp.put("port", streamDescription.getSctpPort());
             sctp.put("app", streamDescription.getAppLabel());
-            if (streamDescription.getSctpMaxMessageSize() >= 0) {
-                sctp.put("maxMessageSize", streamDescription.getSctpMaxMessageSize());
-            }
             if (streamDescription.getSctpStreamCount() >= 0) {
                 sctp.put("streams", streamDescription.getSctpStreamCount());
             }

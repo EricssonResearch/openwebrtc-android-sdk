@@ -1125,11 +1125,6 @@ public class UtilsTests extends TestCase {
         }
 
         @Override
-        public int getSctpMaxMessageSize() {
-            return 0;
-        }
-
-        @Override
         public int getSctpStreamCount() {
             return 0;
         }

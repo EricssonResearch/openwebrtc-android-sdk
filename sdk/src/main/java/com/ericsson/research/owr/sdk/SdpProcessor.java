@@ -149,7 +149,7 @@ class SdpProcessor {
             "            \"( tcptype (active|passive|so))?.*$\",\n" +
             "        \"fingerprint\": \"^a=fingerprint:(sha-1|sha-256) ([A-Fa-f\\\\d\\:]+).*$\",\n" +
             "        \"setup\": \"^a=setup:(actpass|active|passive).*$\",\n" +
-            "        \"sctpmap\": \"^a=sctpmap:${port} ([\\\\w\\\\-]+)( [\\\\d]{3,})?( [\\\\d]+)?.*$\"\n" +
+            "        \"sctpmap\": \"^a=sctpmap:${port} ([\\\\w\\\\-]+)( [\\\\d]+)?.*$\"\n" +
             "    };\n" +
             "\n" +
             "    var templates = {\n" +
@@ -204,7 +204,7 @@ class SdpProcessor {
             "        \"dtlsFingerprint\": \"a=fingerprint:${fingerprintHashFunction} ${fingerprint}\\r\\n\",\n" +
             "        \"dtlsSetup\": \"a=setup:${setup}\\r\\n\",\n" +
             "\n" +
-            "        \"sctpmap\": \"a=sctpmap:${port} ${app}${[ ]maxMessageSize}${[ ]streams}\\r\\n\"\n" +
+            "        \"sctpmap\": \"a=sctpmap:${port} ${app}${[ ]streams}\\r\\n\"\n" +
             "    };\n" +
             "\n" +
             "    function match(data, pattern, flags, alt) {\n" +
@@ -404,6 +404,8 @@ class SdpProcessor {
             "                        if (candidate.port == 0 || candidate.port == 9) {\n" +
             "                            candidate.tcpType = \"active\";\n" +
             "                            candidate.port = 9;\n" +
+            "                        } else {\n" +
+            "                            return;\n" +
             "                        }\n" +
             "                    }\n" +
             "                    mediaDescription.ice.candidates.push(candidate);\n" +
@@ -433,9 +435,7 @@ class SdpProcessor {
             "                if (sctpmap) {\n" +
             "                    mediaDescription.sctp.app = sctpmap[1];\n" +
             "                    if (sctpmap[2])\n" +
-            "                        mediaDescription.sctp.maxMessageSize = parseInt(sctpmap[2]);\n" +
-            "                    if (sctpmap[3])\n" +
-            "                        mediaDescription.sctp.streams = parseInt(sctpmap[3]);\n" +
+            "                        mediaDescription.sctp.streams = parseInt(sctpmap[2]);\n" +
             "                }\n" +
             "            }\n" +
             "\n" +
@@ -587,7 +587,7 @@ class SdpProcessor {
             "\n" +
             "            var sctpInfo = {\"sctpmapLine\": \"\", \"fmt\": \"\"};\n" +
             "            if (mediaDescription.sctp) {\n" +
-            "                addDefaults(mediaDescription.sctp, {\"maxMessageSize\": null, \"streams\": null});\n" +
+            "                addDefaults(mediaDescription.sctp, {\"streams\": null});\n" +
             "                sctpInfo.sctpmapLine = fillTemplate(templates.sctpmap, mediaDescription.sctp);\n" +
             "                sctpInfo.fmt = mediaDescription.sctp.port;\n" +
             "            }\n" +

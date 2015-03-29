@@ -254,7 +254,7 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         StreamDescription stream3 = new StreamDescriptionImpl(StreamType.DATA,
                 StreamMode.SEND_RECEIVE, "admin", "qweasd",
                 Arrays.asList(candidate), "actpass", "12:23:34:45:56:67:78:89:90", "sha-256",
-                5000, 512, 1024, "webrtc-datachannel");
+                5000, 1024, "webrtc-datachannel");
         SessionDescription sessionDescription = new SessionDescriptionImpl(
                 SessionDescription.Type.OFFER, "123456789", Arrays.asList(stream1, stream2, stream3));
         JSONObject jsep = SessionDescriptions.toJsep(sessionDescription);
@@ -339,7 +339,6 @@ public class SessionDescriptionsTest extends AndroidTestCase {
         assertTrue(jsonPayload2.getBoolean("nack"));
         assertTrue(jsonPayload2.getBoolean("nackpli"));
         assertTrue(jsonPayload2.getBoolean("ccmfir"));
-        assertEquals(512, mediaDesc3.getJSONObject("sctp").getInt("maxMessageSize"));
         assertEquals("webrtc-datachannel", mediaDesc3.getJSONObject("sctp").getString("app"));
         assertEquals(5000, mediaDesc3.getJSONObject("sctp").getInt("port"));
         assertEquals(1024, mediaDesc3.getJSONObject("sctp").getInt("streams"));
@@ -398,7 +397,6 @@ public class SessionDescriptionsTest extends AndroidTestCase {
 
         StreamDescription audio = desc.getStreamDescriptions().get(0);
 
-        assertEquals(-1, audio.getSctpMaxMessageSize());
         assertEquals(-1, audio.getSctpPort());
         assertNull(audio.getAppLabel());
 

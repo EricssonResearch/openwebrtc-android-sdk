@@ -394,12 +394,12 @@ public class SdpProcessorTest extends AndroidTestCase {
         assertEquals(addressType, json.optString("addressType"));
     }
 
-    private void assertSctp(JSONObject mediaDescription, int port, String app, int maxSize) {
+    private void assertSctp(JSONObject mediaDescription, int port, String app, int streamCount) {
         JSONObject sctp = mediaDescription.optJSONObject("sctp");
         assertNotNull(sctp);
         assertEquals(port, sctp.optInt("port"));
         assertEquals(app, sctp.optString("app"));
-        assertEquals(maxSize, sctp.optInt("maxMessageSize"));
+        assertEquals(streamCount, sctp.optInt("streams"));
     }
 
     private void assertDtlsObject(JSONObject mediaDescription, String setup, String hashFunc, String fingerprint) {
