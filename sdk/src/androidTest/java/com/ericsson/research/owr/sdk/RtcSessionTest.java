@@ -41,29 +41,11 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class RtcSessionTest extends AndroidTestCase {
+public class RtcSessionTest extends OwrTestCase {
     private static final String TAG = "RtcSessionTest";
-
-    static {
-        Owr.init();
-    }
 
     private MediaSource mVideoSource;
     private MediaSource mAudioSource;
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        Log.v(TAG, "running owr main loop in background");
-        Owr.runInBackground();
-    }
-
-    @Override
-    protected void tearDown() throws Exception {
-        super.tearDown();
-        Log.v(TAG, "quitting owr main loop");
-        Owr.quit();
-    }
 
     public void testStuff() {
         RtcConfig config = RtcConfigs.defaultConfig("stun.example.com");

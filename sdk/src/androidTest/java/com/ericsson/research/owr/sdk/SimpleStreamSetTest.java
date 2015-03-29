@@ -25,59 +25,41 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import android.test.AndroidTestCase;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-public class SimpleStreamSetTest extends AndroidTestCase {
+public class SimpleStreamSetTest extends OwrTestCase {
     private static final String TAG = "SimpleStreamSetTest";
 
-    public void testSimeCall() {
-        final CountDownLatch lock = new CountDownLatch(1);
-
+    public void testSimpleCall() {
         RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
         final RtcSession out = RtcSessions.create(config);
         final RtcSession in = RtcSessions.create(config);
 
-        out.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
-            @Override
-            public void onLocalCandidate(final RtcCandidate candidate) {
-                in.addRemoteCandidate(candidate);
-            }
-        });
-        in.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
-            @Override
-            public void onLocalCandidate(final RtcCandidate candidate) {
-                out.addRemoteCandidate(candidate);
-            }
-        });
-
         final SimpleStreamSet simpleStreamSetOut = SimpleStreamSet.defaultConfig(true, true);
         final SimpleStreamSet simpleStreamSetIn = SimpleStreamSet.defaultConfig(true, true);
 
-        out.setup(simpleStreamSetOut, new RtcSession.SetupCompleteCallback() {
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
-            public void onSetupComplete(final SessionDescription localDescription) {
-                in.setRemoteDescription(localDescription);
-                in.setup(simpleStreamSetIn, new RtcSession.SetupCompleteCallback() {
+            public void run(final CountDownLatch latch) {
+                out.setup(simpleStreamSetOut, new RtcSession.SetupCompleteCallback() {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
-                        out.setRemoteDescription(localDescription);
-                        lock.countDown();
+                        in.setRemoteDescription(localDescription);
+                        in.setup(simpleStreamSetIn, new RtcSession.SetupCompleteCallback() {
+                            @Override
+                            public void onSetupComplete(final SessionDescription localDescription) {
+                                out.setRemoteDescription(localDescription);
+                                latch.countDown();
+                            }
+                        });
                     }
                 });
             }
         });
-
-        try {
-            lock.await(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            throw new RuntimeException("session setup timed out", e);
-        }
     }
 
     public void testViews() {
