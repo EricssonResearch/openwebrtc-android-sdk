@@ -296,8 +296,21 @@ class RtcSessionImpl implements RtcSession {
     }
 
     @Override
-    public void end() {
-        // TODO: do
+    public void stop() {
+        mState = State.STOPPED;
+
+        if (mStreamHandlers != null) {
+            for (StreamHandler streamHandler : mStreamHandlers) {
+                streamHandler.stop();
+            }
+        }
+
+        mLocalCandidateListener = null;
+        mSetupCompleteCallback = null;
+        mRemoteCandidateBuffer = null;
+        mRemoteDescription = null;
+        mTransportAgent = null;
+        mStreamHandlers = null;
     }
 
     public boolean isInitiator() {
@@ -431,6 +444,13 @@ class RtcSessionImpl implements RtcSession {
                 candidate.setUfrag(remoteStreamDescription.getUfrag());
                 candidate.setPassword(remoteStreamDescription.getPassword());
                 getSession().addRemoteCandidate(candidate);
+            }
+        }
+
+        public void stop() {
+            if (getSession() != null) {
+                getSession().removeDtlsCertificateChangeListener(this);
+                getSession().removeOnNewCandidateListener(this);
             }
         }
 
@@ -625,6 +645,21 @@ class RtcSessionImpl implements RtcSession {
         }
 
         @Override
+        public void stop() {
+            super.stop();
+            if (getMediaSession() != null) {
+                getMediaSession().removeCnameChangeListener(this);
+                getMediaSession().removeSendSsrcChangeListener(this);
+                getMediaSession().removeOnIncomingSourceListener(this);
+                getMediaSession().setSendSource(null);
+            }
+            if (getMediaStream() != null) {
+                getMediaStream().onRemoteMediaSource(null);
+                getMediaStream().setMediaSourceDelegate(null);
+            }
+        }
+
+        @Override
         public void onCnameChanged(String cname) {
             getLocalStreamDescription().setCname(cname);
             mHaveCname = true;
@@ -649,12 +684,16 @@ class RtcSessionImpl implements RtcSession {
 
         @Override
         public void onIncomingSource(RemoteMediaSource remoteMediaSource) {
-            getMediaStream().onRemoteMediaSource(remoteMediaSource);
+            if (mState != State.STOPPED) {
+                getMediaStream().onRemoteMediaSource(remoteMediaSource);
+            }
         }
 
         @Override
         public void setMediaSource(MediaSource mediaSource) {
-            getMediaSession().setSendSource(mediaSource);
+            if (mState != State.STOPPED) {
+                getMediaSession().setSendSource(mediaSource);
+            }
         }
     }
 

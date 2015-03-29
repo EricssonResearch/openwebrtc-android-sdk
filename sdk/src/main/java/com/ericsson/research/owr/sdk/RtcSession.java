@@ -61,7 +61,7 @@ public interface RtcSession {
     /**
      * End the call
      */
-    void end();
+    void stop();
 
     interface OnLocalCandidateListener {
         /**

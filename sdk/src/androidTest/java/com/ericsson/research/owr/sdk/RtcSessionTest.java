@@ -55,7 +55,7 @@ public class RtcSessionTest extends OwrTestCase {
             public void onLocalCandidate(final RtcCandidate candidate) {
             }
         });
-        session.end();
+        session.stop();
     }
 
     public void testCall() {
@@ -161,7 +161,118 @@ public class RtcSessionTest extends OwrTestCase {
                 Log.d(TAG, "waiting for remote sources");
             }
         });
+
         Log.d(TAG, "got all remote sources");
+
+        Log.d(TAG, "testing stop");
+        out.stop();
+        in.stop();
+        try {
+            Thread.sleep(200); // wait a bit for stop to complete
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        Log.d(TAG, "stopped");
+    }
+
+    public void testStopAndStartWithNew() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession out = RtcSessions.create(config);
+        final RtcSession in = RtcSessions.create(config);
+        final RtcSession in2 = RtcSessions.create(config);
+
+        final StreamSetMock streamSetMock = new StreamSetMock("simple", Collections.singletonList(
+                audio("audio1", true, true)
+        ));
+
+        final SessionDescription[] outOffer = new SessionDescription[1];
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                out.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        outOffer[0] = localDescription;
+                        in.setRemoteDescription(localDescription);
+                        in.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                            @Override
+                            public void onSetupComplete(final SessionDescription localDescription) {
+                                in.stop();
+                                latch.countDown();
+                            }
+                        });
+                    }
+                });
+                Log.d(TAG, "waiting for 1/2 call setup");
+            }
+        });
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                in2.setRemoteDescription(outOffer[0]);
+                in2.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        out.setRemoteDescription(localDescription);
+                        in2.stop();
+                        latch.countDown();
+                    }
+                });
+                Log.d(TAG, "waiting rest 1/2 of call setup");
+            }
+        });
+
+        out.stop();
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void testImmediateStop() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession session1 = RtcSessions.create(config);
+        final RtcSession session2 = RtcSessions.create(config);
+
+        final StreamSetMock streamSetMock = new StreamSetMock("simple", Collections.singletonList(
+                audio("audio1", true, true)
+        ));
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                session1.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        throw new RuntimeException("should not be reached");
+                    }
+                });
+                session1.stop();
+                session2.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        try {
+                            session1.setRemoteDescription(localDescription);
+                            throw new RuntimeException("should not be reached");
+                        } catch (IllegalStateException e) {
+                        }
+                        session2.stop();
+                        latch.countDown();
+                    }
+                });
+                Log.d(TAG, "waiting for call setup");
+            }
+        });
+
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void testStreamsetCombinations() {
@@ -323,7 +434,7 @@ public class RtcSessionTest extends OwrTestCase {
 
             @Override
             protected synchronized void onRemoteMediaSource(final MediaSource mediaSource) {
-                Log.v(TAG, "[" + mLabel + "] got remote source for " + getId());
+                Log.v(TAG, "[" + mLabel + "] got remote source for " + getId() + " : " + mediaSource);
                 mRemoteSource = mediaSource;
                 if (mCountDownLatch != null) {
                     mCountDownLatch.countDown();
@@ -333,7 +444,7 @@ public class RtcSessionTest extends OwrTestCase {
             @Override
             protected void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
                 mMediaSourceDelegate = mediaSourceDelegate;
-                if (mLocalSource != null) {
+                if (mLocalSource != null && mediaSourceDelegate != null) {
                     Log.v(TAG, "[" + mLabel + "] local source set for " + getId() + " : " + mLocalSource);
                     mediaSourceDelegate.setMediaSource(mLocalSource);
                 } else {
