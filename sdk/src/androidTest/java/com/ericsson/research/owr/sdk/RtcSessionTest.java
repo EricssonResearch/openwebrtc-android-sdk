@@ -275,6 +275,95 @@ public class RtcSessionTest extends OwrTestCase {
         }
     }
 
+    public void testInvalidCalls() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession session = RtcSessions.create(config);
+        final StreamSetMock streamSetMock = new StreamSetMock("empty", Collections.<StreamConfig>emptyList());
+        try {
+            session.setRemoteDescription(null); // invalid argument
+            throw new RuntimeException("should not be reached");
+        } catch (NullPointerException e) {
+        }
+        try {
+            session.setup(streamSetMock, null); // invalid arguments
+            throw new RuntimeException("should not be reached");
+        } catch (NullPointerException e) {
+        }
+        try {
+            session.setup(null, new RtcSession.SetupCompleteCallback() { // invalid arguments
+                @Override
+                public void onSetupComplete(final SessionDescription localDescription) {
+                }
+            });
+            throw new RuntimeException("should not be reached");
+        } catch (NullPointerException e) {
+        }
+        try {
+            session.setup(null, null); // invalid arguments
+            throw new RuntimeException("should not be reached");
+        } catch (NullPointerException e) {
+        }
+
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        try {
+                            // should throw illegal state, since we're already set up
+                            session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                                @Override
+                                public void onSetupComplete(final SessionDescription localDescription) {
+                                }
+                            });
+                            throw new RuntimeException("should not be reached");
+                        } catch (IllegalStateException e) {
+                        }
+
+                        session.stop(); // STOPPING HERE
+                        latch.countDown();
+                    }
+                });
+                try {
+                    // it should not be possible to set remote description during setup
+                    session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
+                    throw new RuntimeException("should not be reached");
+                } catch (IllegalStateException e) {
+                }
+                try {
+                    // should throw illegal state, since we've already started setup
+                    session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                        @Override
+                        public void onSetupComplete(final SessionDescription localDescription) {
+                        }
+                    });
+                    throw new RuntimeException("should not be reached");
+                } catch (IllegalStateException e) {
+                }
+            }
+        });
+
+        try {
+            // should not be possible to set now since it's stopped
+            session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalStateException e) {
+        }
+        try {
+            // should not be possible to set up now since it's stopped
+            session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                @Override
+                public void onSetupComplete(final SessionDescription localDescription) {
+                }
+            });
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalStateException e) {
+        }
+        // should be fine to call even when stopped
+        session.addRemoteCandidate(RtcCandidates.fromSdpAttribute("candidate:1 1 UDP 123 1.1.1.1 1 typ host"));
+    }
+
     public void testStreamsetCombinations() {
         StreamSetMock streamSetMockOut = new StreamSetMock("initiator", Arrays.asList(
                 video("video1", true, true),
