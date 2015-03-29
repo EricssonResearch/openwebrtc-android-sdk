@@ -221,7 +221,7 @@ public class SimpleStreamSet extends StreamSet {
     }
 
     @Override
-    List<? extends Stream> getStreams() {
+    protected List<? extends Stream> getStreams() {
         return Arrays.asList(new SimpleMediaStream(false), new SimpleMediaStream(true));
     }
 
@@ -235,27 +235,27 @@ public class SimpleStreamSet extends StreamSet {
         }
 
         @Override
-        String getId() {
+        protected String getId() {
             return mId;
         }
 
         @Override
-        MediaType getMediaType() {
+        protected MediaType getMediaType() {
             return mIsVideo ? MediaType.VIDEO : MediaType.AUDIO;
         }
 
         @Override
-        boolean wantSend() {
+        protected boolean wantSend() {
             return mIsVideo ? mWantVideo : mWantAudio;
         }
 
         @Override
-        boolean wantReceive() {
+        protected boolean wantReceive() {
             return true;
         }
 
         @Override
-        void onRemoteMediaSource(final MediaSource mediaSource) {
+        protected void onRemoteMediaSource(final MediaSource mediaSource) {
             if (mIsVideo) {
                 mRemoteViewRenderer.setSource(mediaSource);
             } else {
@@ -264,7 +264,7 @@ public class SimpleStreamSet extends StreamSet {
         }
 
         @Override
-        void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
+        protected void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
             synchronized (SimpleStreamSet.this) {
                 if (mIsVideo) {
                     mVideoSourceDelegate = mediaSourceDelegate;

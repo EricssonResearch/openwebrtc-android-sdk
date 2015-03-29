@@ -40,6 +40,8 @@ import java.util.Map;
 public class SessionDescriptions {
     private static final String TAG = "SessionDescriptions";
 
+    private SessionDescriptions() {}
+
     public static SessionDescription fromJsep(JSONObject json) throws InvalidDescriptionException {
         String type;
         String sdpStr;

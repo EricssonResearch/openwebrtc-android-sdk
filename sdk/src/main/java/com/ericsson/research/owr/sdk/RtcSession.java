@@ -34,14 +34,14 @@ public interface RtcSession {
      * Sets the listener that will be called when a local candidate is generated.
      * @param listener the listener that will be called when a local candidate is available.
      */
-    public void setOnLocalCandidateListener(OnLocalCandidateListener listener);
+    void setOnLocalCandidateListener(OnLocalCandidateListener listener);
 
     /**
      * Initiate the session and get ready to receive media and generate a SessionDescription for the other peer.
      * @param streamSet the configuration that should be used for the call
      * @param callback a callback that is called with a SessionDescription that should be sent to the other peer.
      */
-    public void setup(StreamSet streamSet, SetupCompleteCallback callback);
+    void setup(StreamSet streamSet, SetupCompleteCallback callback);
 
     /**
      * Sets the remote description of the session. This method should only be called once, and only after
@@ -49,33 +49,33 @@ public interface RtcSession {
      *
      * @param remoteDescription the SessionDescription received form the other peer.
      */
-    public void setRemoteDescription(SessionDescription remoteDescription) throws InvalidDescriptionException;
+    void setRemoteDescription(SessionDescription remoteDescription) throws InvalidDescriptionException;
 
     /**
      * Add a RtcCandidate that is received form the other peer.
      *
      * @param candidate the candidate to add.
      */
-    public void addRemoteCandidate(RtcCandidate candidate);
+    void addRemoteCandidate(RtcCandidate candidate);
 
     /**
      * End the call
      */
-    public void end();
+    void end();
 
-    public interface OnLocalCandidateListener {
+    interface OnLocalCandidateListener {
         /**
          * Called when a local candidate is generated.
          * @param candidate a local RtcCandidate that should be sent to the other peer.
          */
-        public void onLocalCandidate(RtcCandidate candidate);
+        void onLocalCandidate(RtcCandidate candidate);
     }
 
-    public interface SetupCompleteCallback {
+    interface SetupCompleteCallback {
         /**
          * Called once the call setup is complete.
          * @param localDescription a SessionDescription that should be sent to the other peer.
          */
-        public void onSetupComplete(SessionDescription localDescription);
+        void onSetupComplete(SessionDescription localDescription);
     }
 }

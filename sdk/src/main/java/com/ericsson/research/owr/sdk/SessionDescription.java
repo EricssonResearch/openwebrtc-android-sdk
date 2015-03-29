@@ -34,25 +34,25 @@ public interface SessionDescription {
     /**
      * @return the type of the session description
      */
-    public Type getType();
+    Type getType();
 
     /**
      * @return an immutable list of stream descriptions
      */
-    public List<StreamDescription> getStreamDescriptions();
+    List<StreamDescription> getStreamDescriptions();
 
     /**
      * @return the id of the session
      */
-    public String getSessionId();
+    String getSessionId();
 
     /**
      * @param streamType a stream type
      * @return true if the session description contains a stream of type streamType, false otherwise
      */
-    public boolean hasStreamType(StreamType streamType);
+    boolean hasStreamType(StreamType streamType);
 
-    public enum Type {
+    enum Type {
         OFFER, ANSWER
     }
 }

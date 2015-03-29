@@ -35,27 +35,29 @@ import java.util.List;
  * The reason it's an abstract class is to be able to make the abstract methods package-private
  */
 public abstract class StreamSet {
+    protected StreamSet() {}
+
     /**
      * An interface that represents a single audio, video or data stream.
      * The stream interface Stream should not be implemented directly, but through the MediaStream and DataStream interfaces.
      */
-    interface Stream {
+    protected interface Stream {
         /**
          * @return the type of the stream
          */
-        abstract StreamType getType();
+        StreamType getType();
 
         /**
          * Called once the final mode has been determined for the stream
          * @param mode of the stream
          */
-        abstract void setStreamMode(StreamMode mode);
+        void setStreamMode(StreamMode mode);
     }
 
     /**
      * An interface that represents a single audio or video stream.
      */
-    abstract class MediaStream implements Stream {
+    protected abstract class MediaStream implements Stream {
         @Override
         public StreamType getType() {
             return getMediaType() == MediaType.AUDIO ? StreamType.AUDIO : StreamType.VIDEO;
@@ -65,32 +67,32 @@ public abstract class StreamSet {
          * Implementations should return a unique identifier for the stream, or null.
          * @return a unique identifier, or null
          */
-        abstract String getId();
+        protected abstract String getId();
 
         /**
          * Implementations should return the media type of the stream.
          * @return the media type of the stream
          */
-        abstract MediaType getMediaType();
+        protected abstract MediaType getMediaType();
 
         /**
          * If the implementation returns false no local stream will be sent, event if one is requested by the peer.
          * @return false if no media should be sent, true otherwise
          */
-        abstract boolean wantSend();
+        protected abstract boolean wantSend();
 
         /**
          * If the implementation return false no remote stream will be requested
          * A remote stream might still be received though, in which case it can then be ignored.
          * @return true if remote media should be requested, false otherwise
          */
-        abstract boolean wantReceive();
+        protected abstract boolean wantReceive();
 
         /**
          * This method is called when the media source for the stream is received
          * @param mediaSource a media source matching the media type of the stream
          */
-        abstract void onRemoteMediaSource(MediaSource mediaSource);
+        protected abstract void onRemoteMediaSource(MediaSource mediaSource);
 
         /**
          * Implementations should use the media source delegate to set the media source
@@ -100,13 +102,13 @@ public abstract class StreamSet {
          * The media source type type should be the same as the media type of the stream.
          * @param mediaSourceDelegate the delegate to use to set the media source.
          */
-        abstract void setMediaSourceDelegate(MediaSourceDelegate mediaSourceDelegate);
+        protected abstract void setMediaSourceDelegate(MediaSourceDelegate mediaSourceDelegate);
     }
 
     /**
      * An interface that represents a data stream.
      */
-    abstract class DataStream implements Stream {
+    protected abstract class DataStream implements Stream {
         @Override
         public StreamType getType() {
             return StreamType.DATA;
@@ -122,9 +124,9 @@ public abstract class StreamSet {
      * at the end of the list.
      * @return a list of streams
      */
-    abstract List<? extends Stream> getStreams();
+    protected abstract List<? extends Stream> getStreams();
 
     public interface MediaSourceDelegate {
-        public void setMediaSource(MediaSource mediaSource);
+        void setMediaSource(MediaSource mediaSource);
     }
 }

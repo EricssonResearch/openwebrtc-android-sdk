@@ -28,21 +28,21 @@ package com.ericsson.research.owr.sdk;
 import java.util.Map;
 
 public interface RtcPayload {
-    public int getPayloadType();
+    int getPayloadType();
 
-    public String getEncodingName();
+    String getEncodingName();
 
-    public int getClockRate();
+    int getClockRate();
 
-    public Map<String, Object> getParameters();
+    Map<String, Object> getParameters();
 
     // Audio only
-    public int getChannels();
+    int getChannels();
 
     // Video only
-    public boolean isNack();
+    boolean isNack();
 
-    public boolean isNackPli();
+    boolean isNackPli();
 
-    public boolean isCcmFir();
+    boolean isCcmFir();
 }

@@ -35,23 +35,25 @@ import java.util.List;
  * The reason it's an abstract class is to be able to make the abstract methods package-private
  */
 public abstract class RtcConfig {
-    /**
-     * Implementations should return a list of payloads, ordered by most-preferred to least-preferred.
-     * @return a list of payload
-     */
-    abstract List<RtcPayload> getDefaultVideoPayloads();
+    protected RtcConfig() {}
 
     /**
      * Implementations should return a list of payloads, ordered by most-preferred to least-preferred.
      * @return a list of payload
      */
-    abstract List<RtcPayload> getDefaultAudioPayloads();
+    protected abstract List<RtcPayload> getDefaultVideoPayloads();
+
+    /**
+     * Implementations should return a list of payloads, ordered by most-preferred to least-preferred.
+     * @return a list of payload
+     */
+    protected abstract List<RtcPayload> getDefaultAudioPayloads();
 
     /**
      * Implementations should return a list of helper servers that are used for ICE.
      * @return a collection of helper servers
      */
-    abstract Collection<HelperServer> getHelperServers();
+    protected abstract Collection<HelperServer> getHelperServers();
 
     public static class HelperServer {
         private final HelperServerType mType;

@@ -93,17 +93,17 @@ public class RtcConfigs {
         }
 
         @Override
-        List<RtcPayload> getDefaultVideoPayloads() {
+        protected List<RtcPayload> getDefaultVideoPayloads() {
             return sDefaultVideoPayloads;
         }
 
         @Override
-        List<RtcPayload> getDefaultAudioPayloads() {
+        protected List<RtcPayload> getDefaultAudioPayloads() {
             return sDefaultAudioPayloads;
         }
 
         @Override
-        Collection<HelperServer> getHelperServers() {
+        protected Collection<HelperServer> getHelperServers() {
             return mHelperServers;
         }
     }

@@ -26,41 +26,41 @@
 package com.ericsson.research.owr.sdk;
 
 public interface RtcCandidate {
-    public int getStreamIndex();
+    int getStreamIndex();
 
-    public String getStreamId();
+    String getStreamId();
 
-    public String getUfrag();
+    String getUfrag();
 
-    public String getPassword();
+    String getPassword();
 
-    public String getFoundation();
+    String getFoundation();
 
-    public ComponentType getComponentType();
+    ComponentType getComponentType();
 
-    public String getAddress();
+    String getAddress();
 
-    public int getPort();
+    int getPort();
 
-    public int getPriority();
+    int getPriority();
 
-    public TransportType getTransportType();
+    TransportType getTransportType();
 
-    public CandidateType getType();
+    CandidateType getType();
 
-    public String getRelatedAddress();
+    String getRelatedAddress();
 
-    public int getRelatedPort();
+    int getRelatedPort();
 
-    public enum ComponentType {
+    enum ComponentType {
         RTP, RTCP
     }
 
-    public enum TransportType {
+    enum TransportType {
         UDP, TCP_ACTIVE, TCP_PASSIVE, TCP_SO
     }
 
-    public enum CandidateType {
+    enum CandidateType {
         HOST, SERVER_REFLEXIVE, PEER_REFLEXIVE, RELAY
     }
 }

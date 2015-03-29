@@ -254,7 +254,7 @@ public class RtcSessionTest extends OwrTestCase {
         }
 
         @Override
-        List<Stream> getStreams() {
+        protected List<Stream> getStreams() {
             return mStreams;
         }
 
@@ -302,27 +302,27 @@ public class RtcSessionTest extends OwrTestCase {
             }
 
             @Override
-            String getId() {
+            protected String getId() {
                 return mConfig.id;
             }
 
             @Override
-            MediaType getMediaType() {
+            protected MediaType getMediaType() {
                 return mConfig.mediaType;
             }
 
             @Override
-            boolean wantSend() {
+            protected boolean wantSend() {
                 return mConfig.wantSend;
             }
 
             @Override
-            boolean wantReceive() {
+            protected boolean wantReceive() {
                 return mConfig.wantReceive;
             }
 
             @Override
-            synchronized void onRemoteMediaSource(final MediaSource mediaSource) {
+            protected synchronized void onRemoteMediaSource(final MediaSource mediaSource) {
                 Log.v(TAG, "[" + mLabel + "] got remote source for " + getId());
                 mRemoteSource = mediaSource;
                 if (mCountDownLatch != null) {
@@ -331,7 +331,7 @@ public class RtcSessionTest extends OwrTestCase {
             }
 
             @Override
-            void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
+            protected void setMediaSourceDelegate(final MediaSourceDelegate mediaSourceDelegate) {
                 mMediaSourceDelegate = mediaSourceDelegate;
                 if (mLocalSource != null) {
                     Log.v(TAG, "[" + mLabel + "] local source set for " + getId() + " : " + mLocalSource);
