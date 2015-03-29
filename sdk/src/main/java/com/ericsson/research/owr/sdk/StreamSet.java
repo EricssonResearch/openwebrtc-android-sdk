@@ -25,6 +25,7 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import com.ericsson.research.owr.DataChannel;
 import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
 
@@ -114,7 +115,19 @@ public abstract class StreamSet {
             return StreamType.DATA;
         }
 
-        // TODO
+        /**
+         * This method is called when a data channel is received from the peer
+         * @param dataChannel the data channel which was received
+         */
+        protected abstract void onDataChannelReceived(DataChannel dataChannel);
+
+        /**
+         * Implementations should use the data channel delegate to add data channels
+         * to the data stream. The delegate can be called at any time, but may be ignored if
+         * the stream is not active.
+         * @param dataChannelDelegate the delegate to use to add data channels.
+         */
+        protected abstract void setDataChannelDelegate(DataChannelDelegate dataChannelDelegate);
     }
 
     /**
@@ -128,5 +141,9 @@ public abstract class StreamSet {
 
     public interface MediaSourceDelegate {
         void setMediaSource(MediaSource mediaSource);
+    }
+
+    public interface DataChannelDelegate {
+        void addDataChannel(DataChannel dataChannel);
     }
 }
