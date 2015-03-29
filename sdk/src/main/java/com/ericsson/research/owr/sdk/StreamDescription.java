@@ -63,7 +63,9 @@ public interface StreamDescription {
     // data only
     public int getSctpPort();
 
-    public int getMaxMessageSize();
+    public int getSctpMaxMessageSize();
+
+    public int getSctpStreamCount();
 
     public String getAppLabel();
 }

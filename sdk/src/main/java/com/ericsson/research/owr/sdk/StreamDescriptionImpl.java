@@ -48,10 +48,11 @@ class StreamDescriptionImpl implements StreamDescription {
     private final List<RtcPayload> mPayloads;
     // data only
     private final int mSctpPort;
-    private final int mMaxMessageSize;
+    private final int mSctpMaxMessageSize;
+    private final int mSctpStreamCount;
     private final String mAppLabel;
 
-    private StreamDescriptionImpl(StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int maxMessageSize, String appLabel) {
+    private StreamDescriptionImpl(StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads, int sctpPort, int sctpMaxMessageSize, int sctpStreamCount, String appLabel) {
         mType = streamType;
         mMode = mode;
         mUfrag = ufrag;
@@ -79,16 +80,17 @@ class StreamDescriptionImpl implements StreamDescription {
             mPayloads = Collections.unmodifiableList(payloads);
         }
         mSctpPort = sctpPort;
-        mMaxMessageSize = maxMessageSize;
+        mSctpMaxMessageSize = sctpMaxMessageSize;
+        mSctpStreamCount = sctpStreamCount;
         mAppLabel = appLabel;
     }
 
     StreamDescriptionImpl(StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, String mediaStreamId, String mediaStreamTrackId, String cname, boolean rtcpMux, List<Long> ssrcs, List<RtcPayload> payloads) {
-        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads, -1, -1, null);
+        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, mediaStreamId, mediaStreamTrackId, cname, rtcpMux, ssrcs, payloads, -1, -1, -1, null);
     }
 
-    StreamDescriptionImpl(StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int maxMessageSize, String appLabel) {
-        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, null, null, false, null, null, sctpPort, maxMessageSize, appLabel);
+    StreamDescriptionImpl(StreamType streamType, StreamMode mode, String ufrag, String password, List<RtcCandidate> candidates, String dtlsSetup, String fingerprint, String fingerprintHashFunction, int sctpPort, int sctpMaxMessageSize, int sctpStreamCount, String appLabel) {
+        this(streamType, mode, ufrag, password, candidates, dtlsSetup, fingerprint, fingerprintHashFunction, null, null, null, false, null, null, sctpPort, sctpMaxMessageSize, sctpStreamCount, appLabel);
     }
 
     @Override
@@ -166,8 +168,13 @@ class StreamDescriptionImpl implements StreamDescription {
     }
 
     @Override
-    public int getMaxMessageSize() {
-        return mMaxMessageSize;
+    public int getSctpMaxMessageSize() {
+        return mSctpMaxMessageSize;
+    }
+
+    @Override
+    public int getSctpStreamCount() {
+        return mSctpStreamCount;
     }
 
     @Override

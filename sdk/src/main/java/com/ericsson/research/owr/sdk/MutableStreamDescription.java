@@ -46,6 +46,7 @@ public class MutableStreamDescription implements StreamDescription {
     private List<RtcPayload> mPayloads = new LinkedList<>();
     private int mSctpPort;
     private int mMaxMessageSize;
+    private int mSctpStreamCount;
     private String mAppLabel;
 
     @Override
@@ -184,12 +185,21 @@ public class MutableStreamDescription implements StreamDescription {
     }
 
     @Override
-    public int getMaxMessageSize() {
+    public int getSctpMaxMessageSize() {
         return mMaxMessageSize;
     }
 
     public void setMaxMessageSize(final int maxMessageSize) {
         mMaxMessageSize = maxMessageSize;
+    }
+
+    @Override
+    public int getSctpStreamCount() {
+        return mSctpStreamCount;
+    }
+
+    public void setSctpStreamCount(final int sctpStreamCount) {
+        mSctpStreamCount = sctpStreamCount;
     }
 
     @Override
