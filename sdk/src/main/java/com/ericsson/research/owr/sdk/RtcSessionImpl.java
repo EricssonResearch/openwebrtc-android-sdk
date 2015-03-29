@@ -452,6 +452,8 @@ class RtcSessionImpl implements RtcSession {
                 getSession().removeDtlsCertificateChangeListener(this);
                 getSession().removeOnNewCandidateListener(this);
             }
+            mSession = null;
+            mRemoteStreamDescription = null;
         }
 
         @Override
@@ -646,7 +648,6 @@ class RtcSessionImpl implements RtcSession {
 
         @Override
         public void stop() {
-            super.stop();
             if (getMediaSession() != null) {
                 getMediaSession().removeCnameChangeListener(this);
                 getMediaSession().removeSendSsrcChangeListener(this);
@@ -657,6 +658,7 @@ class RtcSessionImpl implements RtcSession {
                 getMediaStream().onRemoteMediaSource(null);
                 getMediaStream().setMediaSourceDelegate(null);
             }
+            super.stop();
         }
 
         @Override
