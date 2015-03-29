@@ -157,6 +157,15 @@ class RtcSessionImpl implements RtcSession {
 
         mState = State.SETUP;
         log("initial setup complete");
+
+        mMainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                // we might be ready straight away if there are no active streams.
+                // do this check asynchronously to keep code paths consistent
+                maybeFinishSetup();
+            }
+        });
     }
 
     private synchronized void maybeFinishSetup() {
