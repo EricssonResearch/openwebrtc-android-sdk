@@ -11,7 +11,7 @@ android {
         versionName "0.0.1"
 
         ndk {
-            abiFilter "armeabi"
+            abiFilter "armeabi-v7a"
         }
     }
     buildTypes {
