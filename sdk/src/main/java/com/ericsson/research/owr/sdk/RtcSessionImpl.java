@@ -313,6 +313,14 @@ class RtcSessionImpl implements RtcSession {
         mStreamHandlers = null;
     }
 
+    @Override
+    public String dumpPipelineGraph() {
+        if (mTransportAgent != null) {
+            return mTransportAgent.getDotData();
+        }
+        return null;
+    }
+
     public boolean isInitiator() {
         return mIsInitiator;
     }

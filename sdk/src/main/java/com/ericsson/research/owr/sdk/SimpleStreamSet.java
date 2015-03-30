@@ -45,8 +45,10 @@ import com.ericsson.research.owr.WindowRegistry;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 public class SimpleStreamSet extends StreamSet {
     private static final String TAG = "SimpleStreamSet";
@@ -223,6 +225,25 @@ public class SimpleStreamSet extends StreamSet {
     @Override
     protected List<? extends Stream> getStreams() {
         return Arrays.asList(new SimpleMediaStream(false), new SimpleMediaStream(true));
+    }
+
+    /**
+     * Dumps the current pipeline graph in dot format.
+     * Each key-value pair in the returned map is a pipeline name and a graph.
+     * @return a map of pipeline graphs
+     */
+    public Map<String, String> dumpPipelineGraphs() {
+        HashMap<String, String> result = new HashMap<>();
+        if (!mVideoSources.isEmpty()) {
+            result.put("video-source", mVideoSources.getFirst().getDotData());
+        }
+        if (!mAudioSources.isEmpty()) {
+            result.put("audio-source", mAudioSources.getFirst().getDotData());
+        }
+        result.put("remote-audio-renderer", mAudioRenderer.getDotData());
+        result.put("remote-video-renderer", mRemoteViewRenderer.getDotData());
+        result.put("local-video-renderer", mSelfViewRenderer.getDotData());
+        return result;
     }
 
     private class SimpleMediaStream extends MediaStream {

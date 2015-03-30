@@ -63,6 +63,12 @@ public interface RtcSession {
      */
     void stop();
 
+    /**
+     * Dumps the current pipeline graph in dot format.
+     * @return the pipeline graph in dot format
+     */
+    String dumpPipelineGraph();
+
     interface OnLocalCandidateListener {
         /**
          * Called when a local candidate is generated.
