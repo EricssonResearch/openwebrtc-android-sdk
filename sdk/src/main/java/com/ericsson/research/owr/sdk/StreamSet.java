@@ -116,10 +116,15 @@ public abstract class StreamSet {
         }
 
         /**
-         * This method is called when a data channel is received from the peer
-         * @param dataChannel the data channel which was received
+         * This method is called when a data channel is requested from the peer.
+         * If true is returned the data channel is added to the stream and is ready to be used.
+         * If false is returned the data channel is ignored. It is possible to return false and then
+         * add the data channel later using the data channel delegate.
+         *
+         * @param dataChannel the data channel that has been requested
+         * @return true if the data channel should be added to the stream
          */
-        protected abstract void onDataChannelReceived(DataChannel dataChannel);
+        protected abstract boolean onDataChannelReceived(DataChannel dataChannel);
 
         /**
          * Implementations should use the data channel delegate to add data channels

@@ -25,19 +25,23 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.os.Handler;
 import android.os.Looper;
-import android.test.AndroidTestCase;
 import android.util.Log;
 
+import com.ericsson.research.owr.AudioRenderer;
 import com.ericsson.research.owr.CaptureSourcesCallback;
+import com.ericsson.research.owr.DataChannel;
 import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.DataChannelReadyState;
 import com.ericsson.research.owr.Owr;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
@@ -115,10 +119,10 @@ public class RtcSessionTest extends OwrTestCase {
             }
         });
 
-        streamSetMockOut.getStream("audio1").setMediaSource(mAudioSource);
-        streamSetMockIn.getStream("audio1").setMediaSource(mAudioSource);
-        streamSetMockOut.getStream("video1").setMediaSource(mVideoSource);
-        streamSetMockIn.getStream("video1").setMediaSource(mVideoSource);
+        streamSetMockOut.getMediaStream("audio1").setMediaSource(mAudioSource);
+        streamSetMockIn.getMediaStream("audio1").setMediaSource(mAudioSource);
+        streamSetMockOut.getMediaStream("video1").setMediaSource(mVideoSource);
+        streamSetMockIn.getMediaStream("video1").setMediaSource(mVideoSource);
 
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
@@ -144,20 +148,20 @@ public class RtcSessionTest extends OwrTestCase {
             }
         });
 
-        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getStream("video1").getStreamMode());
-        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getStream("audio1").getStreamMode());
-        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getStream("video1").getStreamMode());
-        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getStream("audio1").getStreamMode());
-        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getStream("video2").getStreamMode());
-        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getStream("audio2").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getMediaStream("audio1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getMediaStream("audio1").getStreamMode());
+        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getMediaStream("video2").getStreamMode());
+        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getMediaStream("audio2").getStreamMode());
 
         TestUtils.synchronous().timeout(15).latchCount(4).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                streamSetMockOut.getStream("audio1").waitForRemoteSource(latch);
-                streamSetMockIn.getStream("audio1").waitForRemoteSource(latch);
-                streamSetMockOut.getStream("video1").waitForRemoteSource(latch);
-                streamSetMockIn.getStream("video1").waitForRemoteSource(latch);
+                streamSetMockOut.getMediaStream("audio1").waitForRemoteSource(latch);
+                streamSetMockIn.getMediaStream("audio1").waitForRemoteSource(latch);
+                streamSetMockOut.getMediaStream("video1").waitForRemoteSource(latch);
+                streamSetMockIn.getMediaStream("video1").waitForRemoteSource(latch);
                 Log.d(TAG, "waiting for remote sources");
             }
         });
@@ -273,6 +277,145 @@ public class RtcSessionTest extends OwrTestCase {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public void testDatachannel() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession out = RtcSessions.create(config);
+        final RtcSession in = RtcSessions.create(config);
+
+        out.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
+            @Override
+            public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
+                Log.e(TAG, "LOCAL CANDIDATE out -> in: " + RtcCandidates.toJsep(candidate));
+                in.addRemoteCandidate(candidate);
+            }
+        });
+        in.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
+            @Override
+            public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
+                Log.e(TAG, "LOCAL CANDIDATE in -> out: " + RtcCandidates.toJsep(candidate));
+                out.addRemoteCandidate(candidate);
+            }
+        });
+
+        final StreamSetMock streamSetOut = new StreamSetMock("initiator", Collections.singletonList(data()));
+        final StreamSetMock streamSetIn = new StreamSetMock("peer", Collections.singletonList(data()));
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                out.setup(streamSetOut, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
+                        in.setRemoteDescription(localDescription);
+                        in.setup(streamSetIn, new RtcSession.SetupCompleteCallback() {
+                            @Override
+                            public void onSetupComplete(final SessionDescription localDescription) {
+                                out.setRemoteDescription(localDescription);
+                                Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
+                                latch.countDown();
+                            }
+                        });
+                    }
+                });
+                Log.d(TAG, "waiting for call setup");
+            }
+        });
+
+        TestUtils.synchronous().latchCount(2).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                Log.d(TAG, "waiting for streams to become active");
+                streamSetOut.getDataStream().waitUntilActive(latch);
+                streamSetIn.getDataStream().waitUntilActive(latch);
+            }
+        });
+
+        assertSame(StreamMode.SEND_RECEIVE, streamSetOut.getDataStream().getStreamMode());
+        assertSame(StreamMode.SEND_RECEIVE, streamSetIn.getDataStream().getStreamMode());
+
+        Log.d(TAG, "streams are active");
+
+/*        final DataChannel channelOut1 = new DataChannel(true, -1, 10, "UTPE", false, (short) 1, "test");
+        DataChannel.ReadyStateChangeListener readyStateChangeListener = new DataChannel.ReadyStateChangeListener() {
+            @Override
+            public void onReadyStateChanged(final DataChannelReadyState dataChannelReadyState) {
+                Log.d(TAG, "DATACHANNEL: ready state changed: " + dataChannelReadyState);
+            }
+        };
+        channelOut1.addReadyStateChangeListener(readyStateChangeListener);
+        streamSetOut.getDataStream().addDataChannel(channelOut1);
+
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                streamSetIn.getDataStream().waitForDataChannels(latch);
+            }
+        });
+
+        final DataChannel channelIn1 = streamSetIn.getDataStream().getReceivedDataChannels().get(0);
+        channelIn1.addReadyStateChangeListener(readyStateChangeListener);
+
+        runDataChannelMessageTest("requested", channelOut1, channelIn1);
+
+        final DataChannel channelOut2 = new DataChannel(false, 1000, -1, "TEST", true, (short) 3, "test2");
+        final DataChannel channelIn2 = new DataChannel(false, 1000, -1, "TEST", true, (short) 3, "test2");
+        channelOut2.addReadyStateChangeListener(readyStateChangeListener);
+        channelIn2.addReadyStateChangeListener(readyStateChangeListener);
+        streamSetOut.getDataStream().addDataChannel(channelOut2);
+        streamSetIn.getDataStream().addDataChannel(channelIn2);
+
+        runDataChannelMessageTest("pre-negotiated", channelOut2, channelIn2);
+
+        out.stop();
+        in.stop();*/
+    }
+
+    private void runDataChannelMessageTest(final String label, final DataChannel left, final DataChannel right) {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        TestUtils.synchronous().latchCount(4).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                DataChannel.OnDataListener latchCounter = new DataChannel.OnDataListener() {
+                    @Override
+                    public void onData(final String string) {
+                        Log.d(TAG, "[" + label + "] got string data: " + string);
+                        if ("message".equals(string)) {
+                            latch.countDown();
+                        }
+                    }
+                };
+                DataChannel.OnBinaryDataListener binaryLatchCounter = new DataChannel.OnBinaryDataListener() {
+                    @Override
+                    public void onBinaryData(final byte[] bytes) {
+                        String string = new String(bytes);
+                        Log.d(TAG, "[" + label + "] got binary data: " + string);
+                        if ("message".equals(string)) {
+                            latch.countDown();
+                        }
+                    }
+                };
+                left.addOnDataListener(latchCounter);
+                left.addOnBinaryDataListener(binaryLatchCounter);
+                right.addOnDataListener(latchCounter);
+                right.addOnBinaryDataListener(binaryLatchCounter);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d(TAG, "[" + label + "] sending 'message' left -> right");
+                        left.send("message");
+                        left.sendBinary("message".getBytes());
+                        Log.d(TAG, "[" + label + "] sending 'message' right -> left");
+                        right.send("message");
+                        right.sendBinary("message".getBytes());
+                    }
+                }, 100);
+            }
+        });
     }
 
     public void testInvalidCalls() {
@@ -417,6 +560,10 @@ public class RtcSessionTest extends OwrTestCase {
         return new StreamConfig(id, wantSend, wantReceive, MediaType.AUDIO);
     }
 
+    private static StreamConfig data() {
+        return new StreamConfig();
+    }
+
     private static class StreamConfig {
         private String id;
         private boolean wantSend;
@@ -429,6 +576,10 @@ public class RtcSessionTest extends OwrTestCase {
             this.wantReceive = wantReceive;
             this.mediaType = mediaType;
         }
+
+        private StreamConfig() {
+            this.mediaType = null;
+        }
     }
 
     private class StreamSetMock extends StreamSet {
@@ -439,15 +590,30 @@ public class RtcSessionTest extends OwrTestCase {
             mLabel = label;
             mStreams = new ArrayList<>(configs.size());
             for (StreamConfig config : configs) {
-                mStreams.add(new MediaStreamMock(config));
+                if (config.mediaType != null) {
+                    mStreams.add(new MediaStreamMock(config));
+                } else {
+                    mStreams.add(new DataStreamMock());
+                }
             }
         }
 
-        public MediaStreamMock getStream(String id) {
+        public MediaStreamMock getMediaStream(String id) {
             for (Stream stream : mStreams) {
-                MediaStreamMock mock = (MediaStreamMock) stream;
-                if (id.equals(mock.getId())) {
-                    return mock;
+                if (stream instanceof MediaStreamMock) {
+                    MediaStreamMock mock = (MediaStreamMock) stream;
+                    if (id.equals(mock.getId())) {
+                        return mock;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public DataStreamMock getDataStream() {
+            for (Stream stream : mStreams) {
+                if (stream instanceof DataStreamMock) {
+                    return (DataStreamMock) stream;
                 }
             }
             return null;
@@ -456,6 +622,66 @@ public class RtcSessionTest extends OwrTestCase {
         @Override
         protected List<Stream> getStreams() {
             return mStreams;
+        }
+
+        private class DataStreamMock extends DataStream {
+            private StreamMode mStreamMode = null;
+            private List<DataChannel> mReceivedDataChannels = new LinkedList<>();
+            private CountDownLatch mDataChannelLatch = null;
+            private CountDownLatch mModeSetLatch = null;
+            private DataChannelDelegate mDataChannelDelegate;
+
+            public synchronized void waitForDataChannels(CountDownLatch latch) {
+                mDataChannelLatch = latch;
+                for (DataChannel ignored : mReceivedDataChannels) {
+                    latch.countDown();
+                }
+            }
+
+            public StreamMode getStreamMode() {
+                return mStreamMode;
+            }
+
+            public List<DataChannel> getReceivedDataChannels() {
+                return mReceivedDataChannels;
+            }
+
+            public void addDataChannel(DataChannel dataChannel) {
+                mDataChannelDelegate.addDataChannel(dataChannel);
+            }
+
+            @Override
+            protected synchronized boolean onDataChannelReceived(final DataChannel dataChannel) {
+                Log.v(TAG, "[" + mLabel + "] data channel received: " + dataChannel);
+                mReceivedDataChannels.add(dataChannel);
+                if (mDataChannelLatch != null) {
+                    mDataChannelLatch.countDown();
+                }
+                return true;
+            }
+
+            @Override
+            protected void setDataChannelDelegate(final DataChannelDelegate dataChannelDelegate) {
+                mDataChannelDelegate = dataChannelDelegate;
+                Log.v(TAG, "[" + mLabel + "] data channel delegate set: " + dataChannelDelegate);
+            }
+
+            @Override
+            public void setStreamMode(final StreamMode mode) {
+                mStreamMode = mode;
+                if (mModeSetLatch != null) {
+                    mModeSetLatch.countDown();
+                    mModeSetLatch = null;
+                }
+            }
+
+            public void waitUntilActive(final CountDownLatch latch) {
+                mModeSetLatch = latch;
+                if (mStreamMode != null) {
+                    mModeSetLatch.countDown();
+                    mModeSetLatch = null;
+                }
+            }
         }
 
         private class MediaStreamMock extends MediaStream {
