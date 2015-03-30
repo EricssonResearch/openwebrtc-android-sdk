@@ -268,13 +268,17 @@ public class SimpleStreamSet extends StreamSet {
             synchronized (SimpleStreamSet.this) {
                 if (mIsVideo) {
                     mVideoSourceDelegate = mediaSourceDelegate;
-                    if (!mVideoSources.isEmpty()) {
-                        mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
+                    if (mediaSourceDelegate != null) {
+                        if (!mVideoSources.isEmpty()) {
+                            mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
+                        }
                     }
                 } else {
-                    mAudioSourceDelegate = mediaSourceDelegate;
-                    if (!mAudioSources.isEmpty()) {
-                        mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
+                    if (mediaSourceDelegate != null) {
+                        mAudioSourceDelegate = mediaSourceDelegate;
+                        if (!mAudioSources.isEmpty()) {
+                            mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
+                        }
                     }
                 }
             }
