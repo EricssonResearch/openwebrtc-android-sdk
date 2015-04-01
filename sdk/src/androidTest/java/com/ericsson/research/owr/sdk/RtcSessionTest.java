@@ -37,6 +37,8 @@ import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.DataChannelReadyState;
 import com.ericsson.research.owr.Owr;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -176,6 +178,75 @@ public class RtcSessionTest extends OwrTestCase {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+
+        Log.d(TAG, "stopped");
+    }
+
+    public void testJsepCall() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession out = RtcSessions.create(config);
+        final RtcSession in = RtcSessions.create(config);
+
+        out.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
+            @Override
+            public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
+                JSONObject json = RtcCandidates.toJsep(candidate);
+                Log.e(TAG, "LOCAL CANDIDATE out -> in: " + json);
+                in.addRemoteCandidate(RtcCandidates.fromJsep(json));
+            }
+        });
+        in.setOnLocalCandidateListener(new RtcSession.OnLocalCandidateListener() {
+            @Override
+            public void onLocalCandidate(final RtcCandidate candidate) {
+                assertSame(Looper.getMainLooper(), Looper.myLooper());
+                JSONObject json = RtcCandidates.toJsep(candidate);
+                Log.e(TAG, "LOCAL CANDIDATE in -> out: " + json);
+                out.addRemoteCandidate(RtcCandidates.fromJsep(json));
+            }
+        });
+
+        final StreamSetMock streamSetMockOut = new StreamSetMock("initiator", Arrays.asList(
+                video("video1", true, true),
+                audio("audio1", true, true)
+        ));
+
+        final StreamSetMock streamSetMockIn = new StreamSetMock("peer", Arrays.asList(
+                video("video1", true, true),
+                audio("audio1", true, true)
+        ));
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        assertSame(Looper.getMainLooper(), Looper.myLooper());
+                        JSONObject jsepOffer = SessionDescriptions.toJsep(localDescription);
+                        in.setRemoteDescription(SessionDescriptions.fromJsep(jsepOffer));
+                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
+                            @Override
+                            public void onSetupComplete(final SessionDescription localDescription) {
+                                assertSame(Looper.getMainLooper(), Looper.myLooper());
+                                JSONObject jsepAnswer = SessionDescriptions.toJsep(localDescription);
+                                out.setRemoteDescription(SessionDescriptions.fromJsep(jsepAnswer));
+                                latch.countDown();
+                            }
+                        });
+                    }
+                });
+                Log.d(TAG, "waiting for call setup");
+            }
+        });
+
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockOut.getMediaStream("audio1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.SEND_RECEIVE, streamSetMockIn.getMediaStream("audio1").getStreamMode());
+
+        out.stop();
+        in.stop();
 
         Log.d(TAG, "stopped");
     }

@@ -76,7 +76,7 @@ class RtcSessionImpl implements RtcSession {
     private static Random sRandom = new Random();
 
     RtcSessionImpl(RtcConfig config) {
-        mSessionId = "" + (sRandom.nextLong() + new Date().getTime());
+        mSessionId = "" + (sRandom.nextInt() + new Date().getTime());
         mConfig = config;
         mState = State.INIT;
         mIsInitiator = true;
