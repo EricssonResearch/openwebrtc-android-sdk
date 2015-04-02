@@ -134,12 +134,20 @@ public class RtcSessionTest extends OwrTestCase {
                     public void onSetupComplete(final SessionDescription localDescription) {
                         assertSame(Looper.getMainLooper(), Looper.myLooper());
                         Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
-                        in.setRemoteDescription(localDescription);
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
                                 assertSame(Looper.getMainLooper(), Looper.myLooper());
-                                out.setRemoteDescription(localDescription);
+                                try {
+                                    out.setRemoteDescription(localDescription);
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
                                 latch.countDown();
                             }
@@ -224,13 +232,21 @@ public class RtcSessionTest extends OwrTestCase {
                     public void onSetupComplete(final SessionDescription localDescription) {
                         assertSame(Looper.getMainLooper(), Looper.myLooper());
                         JSONObject jsepOffer = SessionDescriptions.toJsep(localDescription);
-                        in.setRemoteDescription(SessionDescriptions.fromJsep(jsepOffer));
+                        try {
+                            in.setRemoteDescription(SessionDescriptions.fromJsep(jsepOffer));
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
                                 assertSame(Looper.getMainLooper(), Looper.myLooper());
                                 JSONObject jsepAnswer = SessionDescriptions.toJsep(localDescription);
-                                out.setRemoteDescription(SessionDescriptions.fromJsep(jsepAnswer));
+                                try {
+                                    out.setRemoteDescription(SessionDescriptions.fromJsep(jsepAnswer));
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 latch.countDown();
                             }
                         });
@@ -270,7 +286,11 @@ public class RtcSessionTest extends OwrTestCase {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
                         outOffer[0] = localDescription;
-                        in.setRemoteDescription(localDescription);
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
@@ -287,11 +307,19 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                in2.setRemoteDescription(outOffer[0]);
+                try {
+                    in2.setRemoteDescription(outOffer[0]);
+                } catch (InvalidDescriptionException e) {
+                    throw new RuntimeException(e);
+                }
                 in2.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
-                        out.setRemoteDescription(localDescription);
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in2.stop();
                         latch.countDown();
                     }
@@ -334,6 +362,8 @@ public class RtcSessionTest extends OwrTestCase {
                             session1.setRemoteDescription(localDescription);
                             throw new RuntimeException("should not be reached");
                         } catch (IllegalStateException e) {
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
                         }
                         session2.stop();
                         latch.countDown();
@@ -382,11 +412,19 @@ public class RtcSessionTest extends OwrTestCase {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
                         Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
-                        in.setRemoteDescription(localDescription);
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(streamSetIn, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
-                                out.setRemoteDescription(localDescription);
+                                try {
+                                    out.setRemoteDescription(localDescription);
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
                                 latch.countDown();
                             }
@@ -497,6 +535,8 @@ public class RtcSessionTest extends OwrTestCase {
             session.setRemoteDescription(null); // invalid argument
             throw new RuntimeException("should not be reached");
         } catch (NullPointerException e) {
+        } catch (InvalidDescriptionException e) {
+            throw new RuntimeException(e);
         }
         try {
             session.setup(streamSetMock, null); // invalid arguments
@@ -544,6 +584,8 @@ public class RtcSessionTest extends OwrTestCase {
                     session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
                     throw new RuntimeException("should not be reached");
                 } catch (IllegalStateException e) {
+                } catch (InvalidDescriptionException e) {
+                    throw new RuntimeException(e);
                 }
                 try {
                     // should throw illegal state, since we've already started setup
@@ -563,6 +605,8 @@ public class RtcSessionTest extends OwrTestCase {
             session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
             throw new RuntimeException("should not be reached");
         } catch (IllegalStateException e) {
+        } catch (InvalidDescriptionException e) {
+            throw new RuntimeException(e);
         }
         try {
             // should not be possible to set up now since it's stopped
@@ -609,11 +653,19 @@ public class RtcSessionTest extends OwrTestCase {
                 out.setup(outbound, new RtcSession.SetupCompleteCallback() {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
-                        in.setRemoteDescription(localDescription);
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(inbound, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
-                                out.setRemoteDescription(localDescription);
+                                try {
+                                    out.setRemoteDescription(localDescription);
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 latch.countDown();
                             }
                         });

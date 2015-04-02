@@ -48,11 +48,19 @@ public class SimpleStreamSetTest extends OwrTestCase {
                 out.setup(simpleStreamSetOut, new RtcSession.SetupCompleteCallback() {
                     @Override
                     public void onSetupComplete(final SessionDescription localDescription) {
-                        in.setRemoteDescription(localDescription);
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
                         in.setup(simpleStreamSetIn, new RtcSession.SetupCompleteCallback() {
                             @Override
                             public void onSetupComplete(final SessionDescription localDescription) {
-                                out.setRemoteDescription(localDescription);
+                                try {
+                                    out.setRemoteDescription(localDescription);
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
                                 latch.countDown();
                             }
                         });
