@@ -25,8 +25,6 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.javascript.Context;
@@ -85,15 +83,13 @@ class SdpProcessor {
             try {
                 return new JSONObject(result.toString());
             } catch (JSONException e) {
-                e.printStackTrace();
-                Log.e(TAG, "failed to parse json generated from SDP: '" + result + '"');
+                throw new InvalidDescriptionException("failed to parse json generated from SDP", e);
             }
         } catch (EvaluatorException e) {
             throw new InvalidDescriptionException("failed to parse sdp: " + e.getMessage(), e);
         } finally {
             Context.exit();
         }
-        return null;
     }
 
     static String jsonToSdp(JSONObject json) throws InvalidDescriptionException {

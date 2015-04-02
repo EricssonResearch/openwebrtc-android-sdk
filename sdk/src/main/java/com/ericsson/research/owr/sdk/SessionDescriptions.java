@@ -73,7 +73,7 @@ public class SessionDescriptions {
         try {
             originator = sdp.getJSONObject("originator");
         } catch (JSONException e) {
-            throw new InvalidDescriptionException("sdp has no originator", e);
+            throw new InvalidDescriptionException("sdp parsing failed, no originator", e);
         }
 
         String sessionId = null;
