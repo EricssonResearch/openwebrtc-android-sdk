@@ -240,9 +240,15 @@ public class SimpleStreamSet extends StreamSet {
         if (!mAudioSources.isEmpty()) {
             result.put("audio-source", mAudioSources.getFirst().getDotData());
         }
-        result.put("remote-audio-renderer", mAudioRenderer.getDotData());
-        result.put("remote-video-renderer", mRemoteViewRenderer.getDotData());
-        result.put("local-video-renderer", mSelfViewRenderer.getDotData());
+        if (mAudioRenderer != null) {
+            result.put("remote-audio-renderer", mAudioRenderer.getDotData());
+        }
+        if (mRemoteViewRenderer != null) {
+            result.put("remote-video-renderer", mRemoteViewRenderer.getDotData());
+        }
+        if (mSelfViewRenderer != null) {
+            result.put("local-video-renderer", mSelfViewRenderer.getDotData());
+        }
         return result;
     }
 
