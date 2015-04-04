@@ -591,7 +591,6 @@ class RtcSessionImpl implements RtcSession {
             }
             if (!isInitiator()) {
                 payloads = Utils.intersectPayloads(getRemoteStreamDescription().getPayloads(), payloads);
-                payloads = Utils.selectPreferredPayload(payloads);
             }
             for (RtcPayload payload : payloads) {
                 getLocalStreamDescription().addPayload(payload);
