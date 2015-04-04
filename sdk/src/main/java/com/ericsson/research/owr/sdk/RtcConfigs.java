@@ -50,7 +50,7 @@ public class RtcConfigs {
     private static class Default extends RtcConfig {
         private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>(3);
         static {
-            sDefaultVideoPayloads.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+            sDefaultVideoPayloads.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
                 put("packetization-mode", 1);
             }}, 0, false, true, true));
 //            FIXME: Enable when Chrome can handle an offer with RTX for H264
@@ -58,8 +58,8 @@ public class RtcConfigs {
                 put("apt", 103);
                 put("rtx-time", 200);
             }}, 0, false, false, false));*/
-            sDefaultVideoPayloads.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
-            sDefaultVideoPayloads.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+            sDefaultVideoPayloads.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
+            sDefaultVideoPayloads.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
                 put("apt", 100);
                 put("rtx-time", 200);
             }}, 0, false, false, false));
@@ -67,9 +67,9 @@ public class RtcConfigs {
 
         private static final List<RtcPayload> sDefaultAudioPayloads = new ArrayList<>(3);
         static {
-            sDefaultAudioPayloads.add(new PlainRtcPayload(111, "OPUS", 48000, null, 2, false, false, false));
-            sDefaultAudioPayloads.add(new PlainRtcPayload(8, "PCMA", 8000, null, 1, false, false, false));
-            sDefaultAudioPayloads.add(new PlainRtcPayload(0, "PCMU", 8000, null, 1, false, false, false));
+            sDefaultAudioPayloads.add(new RtcPayloadImpl(111, "OPUS", 48000, null, 2, false, false, false));
+            sDefaultAudioPayloads.add(new RtcPayloadImpl(8, "PCMA", 8000, null, 1, false, false, false));
+            sDefaultAudioPayloads.add(new RtcPayloadImpl(0, "PCMU", 8000, null, 1, false, false, false));
         }
 
         private final Collection<HelperServer> mHelperServers;

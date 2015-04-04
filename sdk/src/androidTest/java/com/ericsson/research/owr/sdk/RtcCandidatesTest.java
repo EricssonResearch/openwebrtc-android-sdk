@@ -181,7 +181,7 @@ public class RtcCandidatesTest extends TestCase {
         candidate.setBaseAddress("2.3.4.5");
         candidate.setBasePort(2345);
 
-        RtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        RtcCandidate rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals("asd", rtcCandidate.getUfrag());
         assertEquals("123", rtcCandidate.getPassword());
         assertEquals("0", rtcCandidate.getFoundation());
@@ -195,15 +195,15 @@ public class RtcCandidatesTest extends TestCase {
         assertEquals(2345, rtcCandidate.getRelatedPort());
 
         candidate.setTransportType(TransportType.TCP_ACTIVE);
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals(RtcCandidate.TransportType.TCP_ACTIVE, rtcCandidate.getTransportType());
 
         candidate.setTransportType(TransportType.TCP_SO);
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals(RtcCandidate.TransportType.TCP_SO, rtcCandidate.getTransportType());
 
         candidate.setTransportType(TransportType.UDP);
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals(RtcCandidate.TransportType.UDP, rtcCandidate.getTransportType());
 
         candidate = new Candidate(CandidateType.HOST, ComponentType.RTCP);
@@ -215,7 +215,7 @@ public class RtcCandidatesTest extends TestCase {
         candidate.setAddress("1.2.3.4");
         candidate.setPort(1234);
 
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals("asd", rtcCandidate.getUfrag());
         assertEquals("123", rtcCandidate.getPassword());
         assertEquals("0", rtcCandidate.getFoundation());
@@ -238,7 +238,7 @@ public class RtcCandidatesTest extends TestCase {
         candidate.setBaseAddress("2.3.4.5");
         candidate.setBasePort(2345);
 
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals("asd", rtcCandidate.getUfrag());
         assertEquals("123", rtcCandidate.getPassword());
         assertEquals("0", rtcCandidate.getFoundation());
@@ -263,7 +263,7 @@ public class RtcCandidatesTest extends TestCase {
         candidate.setBaseAddress("2.3.4.5");
         candidate.setBasePort(2345);
 
-        rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+        rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
         assertEquals("asd", rtcCandidate.getUfrag());
         assertEquals("123", rtcCandidate.getPassword());
         assertEquals("0", rtcCandidate.getFoundation());

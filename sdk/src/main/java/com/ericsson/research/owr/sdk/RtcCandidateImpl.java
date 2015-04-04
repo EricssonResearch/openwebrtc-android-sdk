@@ -27,7 +27,7 @@ package com.ericsson.research.owr.sdk;
 
 import com.ericsson.research.owr.Candidate;
 
-class PlainRtcCandidate implements RtcCandidate {
+class RtcCandidateImpl implements RtcCandidate {
     public static String TAG = "PlainRtcCandidate";
 
     private int mStreamIndex;
@@ -44,7 +44,7 @@ class PlainRtcCandidate implements RtcCandidate {
     private final String mRelatedAddress;
     private final int mRelatedPort;
 
-    PlainRtcCandidate(int streamIndex, String streamId, String ufrag, String password, String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
+    RtcCandidateImpl(int streamIndex, String streamId, String ufrag, String password, String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
         mStreamIndex = streamIndex;
         mStreamId = streamId;
         mUfrag = ufrag;
@@ -60,7 +60,7 @@ class PlainRtcCandidate implements RtcCandidate {
         mRelatedPort = relatedPort;
     }
 
-    PlainRtcCandidate(String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
+    RtcCandidateImpl(String foundation, ComponentType componentType, TransportType transportType, int priority, String address, int port, CandidateType type, String relatedAddress, int relatedPort) {
         this(-1, null, null, null, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
     }
 
@@ -142,8 +142,8 @@ class PlainRtcCandidate implements RtcCandidate {
         return mRelatedPort;
     }
 
-    static PlainRtcCandidate fromOwrCandidate(Candidate candidate) {
-        return new PlainRtcCandidate(
+    static RtcCandidateImpl fromOwrCandidate(Candidate candidate) {
+        return new RtcCandidateImpl(
                 -1, null,
                 candidate.getUfrag(),
                 candidate.getPassword(),

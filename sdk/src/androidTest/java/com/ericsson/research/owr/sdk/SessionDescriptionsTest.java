@@ -234,12 +234,12 @@ public class SessionDescriptionsTest extends AndroidTestCase {
             "\",\"type\":\"answer\"}";
 
     public void testSessionDescription() throws JSONException, InvalidDescriptionException {
-        RtcCandidate candidate = new PlainRtcCandidate("4375",
+        RtcCandidate candidate = new RtcCandidateImpl("4375",
                 RtcCandidate.ComponentType.RTP, RtcCandidate.TransportType.UDP,
                 23746, "12.34.56.78", 12345, RtcCandidate.CandidateType.HOST, null, -1);
-        RtcPayload payload1 = new PlainRtcPayload(101, "lolcode", 1337,
+        RtcPayload payload1 = new RtcPayloadImpl(101, "lolcode", 1337,
                 new HashMap<String, Object>(){{put("speed", "full");}}, 5, false, false, false);
-        RtcPayload payload2 = new PlainRtcPayload(102, "wpm8", 1337,
+        RtcPayload payload2 = new RtcPayloadImpl(102, "wpm8", 1337,
                 new HashMap<String, Object>(){{put("speed", "full");}}, -2, true, true, true);
         StreamDescription stream1 = new StreamDescriptionImpl(StreamType.AUDIO,
                 StreamMode.RECEIVE_ONLY, "admin", "qweasd",

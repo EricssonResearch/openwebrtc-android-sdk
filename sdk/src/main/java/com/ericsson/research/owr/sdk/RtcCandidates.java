@@ -88,7 +88,7 @@ public class RtcCandidates {
         if (sdpMLineIndex < 0 && sdpMid == null) {
             return null;
         }
-        PlainRtcCandidate rtcCandidate = (PlainRtcCandidate) fromSdpAttribute(candidateLine);
+        RtcCandidateImpl rtcCandidate = (RtcCandidateImpl) fromSdpAttribute(candidateLine);
         if (rtcCandidate == null) {
             return null;
         }
@@ -271,12 +271,12 @@ public class RtcCandidates {
 
         if (relatedAddress == null) {
             if (candidateType == RtcCandidate.CandidateType.HOST) {
-                return new PlainRtcCandidate(foundation, componentType, transportType, priority, address, port, candidateType, null, -1);
+                return new RtcCandidateImpl(foundation, componentType, transportType, priority, address, port, candidateType, null, -1);
             } else {
                 return null;
             }
         } else {
-            return new PlainRtcCandidate(foundation, componentType, transportType, priority, address, port, candidateType, relatedAddress, relatedPort);
+            return new RtcCandidateImpl(foundation, componentType, transportType, priority, address, port, candidateType, relatedAddress, relatedPort);
         }
     }
 }

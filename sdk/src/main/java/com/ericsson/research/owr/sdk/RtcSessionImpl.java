@@ -489,7 +489,7 @@ class RtcSessionImpl implements RtcSession {
                 getLocalStreamDescription().setPassword(candidate.getPassword());
             }
 
-            final PlainRtcCandidate rtcCandidate = PlainRtcCandidate.fromOwrCandidate(candidate);
+            final RtcCandidateImpl rtcCandidate = RtcCandidateImpl.fromOwrCandidate(candidate);
             if (mLocalDescriptionCreated) {
                 Log.d(TAG, "[RtcSession] got local candidate for " + this);
                 rtcCandidate.setStreamIndex(getIndex());

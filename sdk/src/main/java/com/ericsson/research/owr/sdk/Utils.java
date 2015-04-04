@@ -185,7 +185,7 @@ class Utils {
     }
 
     private static RtcPayload intersectPayload(RtcPayload payload, RtcPayload filter) {
-        return new PlainRtcPayload(
+        return new RtcPayloadImpl(
                 payload.getPayloadType(),
                 payload.getEncodingName(),
                 payload.getClockRate(),

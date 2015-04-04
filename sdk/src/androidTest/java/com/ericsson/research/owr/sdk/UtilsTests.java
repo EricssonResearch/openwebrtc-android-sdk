@@ -57,15 +57,15 @@ public class UtilsTests extends TestCase {
     private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>();
 
     static {
-        sDefaultVideoPayloads.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloads.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloads.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloads.add(new RtcPayloadImpl(123, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 103);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sDefaultVideoPayloads.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
-        sDefaultVideoPayloads.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloads.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloads.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 100);
             put("rtx-time", 200);
         }}, 0, false, false, false));
@@ -73,23 +73,23 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sDefaultVideoPayloadsNoVp8Rtx = new ArrayList<>();
     static {
-        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsNoVp8Rtx.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsNoVp8Rtx.add(new RtcPayloadImpl(123, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 103);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sDefaultVideoPayloadsNoVp8Rtx.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsNoVp8Rtx.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
     }
 
     private static final List<RtcPayload> sDefaultVideoPayloadsNoH264Rtx = new ArrayList<>();
     static {
-        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsNoH264Rtx.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
-        sDefaultVideoPayloadsNoH264Rtx.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsNoH264Rtx.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsNoH264Rtx.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 100);
             put("rtx-time", 200);
         }}, 0, false, false, false));
@@ -97,17 +97,17 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sValidPayloads1 = new ArrayList<>();
     static {
-        sValidPayloads1.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads1.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sValidPayloads1.add(new PlainRtcPayload(115, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads1.add(new RtcPayloadImpl(115, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 0);
         }}, 0, false, true, true));
-        sValidPayloads1.add(new PlainRtcPayload(112, "RTX", 90000, new HashMap<String, Object>(){{
+        sValidPayloads1.add(new RtcPayloadImpl(112, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 110);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sValidPayloads1.add(new PlainRtcPayload(117, "RTX", 90000, new HashMap<String, Object>(){{
+        sValidPayloads1.add(new RtcPayloadImpl(117, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 115);
             put("rtx-time", 200);
         }}, 0, false, false, false));
@@ -115,50 +115,50 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sValidPayloads2 = new ArrayList<>();
     static {
-        sValidPayloads2.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads2.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
     }
 
     private static final List<RtcPayload> sValidPayloads3 = new ArrayList<>();
     static {
-        sValidPayloads3.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads3.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, false, true));
     }
 
     private static final List<RtcPayload> sValidPayloads4 = new ArrayList<>();
     static {
-        sValidPayloads4.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads4.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, false));
     }
 
     private static final List<RtcPayload> sValidPayloads5 = new ArrayList<>();
     static {
-        sValidPayloads5.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>() {{
+        sValidPayloads5.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>() {{
             put("packetization-mode", 1);
         }}, 0, false, false, false));
     }
 
     private static final List<RtcPayload> sValidPayloads6 = new ArrayList<>();
     static {
-        sValidPayloads6.add(new PlainRtcPayload(110, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads6.add(new RtcPayloadImpl(110, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sValidPayloads6.add(new PlainRtcPayload(115, "H264", 90000, new HashMap<String, Object>(){{
+        sValidPayloads6.add(new RtcPayloadImpl(115, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 0);
         }}, 0, false, true, true));
-        sValidPayloads6.add(new PlainRtcPayload(112, "RTX", 90000, new HashMap<String, Object>(){{
+        sValidPayloads6.add(new RtcPayloadImpl(112, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 110);
             put("rtx-time", 200);
         }}, 0, false, true, true));
-        sValidPayloads6.add(new PlainRtcPayload(117, "RTX", 90000, new HashMap<String, Object>(){{
+        sValidPayloads6.add(new RtcPayloadImpl(117, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 115);
             put("rtx-time", 200);
         }}, 0, false, true, true));
-        sValidPayloads6.add(new PlainRtcPayload(111, "VP8", 90000, null, 0, false, true, true));
-        sValidPayloads6.add(new PlainRtcPayload(116, "RTX", 90000, new HashMap<String, Object>(){{
+        sValidPayloads6.add(new RtcPayloadImpl(111, "VP8", 90000, null, 0, false, true, true));
+        sValidPayloads6.add(new RtcPayloadImpl(116, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 111);
             put("rtx-time", 200);
         }}, 0, false, true, true));
@@ -166,9 +166,9 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sDefaultAudioPayloads = new ArrayList<>();
     static {
-        sDefaultAudioPayloads.add(new PlainRtcPayload(111, "OPUS", 48000, null, 2, false, false, false));
-        sDefaultAudioPayloads.add(new PlainRtcPayload(8, "PCMA", 8000, null, 1, false, false, false));
-        sDefaultAudioPayloads.add(new PlainRtcPayload(0, "PCMU", 8000, null, 1, false, false, false));
+        sDefaultAudioPayloads.add(new RtcPayloadImpl(111, "OPUS", 48000, null, 2, false, false, false));
+        sDefaultAudioPayloads.add(new RtcPayloadImpl(8, "PCMA", 8000, null, 1, false, false, false));
+        sDefaultAudioPayloads.add(new RtcPayloadImpl(0, "PCMU", 8000, null, 1, false, false, false));
     }
 
     public void testTransformPayloads() {
@@ -392,15 +392,15 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sDefaultVideoPayloadsRtxReordered = new ArrayList<>();
     static {
-        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReordered.add(new RtcPayloadImpl(123, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 103);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReordered.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
-        sDefaultVideoPayloadsRtxReordered.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReordered.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsRtxReordered.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 100);
             put("rtx-time", 200);
         }}, 0, false, false, false));
@@ -408,15 +408,15 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sDefaultVideoPayloadsRtxReorderedVp8 = new ArrayList<>();
     static {
-        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new RtcPayloadImpl(123, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 103);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
-        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloadsRtxReorderedVp8.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsRtxReorderedVp8.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 100);
             put("rtx-time", 200);
         }}, 0, false, false, false));
@@ -424,14 +424,14 @@ public class UtilsTests extends TestCase {
 
     private static final List<RtcPayload> sDefaultVideoPayloadsVp8RtxReorderedFirst = new ArrayList<>();
     static {
-        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(120, "RTX", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
             put("apt", 100);
             put("rtx-time", 200);
         }}, 0, false, false, false));
-        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(103, "H264", 90000, new HashMap<String, Object>(){{
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
             put("packetization-mode", 1);
         }}, 0, false, true, true));
-        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new PlainRtcPayload(100, "VP8", 90000, null, 0, true, true, true));
+        sDefaultVideoPayloadsVp8RtxReorderedFirst.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
     }
 
     public void testPreferredPayloadSelection() {
@@ -553,7 +553,7 @@ public class UtilsTests extends TestCase {
         assertEquals(TransportType.TCP_PASSIVE, candidates.get(5).getTransportType());
         assertEquals(TransportType.TCP_SO, candidates.get(6).getTransportType());
 
-        RtcCandidate rtcCandidate = new PlainRtcCandidate(0, null, "asd", "123", "234",
+        RtcCandidate rtcCandidate = new RtcCandidateImpl(0, null, "asd", "123", "234",
                 RtcCandidate.ComponentType.RTP, RtcCandidate.TransportType.UDP, 3, "127.1", 13,
                 RtcCandidate.CandidateType.PEER_REFLEXIVE, "192.1", 14);
         Candidate candidate = Utils.transformCandidate(rtcCandidate);

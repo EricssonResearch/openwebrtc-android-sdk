@@ -28,7 +28,7 @@ package com.ericsson.research.owr.sdk;
 import java.util.Collections;
 import java.util.Map;
 
-class PlainRtcPayload implements RtcPayload {
+class RtcPayloadImpl implements RtcPayload {
     private final int mPayloadType;
     private final String mEncodingName;
     private final int mClockRate;
@@ -42,7 +42,7 @@ class PlainRtcPayload implements RtcPayload {
     private final boolean mNackPli;
     private final boolean mCcmFir;
 
-    PlainRtcPayload(int payloadType, String encodingName, int clockRate, Map<String, Object> parameters, int channels, boolean nack, boolean nackPli, boolean ccmFir) {
+    RtcPayloadImpl(int payloadType, String encodingName, int clockRate, Map<String, Object> parameters, int channels, boolean nack, boolean nackPli, boolean ccmFir) {
         mPayloadType = payloadType;
         mEncodingName = encodingName;
         mClockRate = clockRate;

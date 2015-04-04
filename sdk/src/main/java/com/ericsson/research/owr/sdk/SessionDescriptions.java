@@ -228,7 +228,7 @@ public class SessionDescriptions {
                     boolean nackPli = payload.optBoolean("nackpli", false);
                     boolean ccmFir = payload.optBoolean("ccmfir", false);
 
-                    payloads.add(new PlainRtcPayload(payloadType, encodingName, clockRate, parameters, channels, nack, nackPli, ccmFir));
+                    payloads.add(new RtcPayloadImpl(payloadType, encodingName, clockRate, parameters, channels, nack, nackPli, ccmFir));
                 } catch (JSONException e) {
                     Log.d(TAG, "ignoring payload \"" + encodingName + "\": " + e.getMessage());
                 }
@@ -263,7 +263,7 @@ public class SessionDescriptions {
         RtcCandidate.CandidateType type = candidateTypeFromOwrJson(json);
         String relatedAddress = json.optString("relatedAddress", "");
         int relatedPort = json.optInt("relatedPort", 0);
-        return new PlainRtcCandidate(index, id, ufrag, password, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
+        return new RtcCandidateImpl(index, id, ufrag, password, foundation, componentType, transportType, priority, address, port, type, relatedAddress, relatedPort);
     }
     private static RtcCandidate.CandidateType candidateTypeFromOwrJson(JSONObject json) throws JSONException {
         String type = json.getString("type");
