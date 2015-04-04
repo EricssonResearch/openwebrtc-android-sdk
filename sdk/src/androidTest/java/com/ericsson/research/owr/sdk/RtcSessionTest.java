@@ -190,6 +190,83 @@ public class RtcSessionTest extends OwrTestCase {
         Log.d(TAG, "stopped");
     }
 
+    public void testEmptyCall() {
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession out = RtcSessions.create(config);
+        final RtcSession in = RtcSessions.create(config);
+
+        final StreamSetMock streamSetMockOut = new StreamSetMock("initiator", Arrays.asList(
+                video("video1", false, false),
+                audio("audio1", false, false)
+        ));
+
+        final StreamSetMock streamSetMockIn = new StreamSetMock("peer", Arrays.asList(
+                video("video1", false, false),
+                audio("audio1", false, false)
+        ));
+
+        TestUtils.synchronous().timeout(5).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                Owr.getCaptureSources(EnumSet.of(MediaType.VIDEO, MediaType.AUDIO), new CaptureSourcesCallback() {
+                    @Override
+                    public void onCaptureSourcesCallback(final List<MediaSource> list) {
+                        Log.d(TAG, "got capture sources: " + list.size());
+                        for (MediaSource source : list) {
+                            Log.d(TAG, "iterate source " + source.getName());
+                            if (source.getMediaType().contains(MediaType.VIDEO) && mVideoSource == null) {
+                                Log.d(TAG, "got video source: " + source + " " + source.getName());
+                                mVideoSource = source;
+                            } else if (source.getMediaType().contains(MediaType.AUDIO) && mAudioSource == null) {
+                                Log.d(TAG, "got audio source: " + source);
+                                mAudioSource = source;
+                            }
+                        }
+                        latch.countDown();
+                    }
+                });
+            }
+        });
+
+        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                    @Override
+                    public void onSetupComplete(final SessionDescription localDescription) {
+                        Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
+                        try {
+                            in.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
+                            @Override
+                            public void onSetupComplete(final SessionDescription localDescription) {
+                                try {
+                                    out.setRemoteDescription(localDescription);
+                                } catch (InvalidDescriptionException e) {
+                                    throw new RuntimeException(e);
+                                }
+                                Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
+                                latch.countDown();
+                            }
+                        });
+                    }
+                });
+                Log.d(TAG, "waiting for call setup");
+            }
+        });
+
+        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getMediaStream("audio1").getStreamMode());
+        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getMediaStream("video1").getStreamMode());
+        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getMediaStream("audio1").getStreamMode());
+
+        out.stop();
+        in.stop();
+    }
+
     public void testJsepCall() {
         RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
         final RtcSession out = RtcSessions.create(config);

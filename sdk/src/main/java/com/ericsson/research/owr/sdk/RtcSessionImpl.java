@@ -572,6 +572,8 @@ class RtcSessionImpl implements RtcSession {
                 getStream().setStreamMode(mode);
             }
 
+            getLocalStreamDescription().setMode(mode);
+
             if (mode == StreamMode.INACTIVE) {
                 if (isInitiator()) {
                     getStream().setStreamMode(mode);
@@ -579,7 +581,6 @@ class RtcSessionImpl implements RtcSession {
                 return;
             }
 
-            getLocalStreamDescription().setMode(mode);
             getMediaSession().setRtcpMux(rtcpMux);
             getLocalStreamDescription().setRtcpMux(rtcpMux);
 
