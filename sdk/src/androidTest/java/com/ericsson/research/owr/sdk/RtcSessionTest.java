@@ -129,9 +129,9 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         assertSame(Looper.getMainLooper(), Looper.myLooper());
                         Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
                         try {
@@ -139,22 +139,24 @@ public class RtcSessionTest extends OwrTestCase {
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                assertSame(Looper.getMainLooper(), Looper.myLooper());
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetMockIn);
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        assertSame(Looper.getMainLooper(), Looper.myLooper());
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetMockOut);
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -231,30 +233,32 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetMockIn);
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetMockOut);
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -283,28 +287,30 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetMockIn);
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetMockOut);
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -358,9 +364,9 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetMockOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         assertSame(Looper.getMainLooper(), Looper.myLooper());
                         JSONObject jsepOffer = SessionDescriptions.toJsep(localDescription);
                         try {
@@ -368,22 +374,24 @@ public class RtcSessionTest extends OwrTestCase {
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetMockIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                assertSame(Looper.getMainLooper(), Looper.myLooper());
-                                JSONObject jsepAnswer = SessionDescriptions.toJsep(localDescription);
-                                try {
-                                    out.setRemoteDescription(SessionDescriptions.fromJsep(jsepAnswer));
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetMockIn);
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        assertSame(Looper.getMainLooper(), Looper.myLooper());
+                        JSONObject jsepAnswer = SessionDescriptions.toJsep(localDescription);
+                        try {
+                            out.setRemoteDescription(SessionDescriptions.fromJsep(jsepAnswer));
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetMockOut);
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -413,25 +421,27 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         outOffer[0] = localDescription;
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                in.stop();
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetMock);
                     }
                 });
-                Log.d(TAG, "waiting for 1/2 call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        in.stop();
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetMock);
+                Log.d(TAG, "waiting for 1/2 call start");
             }
         });
 
@@ -443,9 +453,9 @@ public class RtcSessionTest extends OwrTestCase {
                 } catch (InvalidDescriptionException e) {
                     throw new RuntimeException(e);
                 }
-                in2.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                in2.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             out.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
@@ -455,7 +465,8 @@ public class RtcSessionTest extends OwrTestCase {
                         latch.countDown();
                     }
                 });
-                Log.d(TAG, "waiting rest 1/2 of call setup");
+                in2.start(streamSetMock);
+                Log.d(TAG, "waiting rest 1/2 of call start");
             }
         });
 
@@ -479,16 +490,18 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                session1.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                session1.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         throw new RuntimeException("should not be reached");
                     }
                 });
+                session1.start(streamSetMock);
                 session1.stop();
-                session2.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                session2.start(streamSetMock);
+                session2.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             session1.setRemoteDescription(localDescription);
                             throw new RuntimeException("should not be reached");
@@ -500,7 +513,7 @@ public class RtcSessionTest extends OwrTestCase {
                         latch.countDown();
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -539,30 +552,32 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(streamSetOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         Log.w(TAG, "OFFER: " + SessionDescriptions.toJsep(localDescription));
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(streamSetIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
-                                latch.countDown();
-                            }
-                        });
+                        in.start(streamSetIn);
                     }
                 });
-                Log.d(TAG, "waiting for call setup");
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        Log.w(TAG, "ANSWER: " + SessionDescriptions.toJsep(localDescription));
+                        latch.countDown();
+                    }
+                });
+                out.start(streamSetOut);
+                Log.d(TAG, "waiting for call start");
             }
         });
 
@@ -670,21 +685,7 @@ public class RtcSessionTest extends OwrTestCase {
             throw new RuntimeException(e);
         }
         try {
-            session.setup(streamSetMock, null); // invalid arguments
-            throw new RuntimeException("should not be reached");
-        } catch (NullPointerException e) {
-        }
-        try {
-            session.setup(null, new RtcSession.SetupCompleteCallback() { // invalid arguments
-                @Override
-                public void onSetupComplete(final SessionDescription localDescription) {
-                }
-            });
-            throw new RuntimeException("should not be reached");
-        } catch (NullPointerException e) {
-        }
-        try {
-            session.setup(null, null); // invalid arguments
+            session.start(null);
             throw new RuntimeException("should not be reached");
         } catch (NullPointerException e) {
         }
@@ -692,16 +693,12 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+                session.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             // should throw illegal state, since we're already set up
-                            session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
-                                @Override
-                                public void onSetupComplete(final SessionDescription localDescription) {
-                                }
-                            });
+                            session.start(streamSetMock);
                             throw new RuntimeException("should not be reached");
                         } catch (IllegalStateException e) {
                         }
@@ -710,8 +707,9 @@ public class RtcSessionTest extends OwrTestCase {
                         latch.countDown();
                     }
                 });
+                session.start(streamSetMock);
                 try {
-                    // it should not be possible to set remote description during setup
+                    // it should not be possible to set remote description during startup
                     session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
                     throw new RuntimeException("should not be reached");
                 } catch (IllegalStateException e) {
@@ -719,12 +717,8 @@ public class RtcSessionTest extends OwrTestCase {
                     throw new RuntimeException(e);
                 }
                 try {
-                    // should throw illegal state, since we've already started setup
-                    session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
-                        @Override
-                        public void onSetupComplete(final SessionDescription localDescription) {
-                        }
-                    });
+                    // should throw illegal state, since we've already started
+                    session.start(streamSetMock);
                     throw new RuntimeException("should not be reached");
                 } catch (IllegalStateException e) {
                 }
@@ -741,11 +735,12 @@ public class RtcSessionTest extends OwrTestCase {
         }
         try {
             // should not be possible to set up now since it's stopped
-            session.setup(streamSetMock, new RtcSession.SetupCompleteCallback() {
+            session.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                 @Override
-                public void onSetupComplete(final SessionDescription localDescription) {
+                public void onLocalDescription(final SessionDescription localDescription) {
                 }
             });
+            session.start(streamSetMock);
             throw new RuntimeException("should not be reached");
         } catch (IllegalStateException e) {
         }
@@ -781,27 +776,29 @@ public class RtcSessionTest extends OwrTestCase {
         TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(outbound, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(inbound, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                latch.countDown();
-                            }
-                        });
+                        in.start(inbound);
                     }
                 });
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        latch.countDown();
+                    }
+                });
+                out.start(outbound);
             }
         });
     }

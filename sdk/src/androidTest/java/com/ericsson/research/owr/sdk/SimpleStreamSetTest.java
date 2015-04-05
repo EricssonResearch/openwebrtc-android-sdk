@@ -45,27 +45,29 @@ public class SimpleStreamSetTest extends OwrTestCase {
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
             public void run(final CountDownLatch latch) {
-                out.setup(simpleStreamSetOut, new RtcSession.SetupCompleteCallback() {
+                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
-                    public void onSetupComplete(final SessionDescription localDescription) {
+                    public void onLocalDescription(final SessionDescription localDescription) {
                         try {
                             in.setRemoteDescription(localDescription);
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
-                        in.setup(simpleStreamSetIn, new RtcSession.SetupCompleteCallback() {
-                            @Override
-                            public void onSetupComplete(final SessionDescription localDescription) {
-                                try {
-                                    out.setRemoteDescription(localDescription);
-                                } catch (InvalidDescriptionException e) {
-                                    throw new RuntimeException(e);
-                                }
-                                latch.countDown();
-                            }
-                        });
+                        in.start(simpleStreamSetIn);
                     }
                 });
+                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            out.setRemoteDescription(localDescription);
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                        latch.countDown();
+                    }
+                });
+                out.start(simpleStreamSetOut);
             }
         });
     }

@@ -32,16 +32,23 @@ public interface RtcSession {
 
     /**
      * Sets the listener that will be called when a local candidate is generated.
-     * @param listener the listener that will be called when a local candidate is available.
+     * @param listener the listener
      */
     void setOnLocalCandidateListener(OnLocalCandidateListener listener);
 
     /**
-     * Initiate the session and get ready to receive media and generate a SessionDescription for the other peer.
-     * @param streamSet the configuration that should be used for the call
-     * @param callback a callback that is called with a SessionDescription that should be sent to the other peer.
+     * Sets the listener that will be called once a local description is ready to be sent to the peer.
+     * @param listener the listener
      */
-    void setup(StreamSet streamSet, SetupCompleteCallback callback);
+    void setOnLocalDescriptionListener(OnLocalDescriptionListener listener);
+
+    /**
+     * Start the session by getting ready to receive media, and generate a local description for the session.
+     * If the remote description has already been set then media will sent as well.
+     * Start can not  be called twice in a row without calling stop inbetween.
+     * @param streamSet the stream set that should be used for the call
+     */
+    void start(StreamSet streamSet);
 
     /**
      * Sets the remote description of the session. This method should only be called once, and only after
@@ -59,7 +66,7 @@ public interface RtcSession {
     void addRemoteCandidate(RtcCandidate candidate);
 
     /**
-     * End the call
+     * Ends the call, this has no effect if the session isn't active.
      */
     void stop();
 
@@ -77,11 +84,11 @@ public interface RtcSession {
         void onLocalCandidate(RtcCandidate candidate);
     }
 
-    interface SetupCompleteCallback {
+    interface OnLocalDescriptionListener {
         /**
-         * Called once the call setup is complete.
+         * Called once the local description is ready to be sent to the peer.
          * @param localDescription a SessionDescription that should be sent to the other peer.
          */
-        void onSetupComplete(SessionDescription localDescription);
+        void onLocalDescription(SessionDescription localDescription);
     }
 }

@@ -69,7 +69,7 @@ class RtcSessionImpl implements RtcSession {
 
     private OnLocalCandidateListener mLocalCandidateListener = null;
     private List<StreamHandler> mStreamHandlers;
-    private SetupCompleteCallback mSetupCompleteCallback;
+    private OnLocalDescriptionListener mLocalDescriptionListener;
     private List<RtcCandidate> mRemoteCandidateBuffer;
     private State mState;
 
@@ -89,6 +89,11 @@ class RtcSessionImpl implements RtcSession {
         mLocalCandidateListener = listener;
     }
 
+    @Override
+    public void setOnLocalDescriptionListener(final OnLocalDescriptionListener listener) {
+        mLocalDescriptionListener = listener;
+    }
+
     private void log(String msg) {
         String streams;
         if (mStreamHandlers == null) {
@@ -106,18 +111,14 @@ class RtcSessionImpl implements RtcSession {
     }
 
     @Override
-    public synchronized void setup(final StreamSet streamSet, final SetupCompleteCallback callback) {
+    public synchronized void start(final StreamSet streamSet) {
         if (mState != State.INIT && mState != State.RECEIVED_OFFER) {
             throw new IllegalStateException("setup called at wrong state: " + mState.name());
         }
         if (streamSet == null) {
             throw new NullPointerException("streamSet may not be null");
         }
-        if (callback == null) {
-            throw new NullPointerException("callback may not be null");
-        }
         log("setup called");
-        mSetupCompleteCallback = callback;
 
         mTransportAgent = new TransportAgent(mIsInitiator);
 
@@ -176,7 +177,6 @@ class RtcSessionImpl implements RtcSession {
     }
 
     private synchronized void maybeFinishSetup() {
-        final SetupCompleteCallback callback;
         final SessionDescription sessionDescription;
 
         if (mState != State.SETUP) {
@@ -206,13 +206,11 @@ class RtcSessionImpl implements RtcSession {
         }
 
         sessionDescription = new SessionDescriptionImpl(type, mSessionId, streamDescriptions);
-        callback = mSetupCompleteCallback;
-        mSetupCompleteCallback = null;
 
         mMainHandler.post(new Runnable() {
             @Override
             public void run() {
-                callback.onSetupComplete(sessionDescription);
+                mLocalDescriptionListener.onLocalDescription(sessionDescription);
             }
         });
     }
@@ -312,8 +310,6 @@ class RtcSessionImpl implements RtcSession {
             }
         }
 
-        mLocalCandidateListener = null;
-        mSetupCompleteCallback = null;
         mRemoteCandidateBuffer = null;
         mRemoteDescription = null;
         mTransportAgent = null;
