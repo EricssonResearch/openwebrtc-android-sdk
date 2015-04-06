@@ -156,14 +156,14 @@ class RtcSessionImpl implements RtcSession {
             }
         }
 
+        mState = State.SETUP;
+
         if (mRemoteDescription != null && mRemoteCandidateBuffer != null) {
             for (RtcCandidate candidate : mRemoteCandidateBuffer) {
                 addRemoteCandidate(candidate);
             }
             mRemoteCandidateBuffer = null;
         }
-
-        mState = State.SETUP;
         log("initial setup complete");
 
         mMainHandler.post(new Runnable() {

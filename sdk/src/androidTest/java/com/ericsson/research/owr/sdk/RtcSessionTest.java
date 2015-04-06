@@ -673,6 +673,64 @@ public class RtcSessionTest extends OwrTestCase {
         });
     }
 
+    public void testAddingCandidates() {
+        final RtcCandidate candidate = new RtcCandidateImpl(0, null, "a", "b", "1", RtcCandidate.ComponentType.RTP,
+                RtcCandidate.TransportType.UDP, 0, "1.2.3.4", 2, RtcCandidate.CandidateType.HOST, null, 0);
+        final SessionDescription remoteDescription = new SessionDescriptionImpl(SessionDescription.Type.OFFER, "1", Collections.<StreamDescription>emptyList());
+        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
+        final RtcSession session1 = RtcSessions.create(config);
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                session1.addRemoteCandidate(candidate);
+                try {
+                    session1.setRemoteDescription(remoteDescription);
+                } catch (InvalidDescriptionException e) {
+                    throw new RuntimeException(e);
+                }
+                session1.addRemoteCandidate(candidate);
+                session1.start(new StreamSetMock("empty", Collections.<StreamConfig>emptyList()));
+                session1.addRemoteCandidate(candidate);
+                session1.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        session1.addRemoteCandidate(candidate);
+                        latch.countDown();
+                    }
+                });
+            }
+        });
+        session1.addRemoteCandidate(candidate);
+        session1.stop();
+        session1.addRemoteCandidate(candidate);
+
+        final RtcSession session2 = RtcSessions.create(config);
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                session2.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+                    @Override
+                    public void onLocalDescription(final SessionDescription localDescription) {
+                        try {
+                            session2.addRemoteCandidate(candidate);
+                            session2.setRemoteDescription(remoteDescription);
+                            session2.addRemoteCandidate(candidate);
+                            latch.countDown();
+                        } catch (InvalidDescriptionException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+                session2.addRemoteCandidate(candidate);
+                session2.start(new StreamSetMock("empty", Collections.<StreamConfig>emptyList()));
+                session2.addRemoteCandidate(candidate);
+            }
+        });
+        session2.addRemoteCandidate(candidate);
+        session2.stop();
+        session2.addRemoteCandidate(candidate);
+    }
+
     public void testInvalidCalls() {
         RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
         final RtcSession session = RtcSessions.create(config);
