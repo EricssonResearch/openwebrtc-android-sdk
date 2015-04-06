@@ -210,7 +210,9 @@ class RtcSessionImpl implements RtcSession {
         mMainHandler.post(new Runnable() {
             @Override
             public void run() {
-                mLocalDescriptionListener.onLocalDescription(sessionDescription);
+                if (mLocalDescriptionListener != null) {
+                    mLocalDescriptionListener.onLocalDescription(sessionDescription);
+                }
             }
         });
     }
