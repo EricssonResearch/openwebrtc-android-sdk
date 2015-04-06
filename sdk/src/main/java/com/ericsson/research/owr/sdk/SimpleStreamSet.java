@@ -43,7 +43,6 @@ import com.ericsson.research.owr.VideoRenderer;
 import com.ericsson.research.owr.WindowRegistry;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -115,7 +114,8 @@ public class SimpleStreamSet extends StreamSet {
                             mVideoSources.add(mediaSource);
                         }
                     }
-                    if (mWantVideo && !mVideoSources.isEmpty()) {
+                    boolean haveSelfView = mSelfViewSurfaceTagger != null || mSelfViewTextureTagger != null;
+                    if (mWantVideo && !mVideoSources.isEmpty() && haveSelfView) {
                         mSelfViewRenderer.setSource(mVideoSources.get(0));
                     }
                     if (mVideoSourceDelegate != null && !mVideoSources.isEmpty()) {
@@ -146,12 +146,15 @@ public class SimpleStreamSet extends StreamSet {
      *
      * @param surfaceView The view to render the self-view in, or null to disable the self-view.
      */
-    public void setSelfView(SurfaceView surfaceView) {
+    public synchronized void setSelfView(SurfaceView surfaceView) {
         if (!mWantVideo) {
             return;
         }
-        stopSelfView();
+        stopSelfViewTaggers();
         if (surfaceView != null) {
+            if (!mVideoSources.isEmpty()) {
+                mSelfViewRenderer.setSource(mVideoSources.get(0));
+            }
             mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
         }
     }
@@ -163,17 +166,31 @@ public class SimpleStreamSet extends StreamSet {
      * @param textureView The view to render the self-view in, or null to disable the self-view.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public void setSelfView(TextureView textureView) {
+    public synchronized void setSelfView(TextureView textureView) {
         if (!mWantVideo) {
             return;
         }
-        stopSelfView();
+        stopSelfViewTaggers();
         if (textureView != null) {
+            if (!mVideoSources.isEmpty()) {
+                mSelfViewRenderer.setSource(mVideoSources.get(0));
+            }
             mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
         }
     }
 
-    private void stopSelfView() {
+    /**
+     * Stops self-view rendering.
+     * This should always be called in order to release resources.
+     */
+    public synchronized void stopSelfView() {
+        stopSelfViewTaggers();
+        if (mSelfViewRenderer != null) {
+            mSelfViewRenderer.setSource(null);
+        }
+    }
+
+    private void stopSelfViewTaggers() {
         if (mSelfViewTextureTagger != null) {
             mSelfViewTextureTagger.stop();
             mSelfViewTextureTagger = null;
@@ -190,8 +207,8 @@ public class SimpleStreamSet extends StreamSet {
      *
      * @param surfaceView The view to render the remote-view in, or null to disable the remote-view.
      */
-    public void setRemoteView(SurfaceView surfaceView) {
-        stopRemoteView();
+    public synchronized void setRemoteView(SurfaceView surfaceView) {
+        stopRemoteViewTaggers();
         if (surfaceView != null) {
             mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
         }
@@ -204,14 +221,21 @@ public class SimpleStreamSet extends StreamSet {
      * @param textureView The view to render the remote-view in, or null to disable the remote-view.
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public void setRemoteView(TextureView textureView) {
-        stopRemoteView();
+    public synchronized void setRemoteView(TextureView textureView) {
+        stopRemoteViewTaggers();
         if (textureView != null) {
             mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
         }
     }
 
-    private void stopRemoteView() {
+    /**
+     * Stops remote-view rendering.
+     */
+    public synchronized void stopRemoteView() {
+        stopRemoteViewTaggers();
+    }
+
+    private void stopRemoteViewTaggers() {
         if (mRemoteViewTextureTagger != null) {
             mRemoteViewTextureTagger.stop();
             mRemoteViewTextureTagger = null;

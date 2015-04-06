@@ -78,15 +78,20 @@ public class SimpleStreamSetTest extends OwrTestCase {
 
         SimpleStreamSet simpleStreamSet = SimpleStreamSet.defaultConfig(false, true);
 
+        simpleStreamSet.stopSelfView();
         simpleStreamSet.setSelfView(textureView);
         simpleStreamSet.setRemoteView(textureView);
         simpleStreamSet.setSelfView(textureView);
         simpleStreamSet.setRemoteView(textureView);
+        simpleStreamSet.stopSelfView();
+        simpleStreamSet.setSelfView(surfaceView);
         simpleStreamSet.setSelfView(surfaceView);
         simpleStreamSet.setRemoteView(surfaceView);
-        simpleStreamSet.setSelfView(surfaceView);
         simpleStreamSet.setRemoteView(surfaceView);
+        simpleStreamSet.stopSelfView();
         simpleStreamSet.setSelfView(textureView);
         simpleStreamSet.setRemoteView(textureView);
+        simpleStreamSet.stopSelfView();
+        simpleStreamSet.stopSelfView();
     }
 }
