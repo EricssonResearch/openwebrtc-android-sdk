@@ -28,7 +28,14 @@ package com.ericsson.research.owr.sdk;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
+import com.ericsson.research.owr.CaptureSourcesCallback;
+import com.ericsson.research.owr.MediaSource;
+import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.Owr;
+
 import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class SimpleStreamSetTest extends OwrTestCase {
@@ -73,10 +80,31 @@ public class SimpleStreamSetTest extends OwrTestCase {
     }
 
     public void testViews() {
+        SimpleStreamSet withVideo = SimpleStreamSet.defaultConfig(false, true);
+        runViewTest(withVideo);
+        SimpleStreamSet withoutVideo = SimpleStreamSet.defaultConfig(false, false);
+        runViewTest(withoutVideo);
+
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                Owr.getCaptureSources(EnumSet.of(MediaType.VIDEO), new CaptureSourcesCallback() {
+                    @Override
+                    public void onCaptureSourcesCallback(final List<MediaSource> list) {
+                        latch.countDown();
+                    }
+                });
+            }
+        });
+
+        // StreamSets should now have sources
+        runViewTest(withVideo);
+        runViewTest(withoutVideo);
+    }
+
+    private void runViewTest(SimpleStreamSet simpleStreamSet) {
         TextureView textureView = new TextureView(getContext(), null);
         SurfaceView surfaceView = new SurfaceView(getContext(), null);
-
-        SimpleStreamSet simpleStreamSet = SimpleStreamSet.defaultConfig(false, true);
 
         simpleStreamSet.stopSelfView();
         simpleStreamSet.setSelfView(textureView);
