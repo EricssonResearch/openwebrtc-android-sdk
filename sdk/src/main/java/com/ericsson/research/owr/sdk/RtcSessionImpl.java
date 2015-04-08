@@ -150,11 +150,9 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
             }
         } else {
             for (Pair<StreamDescription, StreamSet.Stream> pair : Utils.resolveOfferedStreams(mRemoteDescription, streamSet.getStreams())) {
+                StreamDescription description = pair.first;
                 StreamSet.Stream stream = pair.second;
-                if (stream == null) {
-                    stream = streamSet.handleUnusedStream(pair.first);
-                }
-                mStreamHandlers.add(createStreamHandler(index, pair.first, stream));
+                mStreamHandlers.add(createStreamHandler(index, description, stream));
                 index++;
             }
         }

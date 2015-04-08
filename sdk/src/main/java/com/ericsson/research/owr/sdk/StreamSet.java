@@ -144,10 +144,6 @@ public abstract class StreamSet {
      */
     protected abstract List<? extends Stream> getStreams();
 
-    protected Stream handleUnusedStream(StreamDescription streamDescription) {
-        return null;
-    }
-
     public interface MediaSourceDelegate {
         void setMediaSource(MediaSource mediaSource);
     }

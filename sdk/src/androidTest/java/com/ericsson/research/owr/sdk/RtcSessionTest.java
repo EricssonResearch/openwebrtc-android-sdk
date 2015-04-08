@@ -271,62 +271,6 @@ public class RtcSessionTest extends OwrTestCase {
         in.stop();
     }
 
-    public void testHandleUnusedStreams() {
-        RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
-        final RtcSession out = RtcSessions.create(config);
-        final RtcSession in = RtcSessions.create(config);
-
-        final StreamSetMock streamSetMockOut = new StreamSetMock("initiator", Arrays.asList(
-                audio("audio1", false, false),
-                audio("audio2", true, false),
-                audio("audio3", false, true),
-                audio("audio4", true, true)
-        ));
-        final StreamSetMock streamSetMockIn = new StreamSetMock("peer", true, Collections.<StreamConfig>emptyList());
-
-        TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
-            @Override
-            public void run(final CountDownLatch latch) {
-                out.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
-                    @Override
-                    public void onLocalDescription(final SessionDescription localDescription) {
-                        try {
-                            in.setRemoteDescription(localDescription);
-                        } catch (InvalidDescriptionException e) {
-                            throw new RuntimeException(e);
-                        }
-                        in.start(streamSetMockIn);
-                    }
-                });
-                in.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
-                    @Override
-                    public void onLocalDescription(final SessionDescription localDescription) {
-                        try {
-                            out.setRemoteDescription(localDescription);
-                        } catch (InvalidDescriptionException e) {
-                            throw new RuntimeException(e);
-                        }
-                        latch.countDown();
-                    }
-                });
-                out.start(streamSetMockOut);
-                Log.d(TAG, "waiting for call start");
-            }
-        });
-
-        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getMediaStream("audio1").getStreamMode());
-        assertEquals(StreamMode.SEND_ONLY, streamSetMockOut.getMediaStream("audio2").getStreamMode());
-        assertEquals(StreamMode.INACTIVE, streamSetMockOut.getMediaStream("audio3").getStreamMode());
-        assertEquals(StreamMode.SEND_ONLY, streamSetMockOut.getMediaStream("audio4").getStreamMode());
-        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getMediaStream("audio1").getStreamMode());
-        assertEquals(StreamMode.RECEIVE_ONLY, streamSetMockIn.getMediaStream("audio2").getStreamMode());
-        assertEquals(StreamMode.INACTIVE, streamSetMockIn.getMediaStream("audio3").getStreamMode());
-        assertEquals(StreamMode.RECEIVE_ONLY, streamSetMockIn.getMediaStream("audio4").getStreamMode());
-
-        out.stop();
-        in.stop();
-    }
-
     public void testJsepCall() {
         RtcConfig config = RtcConfigs.defaultConfig(Collections.<RtcConfig.HelperServer>emptyList());
         final RtcSession out = RtcSessions.create(config);
@@ -932,25 +876,6 @@ public class RtcSessionTest extends OwrTestCase {
                 }
             }
             return null;
-        }
-
-        @Override
-        protected Stream handleUnusedStream(final StreamDescription streamDescription) {
-            if (!mAcceptUnusedStreams) {
-                return null;
-            }
-            Stream stream;
-            if (streamDescription.getType() == StreamType.DATA) {
-                stream = new DataStreamMock();
-            } else {
-                String id = streamDescription.getMediaStreamId();
-                StreamMode mode = streamDescription.getMode().reverse(false, true);
-                MediaType mediaType = streamDescription.getType() == StreamType.VIDEO ? MediaType.VIDEO : MediaType.AUDIO;
-                StreamConfig config = new StreamConfig(id, mode.wantSend(), mode.wantReceive(), mediaType);
-                stream = new MediaStreamMock(config);
-            }
-            mStreams.add(stream);
-            return stream;
         }
 
         @Override
