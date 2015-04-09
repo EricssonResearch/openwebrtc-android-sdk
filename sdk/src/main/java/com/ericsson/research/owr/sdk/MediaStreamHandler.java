@@ -42,8 +42,8 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
     private boolean mHaveCname = false;
     private boolean mHaveSsrc = false;
 
-    MediaStreamHandler(int index, boolean isInitiator, StreamDescription streamDescription, StreamSet.MediaStream mediaStream, RtcConfig config) {
-        super(index, isInitiator, streamDescription, mediaStream, new MediaSession(!isInitiator));
+    MediaStreamHandler(int index, StreamDescription streamDescription, StreamSet.MediaStream mediaStream, RtcConfig config) {
+        super(index, streamDescription == null, streamDescription, mediaStream, new MediaSession(streamDescription != null));
         getMediaSession().addCnameChangeListener(this);
         getMediaSession().addSendSsrcChangeListener(this);
         getMediaSession().addOnIncomingSourceListener(this);
@@ -114,8 +114,8 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
     }
 
     // inactive stream
-    MediaStreamHandler(int index, boolean isInitiator, StreamDescription streamDescription) {
-        super(index, isInitiator, streamDescription);
+    MediaStreamHandler(int index, StreamDescription streamDescription) {
+        super(index, streamDescription == null, streamDescription);
     }
 
     public MediaSession getMediaSession() {

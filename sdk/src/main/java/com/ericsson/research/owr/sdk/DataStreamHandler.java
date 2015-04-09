@@ -58,8 +58,8 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
         }
     };
 
-    public DataStreamHandler(int index, boolean isInitiator, StreamDescription streamDescription, StreamSet.DataStream dataStream) {
-        super(index, isInitiator, streamDescription, dataStream, new DataSession(!isInitiator));
+    public DataStreamHandler(int index, StreamDescription streamDescription, StreamSet.DataStream dataStream) {
+        super(index, streamDescription == null, streamDescription, dataStream, new DataSession(streamDescription != null));
         getDataSession().addOnDataChannelRequestedListener(this);
         getDataSession().addDtlsKeyChangeListener(mDtlsKeyChangeListener);
         getDataStream().setDataChannelDelegate(this);
@@ -100,8 +100,8 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
         getDataSession().setSctpLocalPort(localPort);
     }
 
-    public DataStreamHandler(int index, boolean isInitiator, StreamDescription streamDescription) {
-        super(index, isInitiator, streamDescription);
+    public DataStreamHandler(int index, StreamDescription streamDescription) {
+        super(index, streamDescription == null, streamDescription);
     }
 
     public DataSession getDataSession() {

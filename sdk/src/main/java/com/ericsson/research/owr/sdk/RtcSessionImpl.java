@@ -51,13 +51,8 @@ import java.util.Random;
 class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
     private static final String TAG = "RtcSessionImpl";
 
-    private enum State {
-        INIT, RECEIVED_OFFER, SETUP, AWAITING_ANSWER, ACTIVE, STOPPED
-    }
-
     private TransportAgent mTransportAgent;
 
-    private boolean mIsInitiator;
     private final String mSessionId;
     private final RtcConfig mConfig;
 
@@ -75,8 +70,7 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
     RtcSessionImpl(RtcConfig config) {
         mSessionId = "" + (sRandom.nextInt() + new Date().getTime());
         mConfig = config;
-        mState = State.INIT;
-        mIsInitiator = true;
+        mState = State.STOPPED;
         mMainHandler = new Handler(Looper.getMainLooper());
     }
 
@@ -111,7 +105,6 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
         }
         Log.d(TAG, "[RtcSession" +
                 " id=" + mSessionId +
-                " initiator=" + isInitiator() +
                 " state=" + mState.name() +
                 " streams=" + streams +
                 " candidates=" + (mRemoteCandidateBuffer == null ? 0 : mRemoteCandidateBuffer.size()) +
@@ -120,15 +113,18 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
 
     @Override
     public synchronized void start(final StreamSet streamSet) {
-        if (mState != State.INIT && mState != State.RECEIVED_OFFER) {
-            throw new IllegalStateException("setup called at wrong state: " + mState.name());
+        if (mState.isStarted()) {
+            Log.w(TAG, "start called at wrong state: " + mState);
+            return;
         }
         if (streamSet == null) {
             throw new NullPointerException("streamSet may not be null");
         }
         log("setup called");
 
-        mTransportAgent = new TransportAgent(mIsInitiator);
+        boolean isInitiator = mState == State.STOPPED;
+
+        mTransportAgent = new TransportAgent(isInitiator);
 
         for (RtcConfig.HelperServer helperServer : mConfig.getHelperServers()) {
             mTransportAgent.addHelperServer(
@@ -142,7 +138,7 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
 
         mStreamHandlers = new LinkedList<>();
         int index = 0;
-        if (mIsInitiator) {
+        if (isInitiator) {
             // For outbound calls we initiate all streams without any remote description
             for (StreamSet.Stream stream : streamSet.getStreams()) {
                 mStreamHandlers.add(createStreamHandler(index, null, stream));
@@ -162,7 +158,11 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
             }
         }
 
-        mState = State.SETUP;
+        if (mState == State.STOPPED) {
+            mState = State.PENDING_A;
+        } else {
+            mState = State.PENDING_B;
+        }
 
         if (mRemoteDescription != null && mRemoteCandidateBuffer != null) {
             for (RtcCandidate candidate : mRemoteCandidateBuffer) {
@@ -185,7 +185,7 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
     private synchronized void maybeFinishSetup() {
         final SessionDescription sessionDescription;
 
-        if (mState != State.SETUP) {
+        if (!mState.isPending()) {
             Log.w(TAG, "maybeFinishSetup called at wrong state: " + mState);
             return;
         }
@@ -196,19 +196,23 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
         }
         log("setup complete");
 
+        SessionDescription.Type type;
+
+        if (mState == State.PENDING_A) {
+            type = SessionDescription.Type.OFFER;
+            mState = State.WAIT_ANSWER;
+        } else if (mState == State.PENDING_B) {
+            type = SessionDescription.Type.ANSWER;
+            mState = State.ACTIVE;
+        } else {
+            Log.e(TAG, "invalid state when finishing setup: " + mState);
+            return;
+        }
+
         List<StreamDescription> streamDescriptions = new ArrayList<>(mStreamHandlers.size());
 
         for (StreamHandler streamHandler : mStreamHandlers) {
             streamDescriptions.add(streamHandler.finishLocalStreamDescription());
-        }
-
-        SessionDescription.Type type;
-        if (mIsInitiator) {
-            type = SessionDescription.Type.OFFER;
-            mState = State.AWAITING_ANSWER;
-        } else {
-            type = SessionDescription.Type.ANSWER;
-            mState = State.ACTIVE;
         }
 
         sessionDescription = new SessionDescriptionImpl(type, mSessionId, streamDescriptions);
@@ -223,22 +227,20 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
         });
     }
 
-    @Override
-    public synchronized void setRemoteDescription(final SessionDescription remoteDescription) throws InvalidDescriptionException {
-        if (mState != State.AWAITING_ANSWER && mState != State.INIT) {
-            throw new IllegalStateException("setRemoteDescription called at wrong state: " + mState);
+    private void handleOffer(final SessionDescription remoteDescription) throws InvalidDescriptionException {
+        if (mState != State.STOPPED) {
+            Log.w(TAG, "got offer at invalid state: " + mState);
+            return;
         }
-        if (mRemoteDescription != null) {
-            throw new IllegalStateException("remote description has already been set");
-        }
-        if (remoteDescription == null) {
-            throw new NullPointerException("remote description should not be null");
-        }
-        if (mState == State.INIT) {
-            mRemoteDescription = remoteDescription;
-            mIsInitiator = false;
-            mState = State.RECEIVED_OFFER;
-            log("received offer");
+
+        mRemoteDescription = remoteDescription;
+        mState = State.HAS_OFFER;
+        log("received offer");
+    }
+
+    private void handleAnswer(final SessionDescription remoteDescription) throws InvalidDescriptionException {
+        if (mState != State.WAIT_ANSWER) {
+            Log.w(TAG, "got answer at invalid state: " + mState);
             return;
         }
         mRemoteDescription = remoteDescription;
@@ -263,6 +265,8 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
             streamHandler.provideAnswer(streamDescription);
         }
 
+        mState = State.ACTIVE;
+
         if (mRemoteCandidateBuffer != null) {
             for (RtcCandidate candidate : mRemoteCandidateBuffer) {
                 addRemoteCandidate(candidate);
@@ -272,10 +276,24 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
     }
 
     @Override
+    public synchronized void setRemoteDescription(final SessionDescription remoteDescription) throws InvalidDescriptionException {
+        if (remoteDescription == null) {
+            throw new NullPointerException("remote description should not be null");
+        }
+        if (remoteDescription.getType() == SessionDescription.Type.OFFER) {
+            handleOffer(remoteDescription);
+        } else if (remoteDescription.getType() == SessionDescription.Type.ANSWER) {
+            handleAnswer(remoteDescription);
+        } else {
+            Log.e(TAG, "Unkown description type: " + remoteDescription.getType());
+        }
+    }
+
+    @Override
     public synchronized void addRemoteCandidate(final RtcCandidate candidate) {
         if (mState == State.STOPPED) {
             return;
-        } else if (mRemoteDescription == null || mState == State.RECEIVED_OFFER) {
+        } else if (mRemoteDescription == null || mState == State.HAS_OFFER) {
             if (mRemoteCandidateBuffer == null) {
                 mRemoteCandidateBuffer = new LinkedList<>();
             }
@@ -332,24 +350,45 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
         return null;
     }
 
-    public boolean isInitiator() {
-        return mIsInitiator;
-    }
-
     private StreamHandler createStreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream) {
         StreamHandler streamHandler;
         if (stream == null) {
             if (streamDescription.getType() == StreamType.DATA) {
-                streamHandler = new DataStreamHandler(index, isInitiator(), streamDescription);
+                streamHandler = new DataStreamHandler(index, streamDescription);
             } else {
-                streamHandler = new MediaStreamHandler(index, isInitiator(), streamDescription);
+                streamHandler = new MediaStreamHandler(index, streamDescription);
             }
         } else if (stream.getType() == StreamType.DATA) {
-            streamHandler = new DataStreamHandler(index, isInitiator(), streamDescription, (StreamSet.DataStream) stream);
+            streamHandler = new DataStreamHandler(index, streamDescription, (StreamSet.DataStream) stream);
         } else {
-            streamHandler = new MediaStreamHandler(index, isInitiator(), streamDescription, (StreamSet.MediaStream) stream, mConfig);
+            streamHandler = new MediaStreamHandler(index, streamDescription, (StreamSet.MediaStream) stream, mConfig);
         }
         streamHandler.setRtcSessionDelegate(this);
         return streamHandler;
+    }
+
+    private enum State {
+        STOPPED(false, false),
+        PENDING_A(true, true),
+        WAIT_ANSWER(false, true),
+        HAS_OFFER(false, false),
+        PENDING_B(true, true),
+        ACTIVE(false, true);
+
+        private final boolean mPending;
+        private final boolean mStopped;
+
+        State(boolean pending, boolean stopped) {
+            mPending = pending;
+            mStopped = stopped;
+        }
+
+        public boolean isPending() {
+            return mPending;
+        }
+
+        public boolean isStarted() {
+            return mStopped;
+        }
     }
 }

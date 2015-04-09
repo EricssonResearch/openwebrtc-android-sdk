@@ -447,9 +447,8 @@ public class RtcSessionTest extends OwrTestCase {
                     @Override
                     public void onLocalDescription(final SessionDescription localDescription) {
                         try {
+                            // Setting the remote description just after starting should be ignored
                             session1.setRemoteDescription(localDescription);
-                            throw new RuntimeException("should not be reached");
-                        } catch (IllegalStateException e) {
                         } catch (InvalidDescriptionException e) {
                             throw new RuntimeException(e);
                         }
@@ -698,12 +697,8 @@ public class RtcSessionTest extends OwrTestCase {
                 session.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
                     public void onLocalDescription(final SessionDescription localDescription) {
-                        try {
-                            // should throw illegal state, since we're already set up
-                            session.start(streamSetMock);
-                            throw new RuntimeException("should not be reached");
-                        } catch (IllegalStateException e) {
-                        }
+                        // should be ignored, since we've already started
+                        session.start(streamSetMock);
 
                         session.stop(); // STOPPING HERE
                         latch.countDown();
@@ -711,41 +706,29 @@ public class RtcSessionTest extends OwrTestCase {
                 });
                 session.start(streamSetMock);
                 try {
-                    // it should not be possible to set remote description during startup
+                    // setting the remote description during startup should be ignored
                     session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
-                    throw new RuntimeException("should not be reached");
-                } catch (IllegalStateException e) {
                 } catch (InvalidDescriptionException e) {
                     throw new RuntimeException(e);
                 }
-                try {
-                    // should throw illegal state, since we've already started
-                    session.start(streamSetMock);
-                    throw new RuntimeException("should not be reached");
-                } catch (IllegalStateException e) {
-                }
+                // should be ignored, since we've already started
+                session.start(streamSetMock);
             }
         });
 
         try {
-            // should not be possible to set now since it's stopped
+            // setting the remote description when stopped should be ignored
             session.setRemoteDescription(new SessionDescriptionImpl(null, null, null));
-            throw new RuntimeException("should not be reached");
-        } catch (IllegalStateException e) {
         } catch (InvalidDescriptionException e) {
             throw new RuntimeException(e);
         }
-        try {
-            // should not be possible to set up now since it's stopped
-            session.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
-                @Override
-                public void onLocalDescription(final SessionDescription localDescription) {
-                }
-            });
-            session.start(streamSetMock);
-            throw new RuntimeException("should not be reached");
-        } catch (IllegalStateException e) {
-        }
+        // setting the local description listener when stopped should be ignored
+        session.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
+            @Override
+            public void onLocalDescription(final SessionDescription localDescription) {
+            }
+        });
+        session.start(streamSetMock);
         // should be fine to call even when stopped
         session.addRemoteCandidate(RtcCandidates.fromSdpAttribute("candidate:1 1 UDP 123 1.1.1.1 1 typ host"));
     }
