@@ -43,11 +43,13 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
     private boolean mHaveSsrc = false;
 
     MediaStreamHandler(int index, StreamDescription streamDescription, StreamSet.MediaStream mediaStream, RtcConfig config) {
-        super(index, streamDescription == null, streamDescription, mediaStream, new MediaSession(streamDescription != null));
+        super(index, streamDescription, mediaStream, new MediaSession(streamDescription != null));
         getMediaSession().addCnameChangeListener(this);
         getMediaSession().addSendSsrcChangeListener(this);
         getMediaSession().addOnIncomingSourceListener(this);
         getMediaStream().setMediaSourceDelegate(this);
+
+        boolean haveRemoteDescription = getRemoteStreamDescription() != null;
 
         String mediaStreamId = getMediaStream().getId();
         if (mediaStreamId == null) {
@@ -62,7 +64,7 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         boolean wantSend = getMediaStream().wantSend();
         boolean wantReceive = getMediaStream().wantReceive();
 
-        if (isInitiator()) {
+        if (!haveRemoteDescription) {
             mode = StreamMode.get(wantSend, wantReceive);
             rtcpMux = true;
         } else {
@@ -74,9 +76,7 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         getLocalStreamDescription().setMode(mode);
 
         if (mode == StreamMode.INACTIVE) {
-            if (isInitiator()) {
-                getStream().setStreamMode(mode);
-            }
+            getStream().setStreamMode(mode);
             return;
         }
 
@@ -89,7 +89,7 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         } else {
             payloads = config.getDefaultAudioPayloads();
         }
-        if (!isInitiator()) {
+        if (haveRemoteDescription) {
             payloads = Utils.intersectPayloads(getRemoteStreamDescription().getPayloads(), payloads);
         }
         for (RtcPayload payload : payloads) {
@@ -108,14 +108,14 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
                 getMediaSession().addReceivePayload(payload);
             }
         }
-        if (!isInitiator() && mode.wantSend()) {
+        if (haveRemoteDescription && mode.wantSend()) {
             getMediaSession().setSendPayload(transformedPayloads.get(0));
         }
     }
 
     // inactive stream
     MediaStreamHandler(int index, StreamDescription streamDescription) {
-        super(index, streamDescription == null, streamDescription);
+        super(index, streamDescription);
     }
 
     public MediaSession getMediaSession() {
@@ -127,8 +127,8 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
     }
 
     @Override
-    public void provideAnswer(StreamDescription streamDescription) {
-        super.provideAnswer(streamDescription);
+    public void setRemoteStreamDescription(StreamDescription streamDescription) {
+        super.setRemoteStreamDescription(streamDescription);
         StreamMode mode = getRemoteStreamDescription().getMode().reverse(
                 getMediaStream().wantSend(), getMediaStream().wantReceive()
         );

@@ -262,7 +262,7 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
                 throw new InvalidDescriptionException("stream description types do not match: " +
                         streamDescription.getType() + " != " + streamHandler.getStream().getType());
             }
-            streamHandler.provideAnswer(streamDescription);
+            streamHandler.setRemoteStreamDescription(streamDescription);
         }
 
         mState = State.ACTIVE;

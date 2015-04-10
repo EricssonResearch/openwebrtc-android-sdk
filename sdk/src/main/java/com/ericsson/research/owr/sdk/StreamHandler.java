@@ -43,7 +43,6 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
     private final StreamSet.Stream mStream;
     private final MutableStreamDescription mLocalStreamDescription;
     private final int mIndex;
-    private final boolean mIsInitiator;
     private StreamDescription mRemoteStreamDescription;
     private Session mSession;
     private boolean mHaveCandidate = false;
@@ -52,11 +51,10 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
     private Handler mMainHandler = new Handler(Looper.getMainLooper());
     private WeakReference<RtcSessionDelegate> mRtcSessionDelegateRef = new WeakReference<>(null);
 
-    StreamHandler(int index, boolean isInitiator, StreamDescription streamDescription, StreamSet.Stream stream, Session session) {
+    StreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream, Session session) {
         mLocalStreamDescription = new MutableStreamDescription();
         mRemoteStreamDescription = streamDescription;
         mIndex = index;
-        mIsInitiator = isInitiator;
         mStream = stream;
         mSession = session;
 
@@ -83,7 +81,7 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
         String fingerprintHashFunction;
         String dtlsSetup;
 
-        if (isInitiator()) {
+        if (streamDescription == null) {
             fingerprintHashFunction = DEFAULT_HASH_FUNCTION;
             dtlsSetup = "actpass";
         } else {
@@ -96,20 +94,12 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
     }
 
     // Inactive stream
-    StreamHandler(int index, boolean isInitiator, StreamDescription streamDescription) {
-        this(index, isInitiator, streamDescription, null, null);
+    StreamHandler(int index, StreamDescription streamDescription) {
+        this(index, streamDescription, null, null);
     }
 
     public int getIndex() {
         return mIndex;
-    }
-
-    public boolean isInitiator() {
-        return mIsInitiator;
-    }
-
-    public boolean isDtlsClient() {
-        return !isInitiator();
     }
 
     public Session getSession() {
@@ -138,10 +128,7 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
         return mHaveCandidate && mHaveFingerprint || isInactive;
     }
 
-    public void provideAnswer(StreamDescription remoteStreamDescription) {
-        if (!isInitiator()) {
-            throw new IllegalStateException("remote description set for outbound call");
-        }
+    public void setRemoteStreamDescription(StreamDescription remoteStreamDescription) {
         mRemoteStreamDescription = remoteStreamDescription;
 
         for (RtcCandidate rtcCandidate : getRemoteStreamDescription().getCandidates()) {

@@ -59,17 +59,19 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
     };
 
     public DataStreamHandler(int index, StreamDescription streamDescription, StreamSet.DataStream dataStream) {
-        super(index, streamDescription == null, streamDescription, dataStream, new DataSession(streamDescription != null));
+        super(index, streamDescription, dataStream, new DataSession(streamDescription != null));
         getDataSession().addOnDataChannelRequestedListener(this);
         getDataSession().addDtlsKeyChangeListener(mDtlsKeyChangeListener);
         getDataStream().setDataChannelDelegate(this);
+
+        boolean haveRemoteDescription = getRemoteStreamDescription() != null;
 
         StreamMode mode;
         String appLabel;
         int localPort = BASE_PORT + index;
         int streamCount;
 
-        if (isInitiator()) {
+        if (!haveRemoteDescription) {
             mode = StreamMode.SEND_RECEIVE;
             appLabel = "webrtc-datachannel";
             streamCount = 1024;
@@ -101,7 +103,7 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
     }
 
     public DataStreamHandler(int index, StreamDescription streamDescription) {
-        super(index, streamDescription == null, streamDescription);
+        super(index, streamDescription);
     }
 
     public DataSession getDataSession() {
@@ -113,8 +115,8 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
     }
 
     @Override
-    public void provideAnswer(StreamDescription streamDescription) {
-        super.provideAnswer(streamDescription);
+    public void setRemoteStreamDescription(StreamDescription streamDescription) {
+        super.setRemoteStreamDescription(streamDescription);
         StreamMode mode;
         if (getRemoteStreamDescription().getMode() != StreamMode.SEND_RECEIVE) {
             mode = StreamMode.INACTIVE;
