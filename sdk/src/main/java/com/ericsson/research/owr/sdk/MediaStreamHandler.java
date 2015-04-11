@@ -33,6 +33,7 @@ import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.Payload;
 import com.ericsson.research.owr.RemoteMediaSource;
+import com.ericsson.research.owr.Session;
 
 import java.util.List;
 
@@ -43,7 +44,10 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
     private boolean mHaveSsrc = false;
 
     MediaStreamHandler(int index, StreamDescription streamDescription, StreamSet.MediaStream mediaStream, RtcConfig config) {
-        super(index, streamDescription, mediaStream, new MediaSession(streamDescription != null));
+        super(index, streamDescription, mediaStream);
+        if (mediaStream == null) {
+            return;
+        }
         getMediaSession().addCnameChangeListener(this);
         getMediaSession().addSendSsrcChangeListener(this);
         getMediaSession().addOnIncomingSourceListener(this);
@@ -113,17 +117,17 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         }
     }
 
-    // inactive stream
-    MediaStreamHandler(int index, StreamDescription streamDescription) {
-        super(index, streamDescription);
-    }
-
     public MediaSession getMediaSession() {
         return (MediaSession) getSession();
     }
 
     public StreamSet.MediaStream getMediaStream() {
         return (StreamSet.MediaStream) getStream();
+    }
+
+    @Override
+    Session createSession(final boolean isDtlsClient) {
+        return new MediaSession(isDtlsClient);
     }
 
     @Override

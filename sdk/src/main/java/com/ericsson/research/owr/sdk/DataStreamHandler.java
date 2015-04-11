@@ -59,7 +59,10 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
     };
 
     public DataStreamHandler(int index, StreamDescription streamDescription, StreamSet.DataStream dataStream) {
-        super(index, streamDescription, dataStream, new DataSession(streamDescription != null));
+        super(index, streamDescription, dataStream);
+        if (dataStream == null) {
+            return;
+        }
         getDataSession().addOnDataChannelRequestedListener(this);
         getDataSession().addDtlsKeyChangeListener(mDtlsKeyChangeListener);
         getDataStream().setDataChannelDelegate(this);
@@ -102,16 +105,17 @@ class DataStreamHandler extends StreamHandler implements DataSession.OnDataChann
         getDataSession().setSctpLocalPort(localPort);
     }
 
-    public DataStreamHandler(int index, StreamDescription streamDescription) {
-        super(index, streamDescription);
-    }
-
     public DataSession getDataSession() {
         return (DataSession) getSession();
     }
 
     public StreamSet.DataStream getDataStream() {
         return (StreamSet.DataStream) getStream();
+    }
+
+    @Override
+    Session createSession(final boolean isDtlsClient) {
+        return new DataSession(isDtlsClient);
     }
 
     @Override

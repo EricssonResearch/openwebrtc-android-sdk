@@ -51,18 +51,19 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
     private Handler mMainHandler = new Handler(Looper.getMainLooper());
     private WeakReference<RtcSessionDelegate> mRtcSessionDelegateRef = new WeakReference<>(null);
 
-    StreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream, Session session) {
+    StreamHandler(int index, StreamDescription streamDescription, StreamSet.Stream stream) {
         mLocalStreamDescription = new MutableStreamDescription();
         mRemoteStreamDescription = streamDescription;
         mIndex = index;
         mStream = stream;
-        mSession = session;
 
         if (stream == null) { // Inactive stream
             mLocalStreamDescription.setMode(StreamMode.INACTIVE);
             mLocalStreamDescription.setType(streamDescription.getType());
             return;
         }
+
+        mSession = createSession(streamDescription != null);
 
         if (streamDescription != null) {
             for (RtcCandidate rtcCandidate : getRemoteStreamDescription().getCandidates()) {
@@ -93,9 +94,10 @@ abstract class StreamHandler implements Session.DtlsCertificateChangeListener, S
         getLocalStreamDescription().setDtlsSetup(dtlsSetup);
     }
 
-    // Inactive stream
-    StreamHandler(int index, StreamDescription streamDescription) {
-        this(index, streamDescription, null, null);
+    abstract Session createSession(boolean isDtlsClient);
+
+    public boolean haveRemoteDescription() {
+        return mRemoteStreamDescription != null;
     }
 
     public int getIndex() {

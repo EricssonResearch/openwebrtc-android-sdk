@@ -354,9 +354,9 @@ class RtcSessionImpl implements RtcSession, StreamHandler.RtcSessionDelegate {
         StreamHandler streamHandler;
         if (stream == null) {
             if (streamDescription.getType() == StreamType.DATA) {
-                streamHandler = new DataStreamHandler(index, streamDescription);
+                streamHandler = new DataStreamHandler(index, streamDescription, null);
             } else {
-                streamHandler = new MediaStreamHandler(index, streamDescription);
+                streamHandler = new MediaStreamHandler(index, streamDescription, null, mConfig);
             }
         } else if (stream.getType() == StreamType.DATA) {
             streamHandler = new DataStreamHandler(index, streamDescription, (StreamSet.DataStream) stream);
