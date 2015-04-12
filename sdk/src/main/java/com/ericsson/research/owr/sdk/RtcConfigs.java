@@ -103,6 +103,11 @@ public class RtcConfigs {
         }
 
         @Override
+        protected boolean shouldRespectRemotePayloadOrder() {
+            return false;
+        }
+
+        @Override
         protected Collection<HelperServer> getHelperServers() {
             return mHelperServers;
         }

@@ -50,6 +50,13 @@ public abstract class RtcConfig {
     protected abstract List<RtcPayload> getDefaultAudioPayloads();
 
     /**
+     * @return true if the send payload should be determined by the order in
+     * which the payloads are listed in the remote session description. Otherwise the order in the local
+     * configuration will be used.
+     */
+    protected abstract boolean shouldRespectRemotePayloadOrder();
+
+    /**
      * Implementations should return a list of helper servers that are used for ICE.
      * @return a collection of helper servers
      */

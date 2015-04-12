@@ -470,6 +470,72 @@ public class UtilsTests extends TestCase {
         assertEquals(103, result.get(0).getPayloadType());
     }
 
+    private void doTestReorderWithOther(List<RtcPayload> payloads, List<RtcPayload> filterPayloads, List<Integer> filterIndices, int... expectedIndices) {
+        List<RtcPayload> filter = new LinkedList<>();
+        for (Integer index : filterIndices) {
+            filter.add(filterPayloads.get(index));
+        }
+        List<RtcPayload> reordered = Utils.reorderPayloadsByFilter(payloads, filter);
+        assertEquals(expectedIndices.length, reordered.size());
+        int index = 0;
+        for (int originalIndex : expectedIndices) {
+            assertSame(payloads.get(originalIndex).getEncodingName(), payloads.get(originalIndex), reordered.get(index++));
+        }
+    }
+
+    private void doTestReorderOfSame(List<RtcPayload> payloads, List<Integer> filterIndices, int... expectedIndices) {
+        doTestReorderWithOther(payloads, payloads, filterIndices, expectedIndices);
+    }
+
+    public void testPayloadReordering() {
+        /* OPUS, PCMA, PCMU */
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(0, 1, 2), 0, 1, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(0, 2, 1), 0, 2, 1);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(1, 0, 2), 1, 0, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(1, 2, 0), 1, 2, 0);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(2, 0, 1), 2, 0, 1);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(2, 1, 0), 2, 1, 0);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(0, 1), 0, 1, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(0, 2), 0, 2, 1);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(1, 0), 1, 0, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(1, 2), 1, 2, 0);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(2, 0), 2, 0, 1);
+        doTestReorderOfSame(sDefaultAudioPayloads, Arrays.asList(2, 1), 2, 1, 0);
+        doTestReorderOfSame(sDefaultAudioPayloads, Collections.singletonList(0), 0, 1, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Collections.singletonList(1), 1, 0, 2);
+        doTestReorderOfSame(sDefaultAudioPayloads, Collections.singletonList(2), 2, 0, 1);
+        doTestReorderOfSame(sDefaultAudioPayloads, Collections.<Integer>emptyList(), 0, 1, 2);
+
+        /* H264, H264 RTX, VP8, VP8 RTX */
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(0, 1, 2, 3), 0, 2, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(1, 3, 0, 2), 0, 2, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(3, 1, 0, 2), 0, 2, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(0, 2), 0, 2, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(2, 0), 2, 0, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(1, 2, 0), 2, 0, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(2, 0, 1), 2, 0, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(2, 0, 1), 2, 0, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Collections.singletonList(0), 0, 1, 2, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Collections.singletonList(2), 2, 0, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Collections.singletonList(1), 0, 1, 2, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Collections.singletonList(3), 0, 1, 2, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Collections.<Integer>emptyList(), 0, 1, 2, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(0, 0, 2, 0), 0, 2, 1, 3);
+        doTestReorderOfSame(sDefaultVideoPayloads, Arrays.asList(2, 0, 2, 0), 2, 0, 1, 3);
+
+        /* H264 pm=1, H264 pm=0, H264 pm=1 RTX, H264 pm=0 RTX, VP8, VP8 RTX */
+        doTestReorderWithOther(sValidPayloads6, sDefaultVideoPayloads,
+                Arrays.asList(0, 1, 2, 3), 0, 4, 1, 2, 3, 5);
+        doTestReorderWithOther(sValidPayloads6, sDefaultVideoPayloads,
+                Arrays.asList(0, 2), 0, 4, 1, 2, 3, 5);
+        doTestReorderWithOther(sValidPayloads6, sDefaultVideoPayloads,
+                Arrays.asList(2, 0), 4, 0, 1, 2, 3, 5);
+        doTestReorderWithOther(sValidPayloads6, sValidPayloads1,
+                Arrays.asList(1, 0), 1, 0, 2, 3, 4, 5);
+        doTestReorderWithOther(sValidPayloads6, sValidPayloads1,
+                Arrays.asList(0, 1), 0, 1, 2, 3, 4, 5);
+    }
+
     private static String sFingerprint = "55:20:0F:C6:8D:99:19:A2:09:AF:F3:64:C9:43:53:B6:C8:E0:C7:C9:B6:20:B7:91:11:E9:8B:77:57:D6:43:9B";
     private static String sFingerprintHashFunction = "sha-256";
     private static String sPem = "-----BEGIN CERTIFICATE-----\n" +

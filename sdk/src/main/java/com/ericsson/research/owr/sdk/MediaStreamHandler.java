@@ -39,6 +39,8 @@ import java.util.List;
 
 class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomingSourceListener, MediaSession.CnameChangeListener, StreamSet.MediaSourceDelegate, MediaSession.SendSsrcChangeListener {
     private static final String TAG = "MediaStreamHandler";
+    private boolean mShouldRespectRemotePayloadOrder;
+    private List<RtcPayload> mDefaultPayloads;
 
     private boolean mHaveCname = false;
     private boolean mHaveSsrc = false;
@@ -87,14 +89,18 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         getMediaSession().setRtcpMux(rtcpMux);
         getLocalStreamDescription().setRtcpMux(rtcpMux);
 
-        List<RtcPayload> payloads;
         if (getMediaStream().getMediaType() == MediaType.VIDEO) {
-            payloads = config.getDefaultVideoPayloads();
+            mDefaultPayloads = config.getDefaultVideoPayloads();
         } else {
-            payloads = config.getDefaultAudioPayloads();
+            mDefaultPayloads = config.getDefaultAudioPayloads();
         }
+        mShouldRespectRemotePayloadOrder = config.shouldRespectRemotePayloadOrder();
+        List<RtcPayload> payloads = mDefaultPayloads;
         if (haveRemoteDescription) {
             payloads = Utils.intersectPayloads(getRemoteStreamDescription().getPayloads(), payloads);
+            if (!mShouldRespectRemotePayloadOrder) {
+                payloads = Utils.reorderPayloadsByFilter(payloads, mDefaultPayloads);
+            }
         }
         for (RtcPayload payload : payloads) {
             getLocalStreamDescription().addPayload(payload);
@@ -146,8 +152,11 @@ class MediaStreamHandler extends StreamHandler implements MediaSession.OnIncomin
         }
 
         if (mode.wantSend()) {
-            List<Payload> transformedPayloads = Utils.transformPayloads(
-                    getRemoteStreamDescription().getPayloads(), getMediaStream().getMediaType());
+            List<RtcPayload> payloads =  getRemoteStreamDescription().getPayloads();
+            if (!mShouldRespectRemotePayloadOrder) {
+                payloads = Utils.reorderPayloadsByFilter(payloads, mDefaultPayloads);
+            }
+            List<Payload> transformedPayloads = Utils.transformPayloads(payloads, getMediaStream().getMediaType());
             if (transformedPayloads.isEmpty()) {
                 Log.w(TAG, "no suitable payload found for stream: " + getMediaStream().getId());
                 getStream().setStreamMode(StreamMode.INACTIVE);

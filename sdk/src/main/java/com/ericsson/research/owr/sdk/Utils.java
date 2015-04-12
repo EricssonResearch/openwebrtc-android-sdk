@@ -218,6 +218,27 @@ class Utils {
         return result;
     }
 
+    public static List<RtcPayload> reorderPayloadsByFilter(final List<RtcPayload> payloads, final List<RtcPayload> filterPayloads) {
+        List<RtcPayload> result = new LinkedList<>();
+        List<RtcPayload> payloadsCopy = new LinkedList<>();
+        payloadsCopy.addAll(payloads);
+
+        for (RtcPayload filterPayload : filterPayloads) {
+            if (encodingNameMatches("RTX", filterPayload)) {
+                continue;
+            }
+            RtcPayload payload = findMatchingPayload(payloadsCopy, filterPayload);
+            if (payload != null) {
+                payloadsCopy.remove(payload);
+                result.add(payload);
+            }
+        }
+        for (RtcPayload payload : payloadsCopy) {
+            result.add(payload);
+        }
+        return result;
+    }
+
     public static List<RtcPayload> selectPreferredPayload(final List<RtcPayload> payloads) {
         List<RtcPayload> result = new LinkedList<>();
         for (RtcPayload payload : payloads) {
