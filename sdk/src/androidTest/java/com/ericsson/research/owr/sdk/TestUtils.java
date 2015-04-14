@@ -25,6 +25,9 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.os.Handler;
+import android.os.HandlerThread;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -32,14 +35,22 @@ public class TestUtils {
     public static class SynchronousCallBuilder {
         private int mTimeout;
         private int mLatchCount;
+        private Handler mAsyncHandler;
 
-        private SynchronousCallBuilder() {
+        private SynchronousCallBuilder(Handler asyncHandler) {
             mTimeout = 5;
             mLatchCount = 1;
+            if (asyncHandler != null) {
+                mAsyncHandler = asyncHandler;
+            } else {
+                HandlerThread thread = new HandlerThread("TestUtils-async-thread");
+                thread.start();
+                mAsyncHandler = new Handler(thread.getLooper());
+            }
         }
 
-        public SynchronousCallBuilder timeout(int timeout) {
-            mTimeout = timeout;
+        public SynchronousCallBuilder timeout(int seconds) {
+            mTimeout = seconds;
             return this;
         }
 
@@ -48,12 +59,60 @@ public class TestUtils {
             return this;
         }
 
-        public void run(SynchronousBlock block) {
-            CountDownLatch latch = new CountDownLatch(mLatchCount);
+        public SynchronousCallBuilder run(final SynchronousBlock block) {
+            final CountDownLatch latch = new CountDownLatch(mLatchCount);
             block.run(latch);
+            waitForLatch(latch, 0);
+            return new SynchronousCallBuilder(mAsyncHandler);
+        }
 
+        public SynchronousCallBuilder run(final Runnable runnable) {
+            final CountDownLatch latch = new CountDownLatch(mLatchCount);
+            mAsyncHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    runnable.run();
+                    latch.countDown();
+                }
+            });
+            waitForLatch(latch, 0);
+            return new SynchronousCallBuilder(mAsyncHandler);
+        }
+
+        public SynchronousCallBuilder delay(int delay, final Runnable runnable) {
+            if (delay <= 0) {
+                throw new IllegalArgumentException("delay should be >= 0");
+            }
+            final CountDownLatch latch = new CountDownLatch(1);
+            mAsyncHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    runnable.run();
+                    latch.countDown();
+                }
+            }, delay);
+            waitForLatch(latch, delay);
+            return new SynchronousCallBuilder(mAsyncHandler);
+        }
+
+        public SynchronousCallBuilder delay(int delay, final SynchronousBlock block) {
+            if (delay <= 0) {
+                throw new IllegalArgumentException("delay should be >= 0");
+            }
+            final CountDownLatch latch = new CountDownLatch(mLatchCount);
+            mAsyncHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    block.run(latch);
+                }
+            }, delay);
+            waitForLatch(latch, delay);
+            return new SynchronousCallBuilder(mAsyncHandler);
+        }
+
+        private void waitForLatch(CountDownLatch latch, int extraMilliseconds) {
             try {
-                if (!latch.await(mTimeout, TimeUnit.SECONDS)) {
+                if (!latch.await(extraMilliseconds + mTimeout * 1000, TimeUnit.MILLISECONDS)) {
                     throw new RuntimeException("synchronous block timed out");
                 }
             } catch (InterruptedException e) {
@@ -62,8 +121,16 @@ public class TestUtils {
         }
     }
 
+    public static void sleep(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static SynchronousCallBuilder synchronous() {
-        return new SynchronousCallBuilder();
+        return new SynchronousCallBuilder(null);
     }
 
     public interface SynchronousBlock {
