@@ -76,13 +76,12 @@ public class SimpleStreamSet extends StreamSet {
     private final VideoRenderer mSelfViewRenderer;
     private final AudioRenderer mAudioRenderer;
 
-    private final LinkedList<MediaSource> mAudioSources = new LinkedList<>();
+    private MediaSource mAudioSource = null;
     private final LinkedList<MediaSource> mVideoSources = new LinkedList<>();
     private MediaSourceDelegate mVideoSourceDelegate;
     private MediaSourceDelegate mAudioSourceDelegate;
 
     private int mVideoSourceIndex;
-    private int mAudioSourceIndex;
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
     private int mActiveVideoSourceIndex;
@@ -117,7 +116,6 @@ public class SimpleStreamSet extends StreamSet {
         mSelfViewRenderer.setHeight(512);
         mSelfViewRenderer.setMaxFramerate(30);
 
-        mAudioSourceIndex = 0;
         mVideoSourceIndex = 0;
         mActiveVideoSourceIndex = 0;
         mVideoSourceState = VideoSourceState.READY;
@@ -128,7 +126,11 @@ public class SimpleStreamSet extends StreamSet {
             public void onCaptureSourcesCallback(final List<MediaSource> mediaSources) {
                 for (MediaSource mediaSource : mediaSources) {
                     if (mediaSource.getMediaType().contains(MediaType.AUDIO)) {
-                        mAudioSources.add(mediaSource);
+                        if (mAudioSource != null) {
+                            Log.e(TAG, "found a seconds audio source: previous one was " + mAudioSource.getName() + ", new one is " + mediaSource.getName() + ", ignoring");
+                        } else {
+                            mAudioSource = mediaSource;
+                        }
                     } else {
                         mVideoSources.add(mediaSource);
                     }
@@ -155,10 +157,6 @@ public class SimpleStreamSet extends StreamSet {
 
     public int getVideoSourceCount() {
         return mVideoSources.size();
-    }
-
-    public int getAudioSourceCount() {
-        return mAudioSources.size();
     }
 
     public synchronized void setVideoSourceIndex(final int index) {
@@ -212,14 +210,6 @@ public class SimpleStreamSet extends StreamSet {
         mHandler.postDelayed(onCameraClosed, CAMERA_CLOSE_DURATION_MS);
     }
 
-    public synchronized void setAudioSourceIndex(int index) {
-        checkIndex("audio source", index, getAudioSourceCount());
-        mAudioSourceIndex = index;
-        if (mAudioSourceDelegate != null) {
-            mAudioSourceDelegate.setMediaSource(getSelectedAudioSource());
-        }
-    }
-
     VideoSourceState getVideoSourceState() {
         return mVideoSourceState;
     }
@@ -232,20 +222,9 @@ public class SimpleStreamSet extends StreamSet {
         return mVideoSourceIndex;
     }
 
-    public int getAudioSourceIndex() {
-        return mAudioSourceIndex;
-    }
-
     private MediaSource getSelectedVideoSource() {
         if (!mVideoSources.isEmpty()) {
             return mVideoSources.get(mVideoSourceIndex);
-        }
-        return null;
-    }
-
-    private MediaSource getSelectedAudioSource() {
-        if (!mAudioSources.isEmpty()) {
-            return mAudioSources.get(mAudioSourceIndex);
         }
         return null;
     }
@@ -382,8 +361,8 @@ public class SimpleStreamSet extends StreamSet {
         if (!mVideoSources.isEmpty()) {
             result.put("video-source", mVideoSources.getFirst().getDotData());
         }
-        if (!mAudioSources.isEmpty()) {
-            result.put("audio-source", mAudioSources.getFirst().getDotData());
+        if (mAudioSource != null) {
+            result.put("audio-source", mAudioSource.getDotData());
         }
         if (mAudioRenderer != null) {
             result.put("remote-audio-renderer", mAudioRenderer.getDotData());
@@ -446,7 +425,7 @@ public class SimpleStreamSet extends StreamSet {
                 } else {
                     mAudioSourceDelegate = mediaSourceDelegate;
                     if (mediaSourceDelegate != null) {
-                        mAudioSourceDelegate.setMediaSource(getSelectedAudioSource());
+                        mAudioSourceDelegate.setMediaSource(mAudioSource);
                     }
                 }
             }

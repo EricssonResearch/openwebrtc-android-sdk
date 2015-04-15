@@ -25,7 +25,6 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import android.util.Log;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
@@ -256,22 +255,5 @@ public class SimpleStreamSetTest extends OwrTestCase {
         assertEquals(2, setSourceBeforeView.getVideoSourceCount());
         setSourceBeforeView.setVideoSourceIndex(1);
         setSourceBeforeView.setSelfView(surfaceView);
-    }
-
-    public void testSwitchAudioSource() {
-        TestUtils.sleep(3000);
-        SimpleStreamSet simpleStreamSet = SimpleStreamSet.defaultConfig(true, false);
-        assertEquals(1, simpleStreamSet.getAudioSourceCount());
-        simpleStreamSet.setAudioSourceIndex(0);
-        try {
-            simpleStreamSet.setAudioSourceIndex(1);
-            throw new RuntimeException("should not be reached");
-        } catch (IndexOutOfBoundsException ignored) {
-        }
-        try {
-            simpleStreamSet.setAudioSourceIndex(-1);
-            throw new RuntimeException("should not be reached");
-        } catch (IndexOutOfBoundsException ignored) {
-        }
     }
 }
