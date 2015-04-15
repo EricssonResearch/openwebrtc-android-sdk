@@ -632,8 +632,6 @@ public class RtcSessionTest extends OwrTestCase {
                     throw new RuntimeException(e);
                 }
                 session1.addRemoteCandidate(candidate);
-                session1.start(new StreamSetMock("empty", Collections.<StreamConfig>emptyList()));
-                session1.addRemoteCandidate(candidate);
                 session1.setOnLocalDescriptionListener(new RtcSession.OnLocalDescriptionListener() {
                     @Override
                     public void onLocalDescription(final SessionDescription localDescription) {
@@ -641,6 +639,8 @@ public class RtcSessionTest extends OwrTestCase {
                         latch.countDown();
                     }
                 });
+                session1.start(new StreamSetMock("empty", Collections.<StreamConfig>emptyList()));
+                session1.addRemoteCandidate(candidate);
             }
         });
         session1.addRemoteCandidate(candidate);
