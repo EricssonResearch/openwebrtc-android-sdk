@@ -28,6 +28,8 @@ package com.ericsson.research.owr.sdk;
 import android.annotation.TargetApi;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
@@ -36,6 +38,7 @@ import android.view.TextureView;
 
 import com.ericsson.research.owr.AudioRenderer;
 import com.ericsson.research.owr.CaptureSourcesCallback;
+import com.ericsson.research.owr.MediaRenderer;
 import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.Owr;
@@ -48,9 +51,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class SimpleStreamSet extends StreamSet {
     private static final String TAG = "SimpleStreamSet";
+
+    private static final long SOURCE_CALLBACK_TIMEOUT_MS = 2000;
+    private static final long CAMERA_CLOSE_DURATION_MS = 1000;
+    private static final long CAMERA_OPEN_DURATION_MS = 8000;
 
     private final boolean mWantVideo;
     private final boolean mWantAudio;
@@ -67,10 +76,28 @@ public class SimpleStreamSet extends StreamSet {
     private final VideoRenderer mSelfViewRenderer;
     private final AudioRenderer mAudioRenderer;
 
-    private final LinkedList<MediaSource> mAudioSources;
-    private final LinkedList<MediaSource> mVideoSources;
+    private final LinkedList<MediaSource> mAudioSources = new LinkedList<>();
+    private final LinkedList<MediaSource> mVideoSources = new LinkedList<>();
     private MediaSourceDelegate mVideoSourceDelegate;
     private MediaSourceDelegate mAudioSourceDelegate;
+
+    private int mVideoSourceIndex;
+    private int mAudioSourceIndex;
+
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private int mActiveVideoSourceIndex;
+
+    private VideoSourceState mVideoSourceState;
+
+    public enum VideoSourceState {
+        READY,
+        CLOSING,
+        OPENING;
+
+        public boolean canSetSource() {
+            return this == READY;
+        }
+    }
 
     private SimpleStreamSet(boolean sendAudio, boolean sendVideo) {
         mSelfViewTag = Utils.randomString(32);
@@ -85,48 +112,146 @@ public class SimpleStreamSet extends StreamSet {
         mRemoteViewRenderer.setHeight(512);
         mRemoteViewRenderer.setMaxFramerate(30);
 
-        if (mWantVideo) {
-            mSelfViewRenderer = new VideoRenderer(mSelfViewTag);
-            mSelfViewRenderer.setWidth(512);
-            mSelfViewRenderer.setHeight(512);
-            mSelfViewRenderer.setMaxFramerate(30);
-        } else {
-            mSelfViewRenderer = null;
-        }
+        mSelfViewRenderer = new VideoRenderer(mSelfViewTag);
+        mSelfViewRenderer.setWidth(512);
+        mSelfViewRenderer.setHeight(512);
+        mSelfViewRenderer.setMaxFramerate(30);
 
-        EnumSet<MediaType> mediaTypes = EnumSet.noneOf(MediaType.class);
-        if (mWantAudio) {
-            mediaTypes.add(MediaType.AUDIO);
-        }
-        if (mWantVideo) {
-            mediaTypes.add(MediaType.VIDEO);
-        }
-        mAudioSources = new LinkedList<>();
-        mVideoSources = new LinkedList<>();
-        Owr.getCaptureSources(mediaTypes, new CaptureSourcesCallback() {
+        mAudioSourceIndex = 0;
+        mVideoSourceIndex = 0;
+        mActiveVideoSourceIndex = 0;
+        mVideoSourceState = VideoSourceState.READY;
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        Owr.getCaptureSources(EnumSet.of(MediaType.AUDIO, MediaType.VIDEO), new CaptureSourcesCallback() {
             @Override
             public void onCaptureSourcesCallback(final List<MediaSource> mediaSources) {
+                for (MediaSource mediaSource : mediaSources) {
+                    if (mediaSource.getMediaType().contains(MediaType.AUDIO)) {
+                        mAudioSources.add(mediaSource);
+                    } else {
+                        mVideoSources.add(mediaSource);
+                    }
+                }
+                latch.countDown();
+            }
+        });
+
+        try {
+            latch.await(SOURCE_CALLBACK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void checkIndex(String name, int index, int count) {
+        if (index >= count) {
+            throw new IndexOutOfBoundsException("invalid " + name + " index, " + index + " >= " + count);
+        }
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("invalid " + name + " index, " + index + " < 0 ");
+        }
+    }
+
+    public int getVideoSourceCount() {
+        return mVideoSources.size();
+    }
+
+    public int getAudioSourceCount() {
+        return mAudioSources.size();
+    }
+
+    public synchronized void setVideoSourceIndex(final int index) {
+        checkIndex("video source", index, getVideoSourceCount());
+        mVideoSourceIndex = index;
+        if (mActiveVideoSourceIndex == index) {
+            return;
+        }
+
+        if (!mVideoSourceState.canSetSource()) {
+            Log.d(TAG, "could not set video source index directly in state " + mVideoSourceState + ", queueing switch");
+            return;
+        }
+
+        mSelfViewRenderer.setSource(null);
+        if (mVideoSourceDelegate != null) {
+            mVideoSourceDelegate.setMediaSource(null);
+        }
+        mVideoSourceState = VideoSourceState.CLOSING;
+
+        final Runnable onCameraOpened = new Runnable() {
+            @Override
+            public void run() {
                 synchronized (SimpleStreamSet.this) {
-                    for (MediaSource mediaSource : mediaSources) {
-                        if (mediaSource.getMediaType().contains(MediaType.AUDIO)) {
-                            mAudioSources.add(mediaSource);
-                        } else {
-                            mVideoSources.add(mediaSource);
-                        }
-                    }
-                    boolean haveSelfView = mSelfViewSurfaceTagger != null || mSelfViewTextureTagger != null;
-                    if (mWantVideo && !mVideoSources.isEmpty() && haveSelfView) {
-                        mSelfViewRenderer.setSource(mVideoSources.get(0));
-                    }
-                    if (mVideoSourceDelegate != null && !mVideoSources.isEmpty()) {
-                        mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
-                    }
-                    if (mAudioSourceDelegate != null && !mAudioSources.isEmpty()) {
-                        mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
+                    mVideoSourceState = VideoSourceState.READY;
+                    if (mActiveVideoSourceIndex != mVideoSourceIndex) {
+                        setVideoSourceIndex(mVideoSourceIndex);
                     }
                 }
             }
-        });
+        };
+
+        final Runnable onCameraClosed = new Runnable() {
+            @Override
+            public void run() {
+                synchronized (SimpleStreamSet.this) {
+                    mActiveVideoSourceIndex = mVideoSourceIndex;
+                    MediaSource videoSource = getSelectedVideoSource();
+                    if (mVideoSourceDelegate != null) {
+                        mVideoSourceDelegate.setMediaSource(videoSource);
+                    }
+                    if (selfViewIsActive()) {
+                        mSelfViewRenderer.setSource(videoSource);
+                    }
+                    mVideoSourceState = VideoSourceState.OPENING;
+                    mHandler.postDelayed(onCameraOpened, CAMERA_OPEN_DURATION_MS);
+                }
+            }
+        };
+
+        mHandler.postDelayed(onCameraClosed, CAMERA_CLOSE_DURATION_MS);
+    }
+
+    public synchronized void setAudioSourceIndex(int index) {
+        checkIndex("audio source", index, getAudioSourceCount());
+        mAudioSourceIndex = index;
+        if (mAudioSourceDelegate != null) {
+            mAudioSourceDelegate.setMediaSource(getSelectedAudioSource());
+        }
+    }
+
+    VideoSourceState getVideoSourceState() {
+        return mVideoSourceState;
+    }
+
+    public int getActiveVideoSourceIndex() {
+        return mActiveVideoSourceIndex;
+    }
+
+    public int getVideoSourceIndex() {
+        return mVideoSourceIndex;
+    }
+
+    public int getAudioSourceIndex() {
+        return mAudioSourceIndex;
+    }
+
+    private MediaSource getSelectedVideoSource() {
+        if (!mVideoSources.isEmpty()) {
+            return mVideoSources.get(mVideoSourceIndex);
+        }
+        return null;
+    }
+
+    private MediaSource getSelectedAudioSource() {
+        if (!mAudioSources.isEmpty()) {
+            return mAudioSources.get(mAudioSourceIndex);
+        }
+        return null;
+    }
+
+    private boolean selfViewIsActive() {
+        return mSelfViewSurfaceTagger != null || mSelfViewTextureTagger != null;
     }
 
     /**
@@ -147,16 +272,14 @@ public class SimpleStreamSet extends StreamSet {
      * @param surfaceView The view to render the self-view in, or null to disable the self-view.
      */
     public synchronized void setSelfView(SurfaceView surfaceView) {
-        if (!mWantVideo) {
-            return;
+        if (surfaceView == null) {
+            throw new NullPointerException("surface view may not be null");
+        }
+        if (!selfViewIsActive() && mVideoSourceState.canSetSource()) {
+            mSelfViewRenderer.setSource(getSelectedVideoSource());
         }
         stopSelfViewTaggers();
-        if (surfaceView != null) {
-            if (!mVideoSources.isEmpty()) {
-                mSelfViewRenderer.setSource(mVideoSources.get(0));
-            }
-            mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
-        }
+        mSelfViewSurfaceTagger = new SurfaceViewTagger(mSelfViewTag, surfaceView);
     }
 
     /**
@@ -167,27 +290,23 @@ public class SimpleStreamSet extends StreamSet {
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public synchronized void setSelfView(TextureView textureView) {
-        if (!mWantVideo) {
-            return;
+        if (textureView == null) {
+            throw new NullPointerException("texture view may not be null");
+        }
+        if (!selfViewIsActive() && mVideoSourceState.canSetSource()) {
+            mSelfViewRenderer.setSource(getSelectedVideoSource());
         }
         stopSelfViewTaggers();
-        if (textureView != null) {
-            if (!mVideoSources.isEmpty()) {
-                mSelfViewRenderer.setSource(mVideoSources.get(0));
-            }
-            mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
-        }
+        mSelfViewTextureTagger = new TextureViewTagger(mSelfViewTag, textureView);
     }
 
     /**
-     * Stops self-view rendering.
+     * Stops self-view rendering, it will not stop video from being sent.
      * This should always be called in order to release resources.
      */
     public synchronized void stopSelfView() {
         stopSelfViewTaggers();
-        if (mSelfViewRenderer != null) {
-            mSelfViewRenderer.setSource(null);
-        }
+        mSelfViewRenderer.setSource(null);
     }
 
     private void stopSelfViewTaggers() {
@@ -208,10 +327,11 @@ public class SimpleStreamSet extends StreamSet {
      * @param surfaceView The view to render the remote-view in, or null to disable the remote-view.
      */
     public synchronized void setRemoteView(SurfaceView surfaceView) {
-        stopRemoteViewTaggers();
-        if (surfaceView != null) {
-            mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
+        if (surfaceView == null) {
+            throw new NullPointerException("surface view may not be null");
         }
+        stopRemoteViewTaggers();
+        mRemoteViewSurfaceTagger = new SurfaceViewTagger(mRemoteViewTag, surfaceView);
     }
 
     /**
@@ -222,10 +342,11 @@ public class SimpleStreamSet extends StreamSet {
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public synchronized void setRemoteView(TextureView textureView) {
-        stopRemoteViewTaggers();
-        if (textureView != null) {
-            mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
+        if (textureView == null) {
+            throw new NullPointerException("texture view may not be null");
         }
+        stopRemoteViewTaggers();
+        mRemoteViewTextureTagger = new TextureViewTagger(mRemoteViewTag, textureView);
     }
 
     /**
@@ -307,11 +428,9 @@ public class SimpleStreamSet extends StreamSet {
 
         @Override
         protected void onRemoteMediaSource(final MediaSource mediaSource) {
-            if (mIsVideo) {
-                mRemoteViewRenderer.setSource(mediaSource);
-            } else {
-                mAudioRenderer.setSource(mediaSource);
-            }
+            MediaRenderer renderer = mIsVideo ? mRemoteViewRenderer : mAudioRenderer;
+            renderer.setSource(mediaSource);
+            renderer.setDisabled(mediaSource == null);
         }
 
         @Override
@@ -320,16 +439,14 @@ public class SimpleStreamSet extends StreamSet {
                 if (mIsVideo) {
                     mVideoSourceDelegate = mediaSourceDelegate;
                     if (mediaSourceDelegate != null) {
-                        if (!mVideoSources.isEmpty()) {
-                            mVideoSourceDelegate.setMediaSource(mVideoSources.getFirst());
+                        if (mVideoSourceState.canSetSource()) {
+                            mVideoSourceDelegate.setMediaSource(getSelectedVideoSource());
                         }
                     }
                 } else {
+                    mAudioSourceDelegate = mediaSourceDelegate;
                     if (mediaSourceDelegate != null) {
-                        mAudioSourceDelegate = mediaSourceDelegate;
-                        if (!mAudioSources.isEmpty()) {
-                            mAudioSourceDelegate.setMediaSource(mAudioSources.getFirst());
-                        }
+                        mAudioSourceDelegate.setMediaSource(getSelectedAudioSource());
                     }
                 }
             }

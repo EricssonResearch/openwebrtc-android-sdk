@@ -25,17 +25,11 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.TextureView;
 
-import com.ericsson.research.owr.CaptureSourcesCallback;
-import com.ericsson.research.owr.MediaSource;
-import com.ericsson.research.owr.MediaType;
-import com.ericsson.research.owr.Owr;
-
 import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class SimpleStreamSetTest extends OwrTestCase {
@@ -48,6 +42,9 @@ public class SimpleStreamSetTest extends OwrTestCase {
 
         final SimpleStreamSet simpleStreamSetOut = SimpleStreamSet.defaultConfig(true, true);
         final SimpleStreamSet simpleStreamSetIn = SimpleStreamSet.defaultConfig(true, true);
+
+        assertEquals(2, simpleStreamSetOut.getVideoSourceCount());
+        assertEquals(2, simpleStreamSetIn.getVideoSourceCount());
 
         TestUtils.synchronous().timeout(30).run(new TestUtils.SynchronousBlock() {
             @Override
@@ -76,6 +73,137 @@ public class SimpleStreamSetTest extends OwrTestCase {
                 });
                 out.start(simpleStreamSetOut);
             }
+        }).delay(5000, new Runnable() {
+            @Override
+            public void run() {
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetOut.getVideoSourceState());
+                simpleStreamSetIn.setVideoSourceIndex(0); // already using 0, so should have no effect
+                simpleStreamSetOut.setVideoSourceIndex(0);
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+                simpleStreamSetIn.setVideoSourceIndex(1);
+                simpleStreamSetOut.setVideoSourceIndex(1);
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(300, new Runnable() {
+            @Override
+            public void run() { // we're closing the old source
+                simpleStreamSetIn.setVideoSourceIndex(0);
+                simpleStreamSetOut.setVideoSourceIndex(0);
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(300, new Runnable() {
+            @Override
+            public void run() { // we're still closing the old source
+                simpleStreamSetIn.setVideoSourceIndex(1);
+                simpleStreamSetOut.setVideoSourceIndex(1);
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(900, new Runnable() {
+            @Override
+            public void run() { // We should now have switched source
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+                simpleStreamSetIn.setVideoSourceIndex(0);
+                simpleStreamSetOut.setVideoSourceIndex(0);
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(5000, new Runnable() {
+            @Override
+            public void run() { // in the opening state
+                simpleStreamSetIn.setVideoSourceIndex(1);
+                simpleStreamSetOut.setVideoSourceIndex(1);
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(1000, new Runnable() {
+            @Override
+            public void run() { // switch back to 0
+                simpleStreamSetIn.setVideoSourceIndex(0);
+                simpleStreamSetOut.setVideoSourceIndex(0);
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(2000, new Runnable() {
+            @Override
+            public void run() { // open should now be complete, so it should now be switching
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.CLOSING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(0, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(0, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+                simpleStreamSetIn.setVideoSourceIndex(1);
+                simpleStreamSetOut.setVideoSourceIndex(1);
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+            }
+        }).delay(2000, new Runnable() {
+            @Override
+            public void run() {
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.OPENING, simpleStreamSetOut.getVideoSourceState());
+                assertEquals(1, simpleStreamSetIn.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getVideoSourceIndex());
+                assertEquals(1, simpleStreamSetIn.getActiveVideoSourceIndex());
+                assertEquals(1, simpleStreamSetOut.getActiveVideoSourceIndex());
+                out.stop();
+                in.stop();
+                simpleStreamSetOut.stopSelfView();
+                simpleStreamSetIn.stopSelfView();
+            }
+        }).delay(9000, new Runnable() {
+            @Override
+            public void run() {
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetIn.getVideoSourceState());
+                assertSame(SimpleStreamSet.VideoSourceState.READY, simpleStreamSetOut.getVideoSourceState());
+                simpleStreamSetIn.setVideoSourceIndex(1);
+                simpleStreamSetOut.setVideoSourceIndex(1);
+                TestUtils.sleep(1000);
+            }
         });
     }
 
@@ -85,19 +213,6 @@ public class SimpleStreamSetTest extends OwrTestCase {
         SimpleStreamSet withoutVideo = SimpleStreamSet.defaultConfig(false, false);
         runViewTest(withoutVideo);
 
-        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
-            @Override
-            public void run(final CountDownLatch latch) {
-                Owr.getCaptureSources(EnumSet.of(MediaType.VIDEO), new CaptureSourcesCallback() {
-                    @Override
-                    public void onCaptureSourcesCallback(final List<MediaSource> list) {
-                        latch.countDown();
-                    }
-                });
-            }
-        });
-
-        // StreamSets should now have sources
         runViewTest(withVideo);
         runViewTest(withoutVideo);
     }
@@ -112,6 +227,7 @@ public class SimpleStreamSetTest extends OwrTestCase {
         simpleStreamSet.setSelfView(textureView);
         simpleStreamSet.setRemoteView(textureView);
         simpleStreamSet.stopSelfView();
+        simpleStreamSet.stopRemoteView();
         simpleStreamSet.setSelfView(surfaceView);
         simpleStreamSet.setSelfView(surfaceView);
         simpleStreamSet.setRemoteView(surfaceView);
@@ -120,6 +236,42 @@ public class SimpleStreamSetTest extends OwrTestCase {
         simpleStreamSet.setSelfView(textureView);
         simpleStreamSet.setRemoteView(textureView);
         simpleStreamSet.stopSelfView();
+        simpleStreamSet.stopRemoteView();
         simpleStreamSet.stopSelfView();
+    }
+
+    public void testSwitchVideoSource() {
+        SurfaceView surfaceView = new SurfaceView(getContext(), null);
+        SimpleStreamSet setSourceAfterView = SimpleStreamSet.defaultConfig(false, true);
+        runViewTest(setSourceAfterView);
+
+        assertEquals(2, setSourceAfterView.getVideoSourceCount());
+        setSourceAfterView.setSelfView(surfaceView);
+        setSourceAfterView.setVideoSourceIndex(1);
+        setSourceAfterView.stopSelfView();
+
+        SimpleStreamSet setSourceBeforeView = SimpleStreamSet.defaultConfig(false, true);
+        runViewTest(setSourceBeforeView);
+
+        assertEquals(2, setSourceBeforeView.getVideoSourceCount());
+        setSourceBeforeView.setVideoSourceIndex(1);
+        setSourceBeforeView.setSelfView(surfaceView);
+    }
+
+    public void testSwitchAudioSource() {
+        TestUtils.sleep(3000);
+        SimpleStreamSet simpleStreamSet = SimpleStreamSet.defaultConfig(true, false);
+        assertEquals(1, simpleStreamSet.getAudioSourceCount());
+        simpleStreamSet.setAudioSourceIndex(0);
+        try {
+            simpleStreamSet.setAudioSourceIndex(1);
+            throw new RuntimeException("should not be reached");
+        } catch (IndexOutOfBoundsException ignored) {
+        }
+        try {
+            simpleStreamSet.setAudioSourceIndex(-1);
+            throw new RuntimeException("should not be reached");
+        } catch (IndexOutOfBoundsException ignored) {
+        }
     }
 }
