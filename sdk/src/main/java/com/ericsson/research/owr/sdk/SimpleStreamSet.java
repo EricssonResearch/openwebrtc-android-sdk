@@ -358,8 +358,8 @@ public class SimpleStreamSet extends StreamSet {
      */
     public Map<String, String> dumpPipelineGraphs() {
         HashMap<String, String> result = new HashMap<>();
-        if (!mVideoSources.isEmpty()) {
-            result.put("video-source", mVideoSources.getFirst().getDotData());
+        for (MediaSource videoSource : mVideoSources) {
+            result.put("video-source-" + videoSource.getName().replace(" ", "_"), videoSource.getDotData());
         }
         if (mAudioSource != null) {
             result.put("audio-source", mAudioSource.getDotData());
