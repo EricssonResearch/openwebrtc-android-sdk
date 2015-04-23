@@ -25,6 +25,9 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.ericsson.research.owr.MediaSource;
 
 import java.lang.ref.WeakReference;
@@ -36,14 +39,20 @@ class MediaSourceListenerSet {
 
     private final List<WeakReference<MediaSourceListener>> mListeners = new ArrayList<>();
     private MediaSource mPreviousMediaSource = null;
+    private static Handler sHandler = new Handler(Looper.getMainLooper());
 
-    public synchronized void addListener(MediaSourceListener listener) {
+    public synchronized void addListener(final MediaSourceListener listener) {
         if (listener == null) {
             throw new NullPointerException("listener may not be null");
         }
         removeListener(listener);
         mListeners.add(new WeakReference<>(listener));
-        listener.setMediaSource(mPreviousMediaSource);
+        sHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                listener.setMediaSource(mPreviousMediaSource);
+            }
+        });
     }
 
     private void removeListener(MediaSourceListener removedListener) {
@@ -57,13 +66,18 @@ class MediaSourceListenerSet {
         mListeners.removeAll(removed);
     }
 
-    public synchronized void notifyListeners(MediaSource mediaSource) {
+    public synchronized void notifyListeners(final MediaSource mediaSource) {
         mPreviousMediaSource = mediaSource;
         List<WeakReference<MediaSourceListener>> removed = new ArrayList<>();
         for (WeakReference<MediaSourceListener> ref : mListeners) {
-            MediaSourceListener listener = ref.get();
+            final MediaSourceListener listener = ref.get();
             if (listener != null) {
-                listener.setMediaSource(mediaSource);
+                sHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.setMediaSource(mediaSource);
+                    }
+                });
             } else {
                 removed.add(ref);
             }

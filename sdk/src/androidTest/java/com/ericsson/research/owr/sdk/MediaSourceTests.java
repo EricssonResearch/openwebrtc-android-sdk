@@ -34,14 +34,10 @@ import java.util.concurrent.CountDownLatch;
 public class MediaSourceTests extends OwrTestCase {
     private static final String TAG = "MediaSourceTests";
 
-    private int mListenerCount = 0;
+    private int mListenerCallCount = 0;
 
     public class MockListener implements MediaSourceListener {
         private final CountDownLatch mLatch;
-
-        public MockListener() {
-            mLatch = null;
-        }
 
         public MockListener(CountDownLatch latch) {
             mLatch = latch;
@@ -49,7 +45,7 @@ public class MediaSourceTests extends OwrTestCase {
 
         @Override
         public void setMediaSource(final MediaSource mediaSource) {
-            mListenerCount += 1;
+            mListenerCallCount += 1;
             if (mLatch != null) {
                 mLatch.countDown();
             }
@@ -58,23 +54,29 @@ public class MediaSourceTests extends OwrTestCase {
 
     public void testMediaSourceListenerSet() {
         final MediaSourceListenerSet set = new MediaSourceListenerSet();
-        set.addListener(new MockListener());
-        mListenerCount = 0;
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                set.addListener(new MockListener(latch));
+            }
+        });
         set.notifyListeners(null);
-        assertEquals(1, mListenerCount);
+        assertEquals(1, mListenerCallCount);
 
         long freeMemBeforeGc = Runtime.getRuntime().freeMemory();
         System.gc();
+        TestUtils.sleep(500);
         if (Runtime.getRuntime().freeMemory() < freeMemBeforeGc) {
-            set.notifyListeners(null);
-            assertEquals(1, mListenerCount);
+            set.notifyListeners(null); // This should not call the listener, as it was GC'd
+            assertEquals(1, mListenerCallCount);
             TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
                 @Override
                 public void run(final CountDownLatch latch) {
                     set.addListener(new MockListener(latch));
                 }
             });
-            assertEquals(2, mListenerCount); // should be signaled when it's added
+            // The previous assertion would fail here, as we didn't handle that it was asynchronous
+            assertEquals(2, mListenerCallCount); // should be signaled when it's added
         } else {
             Log.w(TAG, "Skipping GC test, no memory was free'd");
         }
