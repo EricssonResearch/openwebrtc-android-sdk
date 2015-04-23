@@ -25,9 +25,13 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.test.MoreAsserts;
 import android.util.Log;
 
+import com.ericsson.research.owr.AudioRenderer;
 import com.ericsson.research.owr.MediaSource;
+import com.ericsson.research.owr.MediaType;
+import com.ericsson.research.owr.SourceType;
 
 import java.util.concurrent.CountDownLatch;
 
@@ -85,5 +89,39 @@ public class MediaSourceTests extends OwrTestCase {
             set.addListener(null);
             throw new RuntimeException("should not be reached");
         } catch (NullPointerException ignored) {}
+    }
+
+    public void testMicrophoneSource() {
+        final MicrophoneSource source = MicrophoneSource.getInstance();
+        assertEquals("Default audio input", source.getName());
+        final MediaSource[] audioSource = new MediaSource[1];
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                source.addMediaSourceListener(new MediaSourceListener() {
+                    @Override
+                    public void setMediaSource(final MediaSource mediaSource) {
+                        assertNotNull(mediaSource);
+                        audioSource[0] = mediaSource;
+                        MoreAsserts.assertContentsInOrder(mediaSource.getMediaType(), MediaType.AUDIO);
+                        assertEquals(source.getName(), mediaSource.getName());
+                        assertSame(SourceType.CAPTURE, mediaSource.getType());
+                        latch.countDown();
+                    }
+                });
+            }
+        }).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                source.addMediaSourceListener(new MediaSourceListener() {
+                    @Override
+                    public void setMediaSource(final MediaSource mediaSource) {
+                        assertNotNull(mediaSource);
+                        assertSame(audioSource[0], mediaSource);
+                        latch.countDown();
+                    }
+                });
+            }
+        });
     }
 }
