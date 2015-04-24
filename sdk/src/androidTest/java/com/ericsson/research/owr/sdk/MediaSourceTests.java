@@ -33,6 +33,7 @@ import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.SourceType;
 
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class MediaSourceTests extends OwrTestCase {
@@ -121,6 +122,49 @@ public class MediaSourceTests extends OwrTestCase {
                         latch.countDown();
                     }
                 });
+            }
+        });
+    }
+
+    public void testCameraSourceBasicFunctionality() {
+        final CameraSource source = CameraSource.getInstance();
+
+        assertEquals(2, source.getCount()); // Test needs to be run on a device with two cameras
+        assertEquals("Front facing Camera", source.getName(0));
+        assertEquals("Back facing Camera", source.getName(1));
+        List<String> emptyPipelineDump = source.dumpPipelineGraphs();
+        assertEquals(2, emptyPipelineDump.size());
+        assertNotNull(emptyPipelineDump.get(0));
+        assertNotNull(emptyPipelineDump.get(1));
+
+        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                source.addMediaSourceListener(new MediaSourceListener() {
+                    private boolean once = true;
+                    @Override
+                    public void setMediaSource(final MediaSource mediaSource) {
+                        if (once) {
+                            assertNotNull(mediaSource);
+                            assertEquals("Front facing Camera", mediaSource.getName());
+                            latch.countDown();
+                            once = false;
+                        }
+                    }
+                });
+            }
+        }).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                source.addMediaSourceListener(new MediaSourceListener() {
+                    @Override
+                    public void setMediaSource(final MediaSource mediaSource) {
+                        if (mediaSource != null && "Back facing Camera".equals(mediaSource.getName())) {
+                            latch.countDown();
+                        }
+                    }
+                });
+                source.selectSource(1);
             }
         });
     }
