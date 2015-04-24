@@ -25,30 +25,54 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import java.util.List;
+import android.app.Activity;
+import android.os.Bundle;
+import android.test.ActivityInstrumentationTestCase2;
+import android.util.Log;
+import android.view.TextureView;
 
-public abstract class CameraSource implements MediaSourceProvider {
-    public abstract VideoView createVideoView();
+import com.ericsson.research.owr.Owr;
 
-    public abstract String getName(int index);
+public class OwrActivityTestCase extends ActivityInstrumentationTestCase2<OwrActivityTestCase.TextureViewTestActivity> {
+    private static final String TAG = "OwrTestCase";
 
-    public abstract int getCount();
+    static {
+        Owr.init();
+    }
 
-    public abstract  void selectSource(int index);
+    public OwrActivityTestCase() {
+        super(TextureViewTestActivity.class);
+    }
 
-    public abstract int getActiveSource();
+    @Override
+    protected void setUp() throws Exception {
+        super.setUp();
+        Log.v(TAG, "running owr main loop in background");
+        Owr.runInBackground();
+    }
 
-    public abstract int getSelectedSource();
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        Log.v(TAG, "quitting owr main loop");
+        Owr.quit();
+    }
 
-    public abstract List<String> dumpPipelineGraphs();
+    public static class TextureViewTestActivity extends Activity {
+        private TextureView mTextureView;
 
-    private static CameraSourceImpl instance;
-
-    public static synchronized CameraSource getInstance() {
-        if (instance == null) {
-            instance = CameraSourceImpl.create();
+        public TextureViewTestActivity() {
         }
 
-        return instance;
+        public TextureView getTextureView() {
+            return mTextureView;
+        }
+
+        @Override
+        protected void onCreate(final Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            mTextureView = new TextureView(this);
+            setContentView(mTextureView);
+        }
     }
 }

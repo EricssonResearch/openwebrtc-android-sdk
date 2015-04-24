@@ -66,6 +66,11 @@ class CameraSourceImpl extends CameraSource {
     }
 
     @Override
+    public VideoView createVideoView() {
+        return new VideoViewImpl(this, 0, 0, 0);
+    }
+
+    @Override
     public int getCount() {
         return mVideoSources.size();
     }

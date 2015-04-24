@@ -27,8 +27,8 @@ package com.ericsson.research.owr.sdk;
 
 import android.test.MoreAsserts;
 import android.util.Log;
+import android.view.TextureView;
 
-import com.ericsson.research.owr.AudioRenderer;
 import com.ericsson.research.owr.MediaSource;
 import com.ericsson.research.owr.MediaType;
 import com.ericsson.research.owr.SourceType;
@@ -36,7 +36,7 @@ import com.ericsson.research.owr.SourceType;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-public class MediaSourceTests extends OwrTestCase {
+public class MediaSourceTests extends OwrActivityTestCase {
     private static final String TAG = "MediaSourceTests";
 
     private int mListenerCallCount = 0;
@@ -65,8 +65,8 @@ public class MediaSourceTests extends OwrTestCase {
                 set.addListener(new MockListener(latch));
             }
         });
-        set.notifyListeners(null);
         assertEquals(1, mListenerCallCount);
+        set.notifyListeners(null);
 
         long freeMemBeforeGc = Runtime.getRuntime().freeMemory();
         System.gc();
@@ -126,45 +126,154 @@ public class MediaSourceTests extends OwrTestCase {
         });
     }
 
-    public void testCameraSourceBasicFunctionality() {
-        final CameraSource source = CameraSource.getInstance();
+    public void testSelfView() {
+        CameraSource cameraSource = CameraSource.getInstance();
+        VideoView videoView = cameraSource.createVideoView();
 
-        assertEquals(2, source.getCount()); // Test needs to be run on a device with two cameras
-        assertEquals("Front facing Camera", source.getName(0));
-        assertEquals("Back facing Camera", source.getName(1));
-        List<String> emptyPipelineDump = source.dumpPipelineGraphs();
+        assertEquals(2, cameraSource.getCount()); // Test needs to be run on a device with two cameras
+        assertEquals("Front facing Camera", cameraSource.getName(0));
+        assertEquals("Back facing Camera", cameraSource.getName(1));
+        List<String> emptyPipelineDump = cameraSource.dumpPipelineGraphs();
         assertEquals(2, emptyPipelineDump.size());
         assertNotNull(emptyPipelineDump.get(0));
         assertNotNull(emptyPipelineDump.get(1));
 
-        TestUtils.synchronous().run(new TestUtils.SynchronousBlock() {
+        TextureView textureView = getActivity().getTextureView();
+
+        assertEquals(0, videoView.getRotation());
+        videoView.setRotation(0);
+        videoView.setView(textureView);
+        TestUtils.waitForNUpdates(textureView, 5);
+        videoView.setRotation(1);
+        videoView.setView(textureView);
+        assertEquals(1, videoView.getRotation());
+        TestUtils.waitForNUpdates(textureView, 5);
+        try {
+            videoView.setView(null);
+            throw new RuntimeException("should not be reached");
+        } catch (NullPointerException ignored) {}
+        videoView.stop();
+        videoView.stop();
+        videoView.stop();
+        videoView.setView(textureView);
+        TestUtils.waitForNUpdates(textureView, 5);
+        videoView.setRotation(1);
+        assertEquals(1, videoView.getRotation());
+        TestUtils.sleep(100);
+        videoView.setRotation(2);
+        assertEquals(2, videoView.getRotation());
+        TestUtils.sleep(100);
+        videoView.setRotation(3);
+        assertEquals(3, videoView.getRotation());
+        TestUtils.sleep(100);
+        TestUtils.waitForNUpdates(textureView, 5);
+        try {
+            videoView.setRotation(4);
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalArgumentException ignored) {}
+        try {
+            videoView.setRotation(-1);
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalArgumentException ignored) {}
+        try {
+            videoView.setRotation(90);
+            throw new RuntimeException("should not be reached");
+        } catch (IllegalArgumentException ignored) {}
+        videoView.stop();
+        TestUtils.sleep(1000);
+    }
+
+    public void testSelfViewSwitching() {
+        final CameraSourceImpl cameraSource = (CameraSourceImpl) CameraSource.getInstance();
+        final VideoView videoView = cameraSource.createVideoView();
+        final TextureView textureView = getActivity().getTextureView();
+
+        videoView.setView(textureView);
+        TestUtils.waitForNUpdates(textureView, 5);
+
+        TestUtils.synchronous().delay(5000, new Runnable() {
             @Override
-            public void run(final CountDownLatch latch) {
-                source.addMediaSourceListener(new MediaSourceListener() {
-                    private boolean once = true;
-                    @Override
-                    public void setMediaSource(final MediaSource mediaSource) {
-                        if (once) {
-                            assertNotNull(mediaSource);
-                            assertEquals("Front facing Camera", mediaSource.getName());
-                            latch.countDown();
-                            once = false;
-                        }
-                    }
-                });
+            public void run() {
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
+                assertSame(CameraSourceImpl.VideoSourceState.READY, cameraSource.getVideoSourceState());
+                cameraSource.selectSource(0);
+                assertEquals(0, cameraSource.getActiveSource());
+                assertSame(CameraSourceImpl.VideoSourceState.READY, cameraSource.getVideoSourceState());
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
+                cameraSource.selectSource(1);
+                assertEquals(0, cameraSource.getActiveSource());
+                assertSame(CameraSourceImpl.VideoSourceState.CLOSING, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
             }
-        }).run(new TestUtils.SynchronousBlock() {
+        }).delay(300, new Runnable() {
             @Override
-            public void run(final CountDownLatch latch) {
-                source.addMediaSourceListener(new MediaSourceListener() {
-                    @Override
-                    public void setMediaSource(final MediaSource mediaSource) {
-                        if (mediaSource != null && "Back facing Camera".equals(mediaSource.getName())) {
-                            latch.countDown();
-                        }
-                    }
-                });
-                source.selectSource(1);
+            public void run() { // we're closing the old source
+                cameraSource.selectSource(0);
+                assertSame(CameraSourceImpl.VideoSourceState.CLOSING, cameraSource.getVideoSourceState());
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
+            }
+        }).delay(300, new Runnable() {
+            @Override
+            public void run() { // we're still closing the old source
+                cameraSource.selectSource(1);
+                assertSame(CameraSourceImpl.VideoSourceState.CLOSING, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
+            }
+        }).delay(900, new Runnable() {
+            @Override
+            public void run() { // We should now have switched source
+                assertSame(CameraSourceImpl.VideoSourceState.OPENING, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+                cameraSource.selectSource(0);
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+            }
+        }).delay(5000, new Runnable() {
+            @Override
+            public void run() { // in the opening state
+                cameraSource.selectSource(1);
+                assertSame(CameraSourceImpl.VideoSourceState.OPENING, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+            }
+        }).delay(2000, new Runnable() {
+            @Override
+            public void run() { // switch back to 0
+                assertSame(CameraSourceImpl.VideoSourceState.OPENING, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+            }
+        }).delay(2000, new Runnable() {
+            @Override
+            public void run() { // open should now be complete
+                assertSame(CameraSourceImpl.VideoSourceState.READY, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+            }
+        }).delay(2000, new Runnable() {
+            @Override
+            public void run() {
+                assertSame(CameraSourceImpl.VideoSourceState.READY, cameraSource.getVideoSourceState());
+                assertEquals(1, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+                cameraSource.selectSource(0); // Switch back to 0 to not break future tests
+                videoView.stop();
+                assertSame(CameraSourceImpl.VideoSourceState.CLOSING, cameraSource.getVideoSourceState());
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(1, cameraSource.getActiveSource());
+            }
+        }).delay(10000, new Runnable() {
+            @Override
+            public void run() {
+                assertSame(CameraSourceImpl.VideoSourceState.READY, cameraSource.getVideoSourceState());
+                assertEquals(0, cameraSource.getSelectedSource());
+                assertEquals(0, cameraSource.getActiveSource());
             }
         });
     }

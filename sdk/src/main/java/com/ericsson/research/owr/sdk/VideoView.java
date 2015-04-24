@@ -25,30 +25,31 @@
  */
 package com.ericsson.research.owr.sdk;
 
-import java.util.List;
+import android.view.TextureView;
 
-public abstract class CameraSource implements MediaSourceProvider {
-    public abstract VideoView createVideoView();
+public interface VideoView {
+    /**
+     * Sets the rotation of the video in multiples of 90 degrees
+     * @param rotation 0, 1, 2, or 3, any other value will throw an IllegalArgumentException
+     */
+    void setRotation(int rotation);
 
-    public abstract String getName(int index);
+    /**
+     * @return current rotation in multiples of 90 degrees
+     */
+    int getRotation();
 
-    public abstract int getCount();
+    /**
+     * Set the view in which the video should be rendered, and starts the view if it was stopped.
+     *
+     * @param view The view to render the video in, may not be null.
+     */
+    void setView(TextureView view);
 
-    public abstract  void selectSource(int index);
-
-    public abstract int getActiveSource();
-
-    public abstract int getSelectedSource();
-
-    public abstract List<String> dumpPipelineGraphs();
-
-    private static CameraSourceImpl instance;
-
-    public static synchronized CameraSource getInstance() {
-        if (instance == null) {
-            instance = CameraSourceImpl.create();
-        }
-
-        return instance;
-    }
+    /**
+     * Stops the video view and frees all resources. Calling setView again will resume the view.
+     * Depending on the type of the source it might be required to call this function in order
+     * to not leak resources. Calling this function even if it isn't needed is never an error.
+     */
+    void stop();
 }

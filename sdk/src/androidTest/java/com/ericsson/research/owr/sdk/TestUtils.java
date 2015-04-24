@@ -25,8 +25,10 @@
  */
 package com.ericsson.research.owr.sdk;
 
+import android.graphics.SurfaceTexture;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.view.TextureView;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -135,5 +137,54 @@ public class TestUtils {
 
     public interface SynchronousBlock {
         void run(CountDownLatch latch);
+    }
+
+    public static void waitForNUpdates(final TextureView textureView, int count) {
+        TextureView.SurfaceTextureListener previousListener = textureView.getSurfaceTextureListener();
+        final TextureViewAsserter textureViewAsserter = new TextureViewAsserter(previousListener);
+        textureView.setSurfaceTextureListener(textureViewAsserter);
+        TestUtils.synchronous().latchCount(count).timeout(15).run(new TestUtils.SynchronousBlock() {
+            @Override
+            public void run(final CountDownLatch latch) {
+                textureViewAsserter.waitForUpdates(latch);
+            }
+        });
+        textureView.setSurfaceTextureListener(previousListener);
+    }
+
+    private static class TextureViewAsserter implements TextureView.SurfaceTextureListener {
+        private final TextureView.SurfaceTextureListener mListener;
+        private CountDownLatch mLatch;
+
+        public TextureViewAsserter(final TextureView.SurfaceTextureListener surfaceTextureListener) {
+            mListener = surfaceTextureListener;
+        }
+
+        public void waitForUpdates(CountDownLatch latch) {
+            mLatch = latch;
+        }
+
+        @Override
+        public void onSurfaceTextureAvailable(final SurfaceTexture surface, final int width, final int height) {
+            mListener.onSurfaceTextureAvailable(surface, width, height);
+        }
+
+        @Override
+        public void onSurfaceTextureSizeChanged(final SurfaceTexture surface, final int width, final int height) {
+            mListener.onSurfaceTextureSizeChanged(surface, width, height);
+        }
+
+        @Override
+        public boolean onSurfaceTextureDestroyed(final SurfaceTexture surface) {
+            return mListener.onSurfaceTextureDestroyed(surface);
+        }
+
+        @Override
+        public void onSurfaceTextureUpdated(final SurfaceTexture surface) {
+            if (mLatch != null) {
+                mLatch.countDown();
+            }
+            mListener.onSurfaceTextureUpdated(surface);
+        }
     }
 }
