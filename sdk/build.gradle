@@ -1,14 +1,15 @@
 apply plugin: 'com.android.library'
 
+version = '0.1.0'
+
 android {
     compileSdkVersion 22
     buildToolsVersion "22.0.0"
-
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 22
         versionCode 1
-        versionName "0.0.1"
+        versionName version
 
         ndk {
             abiFilter "armeabi-v7a"
