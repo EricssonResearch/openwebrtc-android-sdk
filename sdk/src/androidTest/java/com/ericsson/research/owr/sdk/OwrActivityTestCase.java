@@ -26,10 +26,13 @@
 package com.ericsson.research.owr.sdk;
 
 import android.app.Activity;
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.os.Bundle;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
 import android.view.TextureView;
+import android.view.WindowManager;
 
 import com.ericsson.research.owr.Owr;
 
@@ -73,6 +76,10 @@ public class OwrActivityTestCase extends ActivityInstrumentationTestCase2<OwrAct
             super.onCreate(savedInstanceState);
             mTextureView = new TextureView(this);
             setContentView(mTextureView);
+            KeyguardManager km = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+            KeyguardManager.KeyguardLock keyguardLock = km.newKeyguardLock("TAG");
+            keyguardLock.disableKeyguard();
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         }
     }
 }
