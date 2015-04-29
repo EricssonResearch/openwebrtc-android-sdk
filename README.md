@@ -4,8 +4,7 @@ SDK for adding OpenWebRTC to your Android app
 
 ## Binaries
 
-##### *** This doesn't work yet ***
-Add `compile 'io.openwebrtc:openwebrtc-android-sdk:0.1'` to your gradle dependencies.
+Add `compile 'io.openwebrtc:openwebrtc-android-sdk:0.1.0'` to your gradle dependencies.
 
 ## Development
 
@@ -17,4 +16,5 @@ project(':openwebrtc-android-sdk').projectDir = new File('openwebrtc-android-sdk
 
 Then simply add `compile project(':openwebrtc-android-sdk')` to your module's dependencies.
 
-Also make sure to copy or link `cerbero/dist/android_armv7/lib/jni/openwebrtc.jar` to `openwebrtc-android-sdk/sdk/libs/openwebrtc.jar`
+Another approach is to clone the SDK to a different directory than your app, and then point directly to that directory.
+This is done in the NativeCall example in openwebrtc-examples [link](https://github.com/EricssonResearch/openwebrtc-examples/blob/master/android/NativeCall/settings.gradle)
