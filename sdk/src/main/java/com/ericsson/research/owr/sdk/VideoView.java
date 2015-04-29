@@ -40,6 +40,17 @@ public interface VideoView {
     int getRotation();
 
     /**
+     * Set whether or not the video should be mirrored.
+     * @param mirrored true if the rendered video should be mirrored, false otherwise.
+     */
+    void setMirrored(boolean mirrored);
+
+    /**
+     * @return true if the rendered video will be mirrored, false otherwise.
+     */
+    boolean isMirrored();
+
+    /**
      * Set the view in which the video should be rendered, and starts the view if it was stopped.
      *
      * @param view The view to render the video in, may not be null.

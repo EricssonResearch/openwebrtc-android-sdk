@@ -141,6 +141,7 @@ public class MediaSourceTests extends OwrActivityTestCase {
         TextureView textureView = getActivity().getTextureView();
 
         assertEquals(0, videoView.getRotation());
+        assertEquals(false, videoView.isMirrored());
         videoView.setRotation(0);
         videoView.setView(textureView);
         TestUtils.waitForNUpdates(textureView, 5);
@@ -162,6 +163,12 @@ public class MediaSourceTests extends OwrActivityTestCase {
         TestUtils.sleep(100);
         videoView.setRotation(2);
         assertEquals(2, videoView.getRotation());
+        TestUtils.sleep(100);
+        videoView.setMirrored(true);
+        assertEquals(true, videoView.isMirrored());
+        TestUtils.sleep(100);
+        videoView.setMirrored(false);
+        assertEquals(false, videoView.isMirrored());
         TestUtils.sleep(100);
         videoView.setRotation(3);
         assertEquals(3, videoView.getRotation());

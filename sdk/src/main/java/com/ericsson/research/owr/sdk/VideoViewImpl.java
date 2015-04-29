@@ -40,16 +40,14 @@ public class VideoViewImpl implements VideoView, MediaSourceListener {
     private VideoRenderer mVideoRenderer;
     private MediaSource mVideoSource;
     private final String mTag;
-    private int mRotation;
 
     VideoViewImpl(MediaSourceProvider mediaSourceProvider, int width, int height, double framerate) {
         mVideoSource = null;
-        mRotation = 0;
 
         mTag = Utils.randomString(32);
 
         mVideoRenderer = new VideoRenderer(mTag);
-        mVideoRenderer.setRotation(mRotation);
+        mVideoRenderer.setRotation(0);
         if (width > 0) {
             mVideoRenderer.setWidth(width);
         }
@@ -67,13 +65,22 @@ public class VideoViewImpl implements VideoView, MediaSourceListener {
         if (rotation < 0 || rotation > 3) {
             throw new IllegalArgumentException(rotation + " is an invalid rotation, must be between 0 and 3");
         }
-        mRotation = rotation;
         mVideoRenderer.setRotation(rotation);
     }
 
     @Override
     public int getRotation() {
-        return mRotation;
+        return mVideoRenderer.getRotation();
+    }
+
+    @Override
+    public void setMirrored(final boolean mirrored) {
+        mVideoRenderer.setMirror(mirrored);
+    }
+
+    @Override
+    public boolean isMirrored() {
+        return mVideoRenderer.getMirror();
     }
 
     @Override
