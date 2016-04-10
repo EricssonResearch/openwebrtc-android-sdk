@@ -124,7 +124,7 @@ class RtcCandidateImpl implements RtcCandidate {
 
     @Override
     public int getPort() {
-        return mPort;
+        return (mTransportType == TransportType.TCP_ACTIVE && mPort == 0 ? 9 : mPort);
     }
 
     @Override
@@ -139,7 +139,7 @@ class RtcCandidateImpl implements RtcCandidate {
 
     @Override
     public int getRelatedPort() {
-        return mRelatedPort;
+        return (mRelatedPort > 0 ? mRelatedPort : getPort());
     }
 
     static RtcCandidateImpl fromOwrCandidate(Candidate candidate) {

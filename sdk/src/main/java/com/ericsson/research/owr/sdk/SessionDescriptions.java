@@ -50,12 +50,22 @@ public class SessionDescriptions {
         } catch (JSONException e) {
             throw new InvalidDescriptionException("jsep message has no type", e);
         }
+
         try {
             sdpStr = json.getString("sdp");
         } catch (JSONException e) {
             throw new InvalidDescriptionException("jsep message has no sdp", e);
         }
-        JSONObject sdp = SdpProcessor.sdpToJson(sdpStr);
+
+        JSONObject sdp;
+        if(json.has("sessionDescription")) {
+            try {
+                sdp = json.getJSONObject("sessionDescription");
+            } catch (JSONException e) {
+                throw new InvalidDescriptionException("invalid sessionDescription in jsep message", e);
+            }
+        }
+        else sdp = SdpProcessor.sdpToJson(sdpStr);
 
         SessionDescription.Type descriptionType;
         switch (type) {
@@ -317,6 +327,7 @@ public class SessionDescriptions {
 
     public static JSONObject toJsep(SessionDescription sessionDescription) {
         JSONObject json = new JSONObject();
+        JSONObject sdpJson = null;
         String type;
         String sdpStr;
 
@@ -332,7 +343,7 @@ public class SessionDescriptions {
         }
 
         try {
-            JSONObject sdpJson = sessionDescriptionToOwrJson(sessionDescription);
+            sdpJson = sessionDescriptionToOwrJson(sessionDescription);
             sdpStr = SdpProcessor.jsonToSdp(sdpJson);
         } catch (InvalidDescriptionException | JSONException e) {
             throw new IllegalArgumentException("json to sdp conversion failed: " + e.getMessage(), e);
@@ -340,6 +351,7 @@ public class SessionDescriptions {
 
         try {
             json.put("type", type);
+            json.put("sessionDescription", sdpJson);
             json.put("sdp", sdpStr);
             return json;
         } catch (JSONException e) {
