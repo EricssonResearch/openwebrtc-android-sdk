@@ -28,8 +28,8 @@ android {
 }
 
 dependencies {
-//    Uncomment to use local version
-//    compile files(System.getProperty("user.home") + '/cerbero/dist/android_armv7/lib/jni/openwebrtc.jar')
+    // Uncomment to use local version
+    //compile files(System.getProperty("user.home") + '/cerbero/dist/android_armv7/lib/jni/openwebrtc.jar')
     compile 'io.openwebrtc:openwebrtc-android:0.3'
     compile 'org.mozilla:rhino:1.7R4'
 }

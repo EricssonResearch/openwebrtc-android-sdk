@@ -48,16 +48,15 @@ public class RtcConfigs {
     }
 
     private static class Default extends RtcConfig {
-        private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>(3);
+        private static final List<RtcPayload> sDefaultVideoPayloads = new ArrayList<>(4);
         static {
             sDefaultVideoPayloads.add(new RtcPayloadImpl(103, "H264", 90000, new HashMap<String, Object>(){{
                 put("packetization-mode", 1);
             }}, 0, false, true, true));
-//            FIXME: Enable when Chrome can handle an offer with RTX for H264
-/*            sDefaultVideoPayloads.add(new PlainRtcPayload(123, "RTX", 90000, new HashMap<String, Object>(){{
+            sDefaultVideoPayloads.add(new RtcPayloadImpl(123, "RTX", 90000, new HashMap<String, Object>(){{
                 put("apt", 103);
                 put("rtx-time", 200);
-            }}, 0, false, false, false));*/
+            }}, 0, false, false, false));
             sDefaultVideoPayloads.add(new RtcPayloadImpl(100, "VP8", 90000, null, 0, true, true, true));
             sDefaultVideoPayloads.add(new RtcPayloadImpl(120, "RTX", 90000, new HashMap<String, Object>(){{
                 put("apt", 100);

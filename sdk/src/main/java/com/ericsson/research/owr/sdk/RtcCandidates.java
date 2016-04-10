@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015, Ericsson AB.
+ * Copyright (c) 2015, Paul-Louis Ageneau
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -61,8 +62,53 @@ public class RtcCandidates {
             if (candidate.getStreamIndex() >= 0) {
                 json.put("sdpMLineIndex", candidate.getStreamIndex());
             }
+
+            JSONObject description = new JSONObject();
+            description.put("foundation", candidate.getFoundation());
+            description.put("componentId", (candidate.getComponentType() == RtcCandidate.ComponentType.RTCP ? 2 : 1));
+            description.put("transport", (candidate.getTransportType() == RtcCandidate.TransportType.UDP ? "UDP" : "TCP"));
+            description.put("priority", candidate.getPriority());
+            description.put("address", candidate.getAddress());
+            description.put("port", candidate.getPort());
+
+            if(candidate.getRelatedAddress() != null) {
+                description.put("relatedAddress", candidate.getRelatedAddress());
+                description.put("relatedPort", candidate.getRelatedPort());
+            }
+
+            switch (candidate.getType()) {
+                case HOST:
+                    description.put("type", "host");
+                    break;
+                case SERVER_REFLEXIVE:
+                    description.put("type", "srflx");
+                    break;
+                case PEER_REFLEXIVE:
+                    description.put("type", "prflx");
+                    break;
+                case RELAY:
+                    description.put("type", "relay");
+                    break;
+            }
+
+            if (candidate.getTransportType() != RtcCandidate.TransportType.UDP) {
+                switch (candidate.getTransportType()) {
+                    case TCP_ACTIVE:
+                        description.put("tcptype", "active");
+                        break;
+                    case TCP_PASSIVE:
+                        description.put("tcptype", "passive");
+                        break;
+                    case TCP_SO:
+                        description.put("tcptype", "so");
+                        break;
+                }
+            }
+
+            json.put("candidateDescription", description);
             json.put("candidate", toSdpAttribute(candidate));
             return json;
+
         } catch (JSONException e) {
             e.printStackTrace();
             Log.wtf(TAG, "failed to generate jsep candidate", e);
@@ -76,22 +122,103 @@ public class RtcCandidates {
      * @return a new RtcCandidate
      */
     public static RtcCandidate fromJsep(JSONObject json) {
+        RtcCandidateImpl rtcCandidate;
+
         if (json == null) {
             throw new NullPointerException("json should not be null");
         }
-        String candidateLine = json.optString("candidate");
-        if (candidateLine == null) {
-            return null;
+
+        if(json.has("candidateDescription")) {
+            try {
+                JSONObject description = json.getJSONObject("candidateDescription");
+
+                RtcCandidate.ComponentType componentType;
+                if(description.getInt("componentId") == 1) {
+                    componentType = RtcCandidate.ComponentType.RTP;
+                }
+                else {
+                    componentType = RtcCandidate.ComponentType.RTCP;
+                }
+
+                RtcCandidate.TransportType transportType;
+                int port = description.getInt("port");
+                if ("udp".equals(description.getString("transport").toLowerCase())) {
+                    transportType = RtcCandidate.TransportType.UDP;
+                } else {
+                    if (description.has("tcptype")) {
+                        switch (description.getString("tcptype").toLowerCase()) {
+                            case "active":
+                                transportType = RtcCandidate.TransportType.TCP_ACTIVE;
+                                break;
+                            case "passive":
+                                transportType = RtcCandidate.TransportType.TCP_PASSIVE;
+                                break;
+                            case "so":
+                                transportType = RtcCandidate.TransportType.TCP_SO;
+                                break;
+                            default:
+                                return null;
+                        }
+                    } else if (port == 0 || port == 9) {
+                        transportType = RtcCandidate.TransportType.TCP_ACTIVE;
+                        port = 9;
+                    } else {
+                        return null;
+                    }
+                }
+
+                RtcCandidate.CandidateType type;
+                switch(description.getString("type")) {
+                    case "host":
+                        type = RtcCandidate.CandidateType.HOST;
+                        break;
+                    case "srflx":
+                        type = RtcCandidate.CandidateType.SERVER_REFLEXIVE;
+                        break;
+                    case "prflx":
+                        type = RtcCandidate.CandidateType.PEER_REFLEXIVE;
+                        break;
+                    case "relay":
+                        type = RtcCandidate.CandidateType.RELAY;
+                        break;
+                    default:
+                        return null;
+                }
+
+                rtcCandidate = new RtcCandidateImpl(
+                                    description.getString("foundation"),
+                                    componentType,
+                                    transportType,
+                                    description.getInt("priority"),
+                                    description.getString("address"),
+                                    port,
+                                    type,
+                                    description.optString("relatedAddress", null),
+                                    description.optInt("relatedPort", -1));
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
+        else {
+            String candidateLine = json.optString("candidate");
+            if (candidateLine == null) {
+                return null;
+            }
+
+            rtcCandidate = (RtcCandidateImpl) fromSdpAttribute(candidateLine);
+            if (rtcCandidate == null) {
+                return null;
+            }
+        }
+
         int sdpMLineIndex = json.optInt("sdpMLineIndex", -1);
         String sdpMid = json.isNull("sdpMid") ? null : json.optString("sdpMid", null);
         if (sdpMLineIndex < 0 && sdpMid == null) {
             return null;
         }
-        RtcCandidateImpl rtcCandidate = (RtcCandidateImpl) fromSdpAttribute(candidateLine);
-        if (rtcCandidate == null) {
-            return null;
-        }
+
         rtcCandidate.setStreamIndex(sdpMLineIndex);
         rtcCandidate.setStreamId(sdpMid);
 
