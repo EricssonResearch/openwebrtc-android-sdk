@@ -50,6 +50,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Locale;
 
 class Utils {
     private static final String TAG = "Utils";
@@ -84,7 +85,7 @@ class Utils {
             return false;
         }
         String actualEncodingName = payload.getEncodingName();
-        return encodingName.toUpperCase().equals(actualEncodingName.toUpperCase());
+        return encodingName.equalsIgnoreCase(actualEncodingName);
     }
 
     static List<Payload> transformPayloads(List<RtcPayload> payloads, MediaType mediaType) {
@@ -100,7 +101,7 @@ class Utils {
                 continue;
             }
             try {
-                CodecType codecType = CodecType.valueOf(payload.getEncodingName().toUpperCase());
+                CodecType codecType = CodecType.valueOf(payload.getEncodingName().toUpperCase(Locale.ENGLISH));
                 RtcPayload rtxPayload = findRtxPayloadForPayloadType(payloads, payload.getPayloadType());
 
                 Payload owrPayload;
@@ -278,7 +279,7 @@ class Utils {
         try {
             byte[] der = Base64.decode(base64der.getBytes("UTF8"), Base64.NO_WRAP | Base64.NO_PADDING | Base64.CRLF);
             if (der != null) {
-                MessageDigest digest = MessageDigest.getInstance(hashFunction.toUpperCase());
+                MessageDigest digest = MessageDigest.getInstance(hashFunction.toUpperCase(Locale.ENGLISH));
                 byte[] derHash = digest.digest(der);
 
                 StringBuilder fingerprintBuilder = new StringBuilder(derHash.length * 3 - 1);
@@ -290,7 +291,7 @@ class Utils {
                     fingerprintBuilder.append(Character.forDigit(derHash[i] & 0xF, 16));
                 }
 
-                return fingerprintBuilder.toString().toUpperCase();
+                return fingerprintBuilder.toString().toUpperCase(Locale.ENGLISH);
             }
             return null;
         } catch (NoSuchAlgorithmException | UnsupportedEncodingException exception) {
