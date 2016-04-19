@@ -32,6 +32,8 @@ import org.mozilla.javascript.EvaluatorException;
 import org.mozilla.javascript.Function;
 import org.mozilla.javascript.ScriptableObject;
 
+import java.util.Locale;
+
 class SdpProcessor {
     private static final String TAG = "SdpProcessor";
 

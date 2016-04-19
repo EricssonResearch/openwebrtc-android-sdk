@@ -33,6 +33,8 @@ import org.json.JSONObject;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.util.Locale;
+
 /**
  * An uninstantiable class that provides utility methods for RtcCandidate
  */
@@ -227,7 +229,7 @@ public class RtcCandidates {
             componentType = RtcCandidate.ComponentType.RTCP;
         }
 
-        switch (type.toLowerCase()) {
+        switch (type.toLowerCase(Locale.ENGLISH)) {
             case "host":
                 candidateType = RtcCandidate.CandidateType.HOST;
                 break;
@@ -244,11 +246,11 @@ public class RtcCandidates {
                 return null;
         }
 
-        if ("udp".equals(transport.toLowerCase())) {
+        if ("udp".equals(transport.toLowerCase(Locale.ENGLISH))) {
             transportType = RtcCandidate.TransportType.UDP;
         } else {
             if (tcpType != null) {
-                switch (tcpType.toLowerCase()) {
+                switch (tcpType.toLowerCase(Locale.ENGLISH)) {
                     case "active":
                         transportType = RtcCandidate.TransportType.TCP_ACTIVE;
                         break;
