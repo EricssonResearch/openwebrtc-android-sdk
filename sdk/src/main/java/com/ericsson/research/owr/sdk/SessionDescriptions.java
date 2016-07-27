@@ -114,8 +114,8 @@ public class SessionDescriptions {
         StreamType streamType;
         StreamMode mode;
         String id;
-        String ufrag;
-        String password;
+        String ufrag = null;
+        String password = null;
         List<RtcCandidate> candidates = null;
         String dtlsSetup;
         String fingerprint;
@@ -165,10 +165,6 @@ public class SessionDescriptions {
 
         id = json.optString("mediaStreamId", null);
 
-        JSONObject ice = json.getJSONObject("ice");
-        ufrag = ice.getString("ufrag");
-        password = ice.getString("password");
-
         if (streamType == StreamType.DATA) {
             rtcpMux = false;
         } else {
@@ -176,15 +172,21 @@ public class SessionDescriptions {
             rtcpMux = rtcp != null && rtcp.optBoolean("mux", false);
         }
 
-        JSONArray candidateArr = ice.optJSONArray("candidates");
-        if (candidateArr != null) {
-            candidates = new ArrayList<>(candidateArr.length());
+        JSONObject ice = json.optJSONObject("ice");
+        if (ice != null) {
+            ufrag = ice.getString("ufrag");
+            password = ice.getString("password");
 
-            for (int i = 0; i < candidateArr.length(); i++) {
-                try {
-                    candidates.add(owrJsonToCandidate(candidateArr.getJSONObject(i), ufrag, password, index, id));
-                } catch (JSONException exception) {
-                    Log.w(TAG, "failed to read candidate: " + exception);
+            JSONArray candidateArr = ice.optJSONArray("candidates");
+            if (candidateArr != null) {
+                candidates = new ArrayList<>(candidateArr.length());
+
+                for (int i = 0; i < candidateArr.length(); i++) {
+                    try {
+                        candidates.add(owrJsonToCandidate(candidateArr.getJSONObject(i), ufrag, password, index, id));
+                    } catch (JSONException exception) {
+                        Log.w(TAG, "failed to read candidate: " + exception);
+                    }
                 }
             }
         }
@@ -192,7 +194,7 @@ public class SessionDescriptions {
         JSONObject dtls = json.getJSONObject("dtls");
         fingerprintHashFunction = dtls.getString("fingerprintHashFunction");
         fingerprint = dtls.getString("fingerprint");
-        dtlsSetup = dtls.getString("setup");
+        dtlsSetup = dtls.optString("setup");
 
         if (streamType == StreamType.DATA) {
             JSONObject sctp = json.getJSONObject("sctp");
