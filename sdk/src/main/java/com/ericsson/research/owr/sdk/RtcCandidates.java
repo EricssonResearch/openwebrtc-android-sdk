@@ -64,6 +64,7 @@ public class RtcCandidates {
                 json.put("sdpMLineIndex", candidate.getStreamIndex());
             }
             json.put("candidate", toSdpAttribute(candidate));
+            json.put("candidateDescription", toCandidateDescription(candidate));
             return json;
         } catch (JSONException e) {
             e.printStackTrace();
@@ -81,17 +82,32 @@ public class RtcCandidates {
         if (json == null) {
             throw new NullPointerException("json should not be null");
         }
-        String candidateLine = json.optString("candidate");
-        if (candidateLine == null) {
+
+        RtcCandidateImpl rtcCandidate;
+
+        JSONObject candidateDescription = json.optJSONObject("candidateDescription");
+
+        if (candidateDescription != null) {
+            try {
+                rtcCandidate = (RtcCandidateImpl) fromCandidateDescription(candidateDescription);
+            } catch (JSONException e) {
+                return null;
+            }
+        } else {
+            String candidateLine = json.optString("candidate");
+            if (candidateLine == null) {
+                return null;
+            }
+
+            rtcCandidate = (RtcCandidateImpl) fromSdpAttribute(candidateLine);
+        }
+        if (rtcCandidate == null) {
             return null;
         }
+
         int sdpMLineIndex = json.optInt("sdpMLineIndex", -1);
         String sdpMid = json.isNull("sdpMid") ? null : json.optString("sdpMid", null);
         if (sdpMLineIndex < 0 && sdpMid == null) {
-            return null;
-        }
-        RtcCandidateImpl rtcCandidate = (RtcCandidateImpl) fromSdpAttribute(candidateLine);
-        if (rtcCandidate == null) {
             return null;
         }
         rtcCandidate.setStreamIndex(sdpMLineIndex);
@@ -167,6 +183,61 @@ public class RtcCandidates {
         return sb.toString();
     }
 
+    public static JSONObject toCandidateDescription(RtcCandidate candidate) throws JSONException {
+        JSONObject json = new JSONObject();
+
+        json.put("foundation", candidate.getFoundation());
+        switch (candidate.getComponentType()) {
+            case RTP:
+                json.put("componentId", 1);
+                break;
+            case RTCP:
+                json.put("componentId", 2);
+                break;
+        }
+
+        if (candidate.getTransportType() == RtcCandidate.TransportType.UDP) {
+            json.put("transport", "UDP");
+        } else {
+            json.put("transport", "TCP");
+        }
+        json.put("priority", candidate.getPriority());
+        json.put("address", candidate.getAddress());
+        json.put("port", candidate.getPort());
+        switch (candidate.getType()) {
+            case HOST:
+                json.put("type", "host");
+                break;
+            case SERVER_REFLEXIVE:
+                json.put("type", "srflx");
+                break;
+            case PEER_REFLEXIVE:
+                json.put("type", "prflx");
+                break;
+            case RELAY:
+                json.put("type", "relay");
+                break;
+        }
+        if (candidate.getRelatedAddress() != null) {
+            json.put("relatedAddress", candidate.getRelatedAddress());
+            json.put("relatedPort", candidate.getRelatedPort());
+        }
+        if (candidate.getTransportType() != RtcCandidate.TransportType.UDP) {
+            switch (candidate.getTransportType()) {
+                case TCP_ACTIVE:
+                    json.put("tcpType", "active");
+                    break;
+                case TCP_PASSIVE:
+                    json.put("tcpType", "passive");
+                    break;
+                case TCP_SO:
+                    json.put("tcpType", "so");
+                    break;
+            }
+        }
+        return json;
+    }
+
     private static Pattern sSdpCandidateAttributePattern = Pattern.compile("^" +
             "(?:a=)?candidate:" +
             "(\\d+) " + // foundation
@@ -221,6 +292,84 @@ public class RtcCandidates {
             relatedPort = Integer.parseInt(matcher.group(PATTERN_GROUP_ATTRIBUTE_RELATED_PORT), 10);
         }
         String tcpType = matcher.group(PATTERN_GROUP_ATTRIBUTE_TCP_TYPE);
+        RtcCandidate.TransportType transportType;
+
+        if (componentId == 1) {
+            componentType = RtcCandidate.ComponentType.RTP;
+        } else {
+            componentType = RtcCandidate.ComponentType.RTCP;
+        }
+
+        switch (type.toLowerCase(Locale.ENGLISH)) {
+            case "host":
+                candidateType = RtcCandidate.CandidateType.HOST;
+                break;
+            case "srflx":
+                candidateType = RtcCandidate.CandidateType.SERVER_REFLEXIVE;
+                break;
+            case "prflx":
+                candidateType = RtcCandidate.CandidateType.PEER_REFLEXIVE;
+                break;
+            case "relay":
+                candidateType = RtcCandidate.CandidateType.RELAY;
+                break;
+            default:
+                return null;
+        }
+
+        if ("udp".equals(transport.toLowerCase(Locale.ENGLISH))) {
+            transportType = RtcCandidate.TransportType.UDP;
+        } else {
+            if (tcpType != null) {
+                switch (tcpType.toLowerCase(Locale.ENGLISH)) {
+                    case "active":
+                        transportType = RtcCandidate.TransportType.TCP_ACTIVE;
+                        break;
+                    case "passive":
+                        transportType = RtcCandidate.TransportType.TCP_PASSIVE;
+                        break;
+                    case "so":
+                        transportType = RtcCandidate.TransportType.TCP_SO;
+                        break;
+                    default:
+                        return null;
+                }
+            } else if (port == 0 || port == 9) {
+                transportType = RtcCandidate.TransportType.TCP_ACTIVE;
+                port = 9;
+            } else {
+                return null;
+            }
+        }
+
+        if (relatedAddress == null) {
+            if (candidateType == RtcCandidate.CandidateType.HOST) {
+                return new RtcCandidateImpl(foundation, componentType, transportType, priority, address, port, candidateType, null, -1);
+            } else {
+                return null;
+            }
+        } else {
+            return new RtcCandidateImpl(foundation, componentType, transportType, priority, address, port, candidateType, relatedAddress, relatedPort);
+        }
+    }
+
+    public static RtcCandidate fromCandidateDescription(JSONObject json) throws JSONException {
+        String foundation = json.getString("foundation");
+        int componentId = json.getInt("componentId");
+
+        RtcCandidate.ComponentType componentType;
+        String transport = json.getString("transport");
+        int priority = json.getInt("priority");
+        String address = json.getString("address");
+        int port = json.getInt("port");
+        String type = json.getString("type");
+        RtcCandidate.CandidateType candidateType;
+        String relatedAddress = json.optString("relatedAddress", null);
+        int relatedPort = -1;
+        if (relatedAddress != null) {
+            relatedPort = json.getInt("relatedPort");
+        }
+        String tcpType = json.optString("tcpType", null);
         RtcCandidate.TransportType transportType;
 
         if (componentId == 1) {
