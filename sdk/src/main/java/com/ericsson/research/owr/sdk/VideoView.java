@@ -60,7 +60,7 @@ public interface VideoView {
     /**
      * Stops the video view and frees all resources. Calling setView again will resume the view.
      * Depending on the type of the source it might be required to call this function in order
-     * to not leak resources. Calling this function even if it isn't needed is never an error.
+     * to not leak resources. Calling this function will not cause any error, even if view is already stopped or freed.
      */
     void stop();
 }
